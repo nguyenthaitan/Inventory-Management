@@ -1,10 +1,10 @@
 # 02_Domain Model
 
-## Mục đích
-Tài liệu này trình bày mô hình miền (domain model) cho hệ thống Inventory Management: các thực thể nghiệp vụ chính trong đời sống thực (và phần mềm), thuộc tính tiêu biểu, mối quan hệ giữa chúng, các ràng buộc nghiệp vụ quan trọng và đề xuất về aggregate/transactional boundaries. Mục tiêu là làm rõ cấu trúc dữ liệu và những luồng nghiệp vụ để thuận tiện cho thiết kế cơ sở dữ liệu, API và logic ứng dụng.
-
-## Phạm vi
-Tập trung vào nghiệp vụ quản lý tồn kho, nhập/xuất hàng, quản lý sản phẩm, kho, nhà cung cấp, giao dịch mua/bán, người dùng và audit. Không đi sâu vào chi tiết kỹ thuật (triển khai, indexing cụ thể), nhưng có các gợi ý kiến trúc hữu ích.
+## Các khái niệm chính
+- Material management: Nguyên vật liệu, hàng hóa — quản lý cấu trúc sản phẩm, đơn vị tính (UoM), bill of materials (nếu cần), và lifecycle của vật tư (receive → store → pick → ship).
+- Inventory lot tracking & control: Theo dõi lô hàng tồn kho — quản lý Batch/Lot/Serial, ngày sản xuất/hết hạn, traceability cho recall, và chiến lược xuất hàng (FIFO / FEFO / FEFO biến thể).
+- Label generation & printing: Tạo và in nhãn — sinh barcode/QR, mẫu nhãn cho pallet/lô/sản phẩm, in nhãn khi nhận hàng hoặc chuyển vị trí, tích hợp với máy in nhãn và thiết bị cầm tay.
+- Reporting & analytics: Báo cáo và phân tích — dashboard thời gian thực (tồn, tồn khả dụng, nhập/xuất), báo cáo turnover, ABC/SKU analysis, slow/fast-moving, inventory valuation; hỗ trợ export CSV/Excel và lịch sử giá (PriceHistory).
 
 ---
 
@@ -231,4 +231,3 @@ Ghi chú: Cross-aggregate operations (ví dụ: chuyển kho nhiều InventoryRe
   3. Nếu cần, tôi có thể chuyển phần này thành sơ đồ UML (Mermaid) hoặc tạo migration/schema mẫu (SQL/TypeORM) — cho tôi biết chọn option nào.
 
 Nếu bạn muốn tôi chỉnh sửa tên trường, thêm thực thể hoặc xuất ra sơ đồ Mermaid/UML, nói rõ yêu cầu và tôi sẽ mở rộng ngay.
-
