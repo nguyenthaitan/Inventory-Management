@@ -21,12 +21,6 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
 ---
 
 ## 2. Mục tiêu hệ thống
-- Quản lý chính xác số lượng hàng tồn kho
-- Giảm sai sót trong nhập – xuất hàng
-- Phân quyền người dùng rõ ràng
-- Cung cấp báo cáo doanh thu và tồn kho
-- Dễ mở rộng và bảo trì
-
 ### Các roles chính - pain points:
 - Manager - Quản lý toàn bộ hệ thống, theo dõi báo cáo, inventory status
 - Quality Control Technician - Thay thế công việc giấy tờ thủ công, đảm bảo tuân thủ quy định
@@ -37,129 +31,55 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
 - Thay thế các công việc bằng giấy tờ thủ công
 - Đảm bảo tuân thủ các quy định của pháp luật
 - Theo dõi quản lý các nguyên vật liệu từ lúc nhận đến chuyển giao
+- Chặn các lô hàng bị reject, hết hạn
 - Báo cáo
 - 99.9% là uptime
 - 90% người dùng đánh giá good/excellent
 - Hệ thống có thể chạy trên dữ liệu lớn (scale)
 ---
 
-## 3. Đối tượng sử dụng
-- **Admin**: Quản trị hệ thống, quản lý người dùng
-- **Nhân viên kho**: Nhập kho, xuất kho, kiểm kê
-- **Manager**: Theo dõi báo cáo, doanh thu
-- **User**: Chỉ xem dữ liệu được phân quyền
+## 3. Các khái niệm chính
+- Material management: Nguyên vật liệu, hàng hóa
+- Inventory lot tracking & control: Theo dõi lô hàng tồn kho
+- Label generation & printing: Tạo và in nhãn
+- Reporting & analytics: Báo cáo và phân tích
 
----
+## 4. Out of scope 
+- Financial
+- Customer Relationship Management (CRM)
+- Supplier Chain Management (SCM)
+- Mobile app
 
-## 4. Chức năng chính
+## 5. Requirements
+### Functional requirements
+- Quản lý Identify, name, description, đặc tả, thông tin quy định pháp luật.
+- Khả năng phân loại
+- Control version (change history)
+- Tạo Lot (unique ids, nhà cung cấp, số lượng, ngày sản xuất/hết hạn, status)
+  - Lot Status: Quarantine, Accepted, Rejected, Depleted
+- Label generation khi nhận 1 lô hàng (ngày nhận, số lượng, thông tin nhà cung cấp, thông tin kiểm tra chất lượng)
+  - Barcode
+  - QR code
+- Reporting:
+  - Báo cáo việc sử dụng
+  - Kiểm soát chất lượng
+  - Báo cáo tuân thủ quy định (audit)
+- Security:
+  - Đăng nhập password, các role quản lý
+- Wish:
+  - API luôn có rate limiting
+  - API có documentation
+  - Có Import & Export CSV/Excel (validate)
 
-### 4.1 Xác thực & phân quyền
-- Đăng nhập / đăng xuất
-- Quản lý tài khoản người dùng
-- Phân quyền theo vai trò (Role-based Access Control)
-- Đổi mật khẩu
-
----
-
-### 4.2 Quản lý sản phẩm
-- Thêm / sửa / xóa sản phẩm
-- Quản lý mã sản phẩm (SKU)
-- Danh mục sản phẩm
-- Giá mua, giá bán
-- Trạng thái sản phẩm
-
----
-
-### 4.3 Quản lý kho
-- Tạo và quản lý kho
-- Quản lý vị trí trong kho
-- Gán nhân viên phụ trách kho
-
----
-
-### 4.4 Quản lý tồn kho
-- Theo dõi tồn kho theo sản phẩm và kho
-- Hiển thị số lượng tồn khả dụng
-- Cảnh báo hàng sắp hết
-
----
-
-### 4.5 Nhập kho
-- Tạo phiếu nhập kho
-- Nhập từ nhà cung cấp hoặc trả hàng
-- Nhập nhiều sản phẩm trong một phiếu
-- Lưu lịch sử nhập kho
-
----
-
-### 4.6 Xuất kho
-- Tạo phiếu xuất kho
-- Xuất bán hàng hoặc chuyển kho
-- Kiểm tra tồn kho trước khi xuất
-- Lưu lịch sử xuất kho
-
----
-
-### 4.7 Mua – bán & hóa đơn
-- Tạo giao dịch mua
-- Tạo giao dịch bán
-- Tạo và quản lý hóa đơn
-- Lưu lịch sử giao dịch
-
----
-
-### 4.8 Nhà cung cấp
-- Thêm / sửa / xóa nhà cung cấp
-- Xem lịch sử giao dịch với nhà cung cấp
-
----
-
-### 4.9 Báo cáo & thống kê
-- Báo cáo nhập – xuất – tồn
-- Báo cáo doanh thu
-- Thống kê theo thời gian, sản phẩm, kho
-- Xuất báo cáo (Excel / CSV)
-
----
-
-### 4.10 Audit log
-- Ghi lại lịch sử thao tác người dùng
-- Theo dõi thay đổi dữ liệu hệ thống
-
----
-
-## 5. Công nghệ sử dụng
-
-### Frontend
-- React
-- HTML, CSS, JavaScript
-
-### Backend
-- Node.js
-- NestJS
-- TypeScript
-
-### Database & Hệ thống hỗ trợ
-- MongoDB (dữ liệu chính)
-- MySQL (giao dịch, báo cáo)
-- Redis (cache)
-- Elasticsearch (log & search)
-
----
-
-## 6. Kiến trúc hệ thống
-- Client – Server
-- RESTful API
-- Authentication bằng JWT
-- Role-based Authorization
-
----
-
-## 7. Cài đặt & chạy dự án (tham khảo)
-
-```bash
-# Cài đặt backend
-npm install
-npm run start:dev
-
-```
+### Non-functional requirements
+- mong muốn có thể 100 user cùng truy cập hệ thống
+- api trả lời trong vòng 20s
+- report phải tạo ra trong vòng 30s
+- 1 ngày xử lý tối thiểu 10000 transactions
+- 99.9% uptime
+- hỗ trợ backup & recover dữ liệu
+- hệ thống phải cung cấp scalability (Docker, Kubernetes)
+- hệ thống phải encrypt dữ liệu nhạy cảm (mật khẩu, thông tin cá nhân)
+- hệ thống phải được bảo vệ CSRF protection, DDoS protection, Caching
+- Database min 1.000.000 records
+- Helps
