@@ -1,104 +1,60 @@
+# 01. Business Cases — Quản lý Kho
+
 ## 1. Bối cảnh nghiệp vụ
-Phần mềm Quản lý Kho được xây dựng nhằm hỗ trợ các doanh nghiệp vừa và nhỏ quản lý hàng tồn kho, theo dõi luồng di chuyển hàng hóa (nhập/xuất/tồn), quản lý sản phẩm, kho, giao dịch, đồng thời cung cấp chức năng phân quyền người dùng và báo cáo phục vụ quản trị.
+Phần mềm Quản lý Kho được xây dựng nhằm hỗ trợ các doanh nghiệp vừa và nhỏ quản lý hàng tồn kho, theo dõi luồng di chuyển hàng hóa (nhập/xuất/chuyển/kiểm kê), quản lý sản phẩm, kho, giao dịch, đồng thời cung cấp chức năng phân quyền người dùng, audit log và báo cáo hỗ trợ quản trị.
 
-## 2. Các vai trò, vấn đề, mục tiêu
-### 2.1. Manager (Quản lý)
-- **Vấn đề:**
-	- Khó kiểm soát toàn bộ hệ thống nếu chỉ dựa vào báo cáo giấy tờ thủ công
-	- Thiếu thông tin thời gian thực về tồn kho, giao dịch
-	- Tổng hợp, phân tích dữ liệu mất nhiều thời gian
-- **Mục tiêu:**
-	- Quản lý toàn bộ hệ thống kho hiệu quả
-	- Theo dõi báo cáo, trạng thái tồn kho (inventory status) kịp thời
-	- Ra quyết định nhanh, chính xác dựa trên dữ liệu
-- **Quy trình nghiệp vụ:**
-	- Xem báo cáo tổng hợp trên hệ thống
-	- Phân tích số liệu theo thời gian, sản phẩm, kho
-	- Họp định kỳ với nhân viên kho, kiểm tra báo cáo giấy tờ thủ công
+---
 
-### 2.2. Quality Control Technician (Nhân viên kiểm soát chất lượng)
-- **Vấn đề:**
-	- Công việc giấy tờ thủ công, khó kiểm soát chất lượng hàng hóa khi nhập/xuất
-	- Thiếu công cụ số hóa để theo dõi lỗi chất lượng, nguy cơ vi phạm quy trình
-- **Mục tiêu:**
-	- Đảm bảo hàng hóa đạt tiêu chuẩn chất lượng khi nhập kho/xuất kho
-	- Ghi nhận, xử lý kịp thời các lỗi chất lượng
-- **Quy trình nghiệp vụ:**
-	- Kiểm tra chất lượng hàng hóa khi nhập kho, xuất kho
-	- Ghi nhận lỗi trên hệ thống hoặc sổ tay thủ công
-	- Báo cáo cho quản lý, đề xuất phương án xử lý hàng lỗi
+## 2. Các vai trò
 
-### 2.3. Operator (Nhân viên kho)
-- **Vấn đề:**
-	- Dễ sai sót khi nhập/xuất hàng hóa nếu thao tác thủ công
-	- Ghi nhận số lượng không chính xác, đối chiếu thủ công tốn thời gian
-- **Mục tiêu:**
-	- Thực hiện chính xác các thao tác nhập, xuất, cập nhật hàng hóa
-	- Đảm bảo số liệu tồn kho luôn cập nhật đúng
-- **Quy trình nghiệp vụ:**
-	- Tạo phiếu nhập kho, xuất kho trên hệ thống hoặc ghi sổ tay
-	- Cập nhật số lượng hàng hóa
-	- Đối chiếu số liệu thực tế với hệ thống/sổ sách
-	- Báo cáo sự cố hoặc sai lệch cho quản lý
+### Các vai trò chính
 
-### 2.4. IT Administrator (Quản trị hệ thống)
-- **Vấn đề:**
-	- Hệ thống bị gián đoạn, downtime ảnh hưởng đến vận hành
-	- Mất dữ liệu, lỗi bảo mật
-	- Khó bảo trì, nâng cấp hệ thống
-- **Mục tiêu:**
-	- Quản trị hệ thống, phân quyền người dùng
-	- Đảm bảo hệ thống hoạt động liên tục, ổn định
-	- Phòng tránh mất mát dữ liệu, backup định kỳ
-- **Quy trình nghiệp vụ:**
-	- Theo dõi, giám sát hệ thống
-	- Thực hiện backup, phục hồi dữ liệu định kỳ (có thể thủ công hoặc tự động)
-	- Xử lý sự cố, hỗ trợ người dùng
-	- Nâng cấp, bảo trì hệ thống định kỳ
+- Role Name: Manager (Quản lý)
+  - Pain Points:
+    - Thiếu thông tin kịp thời để ra quyết định (không biết hàng sắp hết, tồn ứ ở đâu).
+    - Báo cáo rời rạc, khó so sánh theo thời gian hoặc theo kho.
+    - Khó đánh giá hiệu suất tồn kho và nhà cung cấp.
+  - Needs:
+    - Dashboard và báo cáo thời gian thực về tồn kho, nhập/xuất, tồn tối thiểu và cảnh báo.
+    - Công cụ lọc/so sánh theo kho, SKU, nhà cung cấp, khoảng thời gian.
+    - Báo cáo xuất được CSV/Excel để làm báo cáo quản trị.
 
-## 3. Các luồng quy trình nghiệp vụ nhóm sẽ xây dựng
-### 3.1. Quy trình nhập kho
-1. Nhân viên kho kiểm tra hàng thực tế
-2. Tạo phiếu nhập kho trên hệ thống
-3. Quản trị viên xác nhận nếu cần
-4. Cập nhật số lượng tồn kho
-5. Đối chiếu với sổ sách thủ công
+- Role Name: Quality Control Technician (Nhân viên kiểm soát chất lượng)
+  - Pain Points:
+    - Nhiều thao tác giấy tờ thủ công khi kiểm nhận, khó lưu evidence kèm hình ảnh.
+    - Thiếu tiêu chí/luồng chuẩn cho kiểm tra chất lượng tại kho.
+    - Khó theo dõi lot/serial liên quan đến các lỗi chất lượng.
+  - Needs:
+    - Ứng dụng quét barcode/lưu ảnh, ghi nhận kết quả kiểm tra ngay trên mobile.
+    - Quy trình kiểm nhận chuẩn (checklist) và workflow xử lý hàng lỗi (scrap/return).
+    - Theo dõi lịch sử chất lượng theo lot/serial và liên kết với PO/Receipt.
 
-### 3.2. Quy trình xuất kho
-1. Nhân viên kho nhận yêu cầu xuất hàng
-2. Kiểm tra số lượng tồn kho
-3. Tạo phiếu xuất kho trên hệ thống
-4. Quản trị viên xác nhận nếu cần
-5. Cập nhật số lượng tồn kho
-6. Đối chiếu với sổ sách thủ công
+- Role Name: Operator / Warehouse Staff (Nhân viên kho)
+  - Pain Points:
+    - Sai sót khi nhập/xuất do thao tác tay, giấy tờ hoặc dữ liệu không đồng bộ.
+    - Phải xử lý nhiều phiếu cùng lúc, dễ nhầm lẫn vị trí/khoảng cách hàng.
+    - Khó quản lý hàng theo lô/serial khi có yêu cầu truy xuất.
+  - Needs:
+    - Giao diện thao tác đơn giản (mobile/scan) cho picking, receiving, transfer và count.
+    - Hỗ trợ barcode/serial để giảm lỗi và tăng tốc xử lý phiếu.
+    - Hướng dẫn/phiếu picking rõ ràng kèm vị trí lưu trữ để giảm thời gian tìm kiếm.
 
-### 3.3. Quy trình kiểm kho định kỳ
-1. Nhân viên kho kiểm tra thực tế số lượng hàng hóa
-2. Đối chiếu với số liệu hệ thống
-3. Báo cáo sai lệch cho quản trị viên
-4. Quản trị viên xử lý sai lệch
+- Role Name: IT Administrator (Quản trị hệ thống)
+  - Pain Points:
+    - Quản lý tài khoản và phân quyền phức tạp khi số lượng người dùng tăng.
+    - Cần đảm bảo an toàn dữ liệu, backup, audit log và khả năng khôi phục.
+    - Cấu hình hệ thống (kho, vị trí, quyền) dễ sai sót khi thực hiện thủ công.
+  - Needs:
+    - Công cụ quản lý người dùng & RBAC rõ ràng, dễ tích hợp với hệ thống hiện tại.
+    - Audit logs chi tiết cho mọi thao tác quan trọng và báo cáo kiểm toán.
+    - Cơ chế backup/restore, hướng dẫn cấu hình kho nhanh (templates/migrate từ CSV).
 
-### 3.4. Quy trình quản lý sản phẩm
-1. Quản trị viên/nhân viên kho thêm/sửa/xóa sản phẩm
-2. Cập nhật thông tin SKU, giá mua/bán, trạng thái sản phẩm
 
-### 3.5. Quy trình quản lý nhà cung cấp
-1. Quản trị viên/nhân viên kho thêm/sửa/xóa nhà cung cấp
-2. Theo dõi lịch sử giao dịch với nhà cung cấp
-
-### 3.6. Quy trình báo cáo
-1. Quản lý truy cập báo cáo doanh thu, tồn kho, nhập/xuất
-2. Phân tích số liệu theo thời gian, sản phẩm, kho
-3. Xuất báo cáo ra Excel/CSV
-
-## 4. Công nghệ sử dụng (tham khảo)
-- **Frontend**: React, HTML, CSS, JavaScript
-- **Backend**: Node.js, NestJS, TypeScript
-- **Database**: MongoDB, MySQL
-- **Hệ thống hỗ trợ**: Redis (cache), Elasticsearch (log & tìm kiếm)
-
-## 5. Tiêu chí thành công
-- Hệ thống được các vai trò sử dụng hiệu quả
-- Độ chính xác tồn kho được cải thiện
-- Báo cáo được sử dụng cho quyết định kinh doanh
-- Phân quyền và bảo mật được đảm bảo
+### Objectives (Mục tiêu hệ thống chung)
+- Thay thế các công việc bằng giấy tờ thủ công.
+- Đảm bảo tuân thủ các quy định của pháp luật và lưu audit trail.
+- Theo dõi quản lý các nguyên vật liệu từ lúc nhận đến chuyển giao.
+- Cung cấp báo cáo quản trị đầy đủ (export CSV/Excel, lọc theo nhiều chiều).
+- Độ sẵn sàng (uptime) mục tiêu: 99.9%.
+- Mục tiêu trải nghiệm: >= 90% người dùng đánh giá good/excellent.
+- Khả năng mở rộng: hệ thống có thể chạy trên dữ liệu lớn (scale).
