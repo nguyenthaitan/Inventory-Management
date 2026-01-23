@@ -28,7 +28,7 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
 - Dễ mở rộng và bảo trì
 
 ### Các roles chính - pain points:
-- Manager - Quản lý toàn bộ hệ thống, theo dõi báo cáo, iventory status
+- Manager - Quản lý toàn bộ hệ thống, theo dõi báo cáo, inventory status
 - Quality Control Technician - Thay thế công việc giấy tờ thủ công, đảm bảo tuân thủ quy định
 - Operator - Nhân viên kho, nhập xuất hàng hóa
 - IT Administrator - Quản trị hệ thống, phân quyền người dùng, system maintenance, data backup
