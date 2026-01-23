@@ -81,6 +81,11 @@ Phần mềm Quản lý Kho được xây dựng nhằm hỗ trợ các doanh ng
 2. Phân tích số liệu theo thời gian, sản phẩm, kho
 3. Xuất báo cáo ra Excel/CSV
 
+### 3.8. Quy trình Quản lý Thuế & Hóa đơn điện tử
+1. Đầu vào: Khi tạo Phiếu nhập kho -> Bắt buộc nhập thông tin/upload ảnh Hóa đơn đỏ (VAT) từ nhà cung cấp -> Hệ thống liên kết Lô hàng với Hóa đơn này.
+2. Đầu ra: Khi hoàn thành Phiếu xuất kho/Bán hàng -> Hệ thống tự động gom đơn, gửi dữ liệu sang nhà cung cấp Hóa đơn điện tử (MISA/Viettel...) để phát hành hóa đơn.
+3. Nhận về "Mã cơ quan thuế" và lưu vào lịch sử giao dịch.
+
 ## 4. Công nghệ sử dụng (tham khảo)
 - **Frontend**: React, HTML, CSS, JavaScript
 - **Backend**: Node.js, NestJS, TypeScript
