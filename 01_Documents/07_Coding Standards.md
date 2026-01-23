@@ -1,3 +1,53 @@
+## Chuẩn mã nguồn và quy ước phát triển dự án
+
+### 1. Mục tiêu
+Thiết lập các quy tắc và chuẩn mã nguồn nhằm đảm bảo chất lượng, tính nhất quán, dễ bảo trì và mở rộng cho dự án Quản lý Kho.
+
+### 2. Chuẩn mã nguồn chung
+- Sử dụng đặt tên biến, hàm, class rõ ràng, có ý nghĩa, theo chuẩn camelCase (JavaScript/TypeScript) hoặc snake_case (Python)
+- Đặt tên file, thư mục ngắn gọn, phản ánh đúng nội dung
+- Mỗi hàm chỉ thực hiện một nhiệm vụ (Single Responsibility)
+- Hạn chế lặp mã, ưu tiên tái sử dụng hàm, module
+- Viết chú thích rõ ràng cho các hàm phức tạp, class, module
+- Không sử dụng mã nguồn "cứng" (hard-code), thay vào đó dùng biến cấu hình
+- Đảm bảo mã nguồn không chứa thông tin nhạy cảm (mật khẩu, key...)
+- Sử dụng cấu trúc thư mục hợp lý: tách riêng các phần frontend, backend, database, tài liệu
+
+### 3. Quy ước mã nguồn cho từng công nghệ
+#### 3.1. JavaScript/TypeScript (React, Node.js, NestJS)
+- Sử dụng camelCase cho biến, hàm, thuộc tính
+- Sử dụng PascalCase cho tên class, component
+- Sử dụng const/let thay cho var
+- Ưu tiên sử dụng arrow function khi phù hợp
+- Sử dụng async/await thay cho callback
+- Đảm bảo kiểm tra null/undefined trước khi truy cập thuộc tính
+- Sử dụng TypeScript để kiểm tra kiểu dữ liệu
+
+#### 3.2. Python
+- Sử dụng snake_case cho biến, hàm
+- Sử dụng PascalCase cho class
+- Viết docstring cho hàm, class
+- Tuân thủ PEP8 về khoảng trắng, độ dài dòng, đặt tên
+
+#### 3.3. SQL
+- Đặt tên bảng, cột rõ ràng, nhất quán
+- Sử dụng chữ thường, phân tách bằng dấu gạch dưới
+- Viết câu truy vấn ngắn gọn, dễ hiểu
+
+### 4. Công cụ đảm bảo chuẩn mã nguồn
+- **ESLint**: Kiểm tra và enforce quy tắc mã nguồn cho JavaScript/TypeScript
+- **Prettier**: Định dạng mã nguồn tự động, đảm bảo nhất quán
+- **EditorConfig**: Thiết lập quy tắc định dạng chung cho nhiều IDE
+- **Husky**: Thiết lập pre-commit hook để kiểm tra mã nguồn trước khi đẩy lên repository
+- **TypeScript**: Kiểm tra kiểu dữ liệu, giảm lỗi runtime
+- **PEP8 linter**: Kiểm tra chuẩn mã nguồn Python
+- **Git**: Quản lý phiên bản, kiểm tra lịch sử thay đổi
+
+### 5. Quy trình kiểm tra mã nguồn
+1. Mã nguồn phải được kiểm tra bằng các công cụ lint trước khi commit
+2. Tất cả pull request phải được review bởi ít nhất một thành viên khác
+3. Không merge nếu có lỗi lint hoặc không đạt chuẩn mã nguồn
+4. Định kỳ kiểm tra lại các quy tắc và cập nhật nếu cần
 ## Coding Standards Draft
 
 ### 1. General Principles
