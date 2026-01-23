@@ -1,4 +1,17 @@
-# Inventory Management Web Application
+# Inventory Management
+
+## Member
+
+Thành viên nhóm:
+
+| Họ và tên         | MSSV     |
+|-------------------|----------|
+| Nguyễn Thái Tân   | 18127269 |
+| Nguyễn Tuấn Minh  | 22127271 |
+| Nguyễn Huy Tấn    | 22127380 |
+| Phạm Văn Minh     | 22127272 |
+| Nguyễn Ngọc Giang | 22127093 |
+| Trần Gia Bảo      | 22127034 |
 
 ## 1. Giới thiệu
 Inventory Management Web Application là một hệ thống web dùng để **quản lý hàng tồn kho**, hỗ trợ theo dõi **nhập – xuất – tồn**, quản lý **sản phẩm, kho, giao dịch mua bán**, phân quyền người dùng và cung cấp **báo cáo – thống kê** cho quản lý.
@@ -134,3 +147,5 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
 # Cài đặt backend
 npm install
 npm run start:dev
+
+```
