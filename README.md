@@ -27,6 +27,17 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
 - Cung cấp báo cáo doanh thu và tồn kho
 - Dễ mở rộng và bảo trì
 
+### Các roles chính:
+- Đảm bảo tuân thủ theo quy định của pháp luật
+- Theo dõi quản lý các nguyên vật liệu từ lúc nhận đến chuyển giao
+- Báo cáo
+
+### Objectives:
+- Thay thế các công việc bằng giấy tờ thủ công
+- Đảm bảo tuân thủ các quy định của pháp luật
+- 99.9% là uptime
+- 90% người dùng đánh giá good/excellent
+- Hệ thống có thể chạy trên dữ liệu lớn (scale)
 ---
 
 ## 3. Đối tượng sử dụng
