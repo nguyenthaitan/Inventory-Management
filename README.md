@@ -27,14 +27,17 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
 - Cung cấp báo cáo doanh thu và tồn kho
 - Dễ mở rộng và bảo trì
 
-### Các roles chính:
-- Đảm bảo tuân thủ theo quy định của pháp luật
-- Theo dõi quản lý các nguyên vật liệu từ lúc nhận đến chuyển giao
-- Báo cáo
+### Các roles chính - pain points:
+- Manager - Quản lý toàn bộ hệ thống, theo dõi báo cáo, iventory status
+- Quality Control Technician - Thay thế công việc giấy tờ thủ công, đảm bảo tuân thủ quy định
+- Operator - Nhân viên kho, nhập xuất hàng hóa
+- IT Administrator - Quản trị hệ thống, phân quyền người dùng, system maintenance, data backup
 
 ### Objectives:
 - Thay thế các công việc bằng giấy tờ thủ công
 - Đảm bảo tuân thủ các quy định của pháp luật
+- Theo dõi quản lý các nguyên vật liệu từ lúc nhận đến chuyển giao
+- Báo cáo
 - 99.9% là uptime
 - 90% người dùng đánh giá good/excellent
 - Hệ thống có thể chạy trên dữ liệu lớn (scale)
