@@ -47,3 +47,24 @@
 ### Xuất báo cáo giao dịch khi cần thiết
 
 # IT Administrator
+## Theo dõi trạng thái hệ thống
+### Đăng nhập vào hệ thống quản trị
+### Kiểm tra dashboard/trang giám sát trạng thái server, dịch vụ
+### Theo dõi các chỉ số hiệu năng (CPU, RAM, dung lượng ổ đĩa, kết nối mạng)
+### Nhận cảnh báo khi có sự cố hoặc hiệu năng bất thường
+
+## Kiểm tra và xử lý lỗi hệ thống
+### Truy cập nhật ký hệ thống (log files, error logs)
+### Phân tích lỗi, xác định nguyên nhân
+### Thực hiện thao tác khắc phục lỗi (restart service, sửa cấu hình, cập nhật phần mềm...)
+### Ghi nhận lại quá trình xử lý lỗi trên hệ thống
+
+## Đảm bảo an toàn và sao lưu dữ liệu
+### Thiết lập và kiểm tra lịch trình sao lưu dữ liệu tự động
+### Kiểm tra trạng thái các bản sao lưu gần nhất
+### Thực hiện phục hồi dữ liệu thử nghiệm để đảm bảo khả năng khôi phục khi có sự cố
+### Đánh giá rủi ro mất mát dữ liệu khi server gặp sự cố
+
+## Báo cáo và đánh giá hệ thống
+### Xuất báo cáo tình trạng hệ thống, lịch sử lỗi, trạng thái sao lưu
+### Đề xuất cải tiến, nâng cấp hệ thống khi cần thiết
