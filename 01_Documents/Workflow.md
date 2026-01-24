@@ -1,6 +1,15 @@
 # Manager
 ## Quản lý inventory theo quy định pháp luật
 ### Kiểm tra thông tin hàng hóa
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Quản lý hàng hóa" trên giao diện hệ thống.
+3. Sử dụng thanh tìm kiếm hoặc bộ lọc để nhập mã hàng, tên hàng hoặc các tiêu chí liên quan.
+4. Hệ thống hiển thị danh sách hàng hóa phù hợp với tiêu chí tìm kiếm.
+5. Chọn một hàng hóa cụ thể để xem chi tiết.
+6. Xem các thông tin chi tiết: tên, mã, loại, số lượng tồn kho, vị trí lưu trữ, ngày nhập, hạn sử dụng, trạng thái, lịch sử giao dịch liên quan...
+7. Nếu cần, xuất thông tin hàng hóa ra file (PDF/Excel) hoặc in trực tiếp từ hệ thống.
+8. Đăng xuất khỏi hệ thống sau khi hoàn thành kiểm tra.
+
 ### Kiểm tra số lượng tồn kho
 ### Cập nhật thông tin hàng hóa
 ### Cập nhật số lượng tồn kho
