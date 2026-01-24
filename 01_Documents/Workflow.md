@@ -48,7 +48,6 @@
 
 # IT Administrator
 ## Theo dõi trạng thái hệ thống
-### Đăng nhập vào hệ thống quản trị
 ### Kiểm tra dashboard/trang giám sát trạng thái server, dịch vụ
 ### Theo dõi các chỉ số hiệu năng (CPU, RAM, dung lượng ổ đĩa, kết nối mạng)
 ### Nhận cảnh báo khi có sự cố hoặc hiệu năng bất thường
