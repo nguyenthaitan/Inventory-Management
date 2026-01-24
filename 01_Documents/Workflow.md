@@ -25,4 +25,25 @@
 
 
 # Operator
+## Nhập kho
+### Tiếp nhận yêu cầu nhập kho từ quản lý hoặc hệ thống
+### Kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan
+### Thực hiện thao tác nhập kho trên hệ thống (cập nhật số lượng, vị trí lưu trữ)
+### Xác nhận hoàn thành nhập kho, lưu lại lịch sử giao dịch
+
+## Xuất kho
+### Tiếp nhận yêu cầu xuất kho từ quản lý hoặc hệ thống
+### Kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan
+### Thực hiện thao tác xuất kho trên hệ thống (cập nhật số lượng, vị trí xuất)
+### Xác nhận hoàn thành xuất kho, lưu lại lịch sử giao dịch
+
+## Kiểm kê kho
+### Thực hiện kiểm kê thực tế và đối chiếu với số liệu trên hệ thống
+### Cập nhật kết quả kiểm kê, báo cáo cho quản lý
+
+## Tra cứu, theo dõi lịch sử giao dịch
+### Truy cập chức năng tra cứu lịch sử nhập/xuất kho
+### Lọc, tìm kiếm giao dịch theo thời gian, loại hàng hóa
+### Xuất báo cáo giao dịch khi cần thiết
+
 # IT Administrator
