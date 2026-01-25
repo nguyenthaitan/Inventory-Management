@@ -46,6 +46,22 @@
 9. Hệ thống thông báo kết quả cập nhật thành công hoặc lỗi (nếu có).
 10. Đăng xuất khỏi hệ thống sau khi hoàn thành cập nhật.
 
+### Tạo phiếu nhập/xuất kho theo quy trình và quy định pháp luật
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Operator (tùy phân quyền).
+2. Truy cập chức năng "Quản lý nhập/xuất kho" trên giao diện hệ thống.
+3. Nhấn nút "Tạo phiếu nhập kho" hoặc "Tạo phiếu xuất kho" tùy theo nhu cầu.
+4. Nhập đầy đủ thông tin vào form tạo phiếu:
+  - Thông tin hàng hóa (mã, tên, số lượng, đơn vị tính...)
+  - Kho lưu trữ/xuất hàng
+  - Lý do nhập/xuất kho
+  - Đính kèm chứng từ liên quan (hóa đơn, phiếu xuất, hợp đồng...)
+  - Thông tin người thực hiện
+5. Kiểm tra lại thông tin đã nhập, xác nhận tính chính xác và hợp lệ theo quy định nội bộ và pháp luật.
+6. Nhấn "Tạo phiếu" để hệ thống ghi nhận phiếu nhập/xuất kho ở trạng thái "Chờ xác nhận".
+7. Hệ thống thông báo kết quả tạo phiếu thành công hoặc lỗi (nếu có).
+8. Có thể in phiếu hoặc xuất file (PDF/Excel) để lưu trữ chứng từ nếu cần.
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
+
 ### Xác nhận nhập/xuất kho theo quy trình và quy định pháp luật 
 1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Quản lý nhập/xuất kho" trên giao diện hệ thống.
@@ -207,38 +223,71 @@
 5. Sử dụng dữ liệu này để đánh giá xem Nhà cung cấp nào ổn định, Nhà cung cấp nào hay giao hàng lỗi.
 
 # Operator
-## Nhập kho
-#### Step by step:
-1. Đăng nhập vào hệ thống với vai trò Operator.
-2. Truy cập Dashboard "Yêu cầu nhập kho" hoặc mục "Nhập kho" trên giao diện hệ thống.
-3. Tiếp nhận và kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan của từng yêu cầu nhập kho.
-4. Thực hiện thao tác nhập kho trên hệ thống: cập nhật số lượng, vị trí lưu trữ cho từng mặt hàng.
-5. Xác nhận hoàn thành nhập kho trên hệ thống, hệ thống tự động lưu lại lịch sử giao dịch.
+## Quản lý inventory theo quy định của pháp luật
+### Tạo phiếu nhập/xuất kho theo quy trình và quy định pháp luật(Giống Manager)
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Operator (tùy phân quyền).
+2. Truy cập chức năng "Quản lý nhập/xuất kho" trên giao diện hệ thống.
+3. Nhấn nút "Tạo phiếu nhập kho" hoặc "Tạo phiếu xuất kho" tùy theo nhu cầu.
+4. Nhập đầy đủ thông tin vào form tạo phiếu:
+  - Thông tin hàng hóa (mã, tên, số lượng, đơn vị tính...)
+  - Kho lưu trữ/xuất hàng
+  - Lý do nhập/xuất kho
+  - Đính kèm chứng từ liên quan (hóa đơn, phiếu xuất, hợp đồng...)
+  - Thông tin người thực hiện
+5. Kiểm tra lại thông tin đã nhập, xác nhận tính chính xác và hợp lệ theo quy định nội bộ và pháp luật.
+6. Nhấn "Tạo phiếu" để hệ thống ghi nhận phiếu nhập/xuất kho ở trạng thái "Chờ xác nhận".
+7. Hệ thống thông báo kết quả tạo phiếu thành công hoặc lỗi (nếu có).
+8. Có thể in phiếu hoặc xuất file (PDF/Excel) để lưu trữ chứng từ nếu cần.
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
 
-## Xuất kho
-#### Step by step:
-1. Đăng nhập vào hệ thống với vai trò Operator.
-2. Truy cập Dashboard "Yêu cầu xuất kho" hoặc mục "Xuất kho" trên giao diện hệ thống.
-3. Tiếp nhận và kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan của từng yêu cầu xuất kho.
-4. Thực hiện thao tác xuất kho trên hệ thống: cập nhật số lượng, vị trí xuất cho từng mặt hàng.
-5. Xác nhận hoàn thành xuất kho trên hệ thống, hệ thống tự động lưu lại lịch sử giao dịch.
+### Xác nhận nhập/xuất kho theo quy trình và quy định pháp luật(Giống Manager) 
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Operator.
+2. Truy cập chức năng "Quản lý nhập/xuất kho" trên giao diện hệ thống.
+3. Xem danh sách các phiếu nhập/xuất kho đang chờ xác nhận.
+4. Chọn phiếu nhập/xuất kho cần xác nhận để xem chi tiết (thông tin hàng hóa, số lượng, chứng từ, lý do nhập/xuất, người thực hiện...).
+5. Đối chiếu thông tin trên phiếu với chứng từ thực tế và quy định pháp luật hiện hành. 
+6. Nếu hợp lệ, nhấn "Xác nhận" để hệ thống ghi nhận giao dịch nhập/xuất kho.
+7. Nếu không hợp lệ, từ chối xác nhận và ghi rõ lý do trên hệ thống.
+8. Hệ thống cập nhật trạng thái phiếu và lưu lại lịch sử xác nhận.
+9. Có thể xuất phiếu nhập/xuất kho đã xác nhận ra file (PDF/Excel) hoặc in trực tiếp từ hệ thống để lưu trữ theo quy định.
+10. Đăng xuất khỏi hệ thống sau khi hoàn thành xác nhận.
 
-## Kiểm kê kho
-#### Step by step:
-1. Đăng nhập vào hệ thống với vai trò Operator.
-2. Truy cập chức năng "Kiểm kê kho" trên giao diện hệ thống.
-3. Thực hiện kiểm kê thực tế tại kho, ghi nhận số liệu từng mặt hàng.
-4. Đối chiếu số liệu thực tế với số liệu trên hệ thống.
-5. Cập nhật kết quả kiểm kê vào hệ thống.
-6. Xuất báo cáo kiểm kê và gửi cho quản lý nếu cần.
+### Lưu trữ, tra cứu lịch sử giao dịch kho(Giống Manager)
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Operator.
+2. Truy cập chức năng "Lịch sử giao dịch kho" trên giao diện hệ thống.
+3. Sử dụng bộ lọc hoặc nhập thông tin (mã hàng, loại giao dịch, thời gian, người thực hiện...) để tìm kiếm giao dịch cần tra cứu.
+4. Hệ thống hiển thị danh sách các giao dịch nhập, xuất, điều chỉnh tồn kho, kiểm kê... phù hợp với tiêu chí tìm kiếm.
+5. Chọn một giao dịch cụ thể để xem chi tiết (thời gian, hàng hóa, số lượng, người thực hiện, lý do, chứng từ liên quan...).
+6. Có thể xuất dữ liệu lịch sử giao dịch ra file (PDF/Excel) hoặc in trực tiếp từ hệ thống để lưu trữ theo quy định.
+7. Đăng xuất khỏi hệ thống sau khi hoàn thành tra cứu hoặc lưu trữ.
 
-## Tra cứu, theo dõi lịch sử giao dịch
-#### Step by step:
-1. Đăng nhập vào hệ thống với vai trò Operator.
-2. Truy cập chức năng "Lịch sử giao dịch kho" hoặc "Tra cứu giao dịch" trên giao diện hệ thống.
-3. Sử dụng bộ lọc để tìm kiếm giao dịch theo thời gian, loại hàng hóa, mã giao dịch...
-4. Xem chi tiết từng giao dịch nhập/xuất kho khi cần thiết.
-5. Xuất báo cáo giao dịch ra file (PDF, Excel) nếu cần gửi cho quản lý hoặc lưu trữ.
+### Tạo báo cáo kiểm kê định kỳ(Giống Manager)
+1. Lên kế hoạch kiểm kê: đăng nhập với vai trò Manager hoặc Operator và vào "Báo cáo kiểm kê" để tạo đợt kiểm kê mới (chọn phạm vi: kho, nhóm hàng, ngày kiểm kê).
+2. Phân công nhân sự: chỉ định Operator phụ trách từng khu vực trên hệ thống (gán nhiệm vụ kiểm kê).
+3. Thực hiện kiểm kê thực tế: Operator thực hiện kiểm kê, quét mã/nhập số liệu thực tế vào form kiểm kê trên hệ thống.
+4. Thu thập dữ liệu kiểm kê: hệ thống tổng hợp số liệu từ các phiếu kiểm kê, hiển thị số lượng thực tế theo vị trí/kho.
+5. Đối chiếu và xử lý chênh lệch: Manager kiểm tra các chênh lệch, ghi nhận lý do và thực hiện điều chỉnh (nếu cần) hoặc lập phiếu điều tra.
+6. Duyệt và lưu báo cáo kiểm kê: sau khi xác nhận, Manager duyệt báo cáo kiểm kê trên hệ thống và lưu phiên bản báo cáo.
+7. Gắn thẻ/ghi chú cho kiểm toán: thêm các thông tin bổ sung (chứng từ kèm theo, chữ ký số nếu có) vào báo cáo trên hệ thống để phục vụ kiểm toán.
+8. Hoàn tất: hệ thống đánh dấu trạng thái đợt kiểm kê là "Completed" và lưu lịch sử; Manager đăng xuất.
+
+### Xuất báo cáo kiểm kê định kỳ phục vụ kiểm toán và thanh tra(Giống Manager)
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Operator.
+2. Truy cập chức năng "Báo cáo kiểm kê" trên giao diện hệ thống.
+3. Chọn kỳ kiểm kê cần xuất báo cáo (theo tháng, quý, năm hoặc theo đợt kiểm kê).
+4. Sử dụng bộ lọc để chọn phạm vi báo cáo (kho, nhóm hàng, vị trí, v.v.).
+5. Xem trước báo cáo kiểm kê trên hệ thống, kiểm tra các thông tin: số lượng thực tế, số lượng trên hệ thống, chênh lệch, lý do điều chỉnh (nếu có), người thực hiện kiểm kê...
+6. Nhấn "Xuất báo cáo" để tải về file (PDF, Excel) hoặc in trực tiếp từ hệ thống.
+7. Lưu trữ báo cáo theo quy định hoặc gửi cho bộ phận kiểm toán/thanh tra khi có yêu cầu.
+8. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
+
+## Theo dõi và quản lý báo cáo (Giống Manager)
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Operator.
+2. Truy cập chức năng "Báo cáo tổng hợp" trên giao diện hệ thống (bao gồm các loại báo cáo: tồn kho, nhập/xuất, doanh thu, chi phí...).
+3. Sử dụng bộ lọc hoặc nhập thông tin (thời gian, loại hàng hóa, nhà cung cấp...) để tìm kiếm báo cáo phù hợp.
+4. Xem chi tiết báo cáo trên hệ thống.
+5. Nếu cần, xuất báo cáo ra các định dạng (PDF, Excel) để lưu trữ hoặc gửi cho cơ quan chức năng.
+6. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
 
 # IT Administrator
 ## Theo dõi trạng thái hệ thống
