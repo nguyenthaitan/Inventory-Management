@@ -100,6 +100,44 @@ Khi chọn mục "Báo cáo" trên navbar, ReportScreen hiển thị danh sách 
 
 Khi nhấn nút "Xem chi tiết" tại danh sách báo cáo, màn hình ReportDetail xuất hiện cung cấp nội dung tóm tắt và kết quả phân tích kỹ thuật chuyên sâu. Màn hình trình bày rõ rệt lý do biến động dữ liệu và các nhận định về mức độ an toàn của hàng hóa trong kỳ báo cáo cụ thể. Manager có thể thực hiện xuất file PDF chính thức từ giao diện này để trình cấp trên hoặc lưu trữ hồ sơ pháp lý theo quy định.
 
+---
+
+### 2.9 Approve Report Screen
+
+![Approve Report Screen](./Images/Manager/ApproveReport.png)
+
+Khi nhấn nút "Đối chiếu & Xử lý" tại màn hình báo cáo, giao diện ApproveReport xuất hiện để Manager phê duyệt kết quả kiểm kê thực tế từ Operator. Màn hình trình bày bảng so sánh chênh lệch chi tiết, khu vực nhập lý do xử lý và ô xác nhận chữ ký số (Digital Signature) phục vụ kiểm toán. Thao tác "Duyệt báo cáo & Đăng xuất" sẽ đánh dấu trạng thái "Completed" cho đợt kiểm kê và hoàn tất quy trình làm việc của quản lý.
+
+### 2.11 Manage User Screen
+
+![Manage User Screen](./Images/Manager/ManageUserScreen.png)
+
+Khi người dùng nhấn vào mục "Quản lý User" trên thanh điều hướng, hệ thống hiển thị giao diện ManageUserScreen mặc định tại tab "Danh sách User" để quản trị tài khoản tập trung. Màn hình cung cấp danh sách nhân viên kèm theo các thông tin định danh, vai trò phòng ban và trạng thái hoạt động trực quan (Active/Locked). Tại đây, Manager có thể thực hiện tìm kiếm nhanh, lọc theo vai trò hoặc sử dụng các biểu tượng thao tác để chỉnh sửa và khóa/mở khóa tài khoản người dùng ngay lập tức.
+
+---
+
+### 2.12 Edit User Screen
+
+![Edit User Screen](./Images/Manager/EditUser.png)
+
+Bằng cách nhấn vào biểu tượng chỉnh sửa tại danh sách, giao diện modal EditUser xuất hiện cho phép cập nhật thông tin cá nhân hoặc thay đổi quyền truy cập của nhân viên. Các trường dữ liệu quan trọng như họ tên, email công việc và vai trò hệ thống (Operator, QC...) được bố trí trong biểu mẫu nhập liệu tối giản để đảm bảo tính chính xác. Thao tác "Xác nhận lưu" sẽ ghi nhận các điều chỉnh vào cơ sở dữ liệu và tự động đồng bộ hóa quyền hạn mới cho tài khoản trên toàn hệ thống.
+
+---
+
+### 2.13 User Management History Screen
+
+![User Management History Screen](./Images/Manager/UserManagementHistory.png)
+
+Khi chuyển sang tab "Lịch sử hoạt động", màn hình UserManagementHistory cung cấp nhật ký truy vết chi tiết mọi thao tác để đảm bảo tuân thủ quy định nội bộ và pháp luật. Bảng dữ liệu liệt kê chính xác thời gian ghi nhận, địa chỉ IP kết nối và phân loại hành động như đăng nhập, chỉnh sửa hay xuất báo cáo thông qua các nhãn trạng thái màu sắc. Manager có thể sử dụng tính năng "Xuất nhật ký (Excel)" để trích xuất toàn bộ lịch sử hoạt động phục vụ công tác kiểm tra và kiểm toán định kỳ.
+
+---
+
+### 2.14 User History Detail Screen
+
+![User History Detail Screen](./Images/Manager/UserHistoryDetail.png)
+
+Chọn biểu tượng con mắt tại nhật ký hoạt động sẽ mở ra cửa sổ UserHistoryDetail hiển thị hồ sơ chi tiết của một giao dịch cụ thể. Màn hình cung cấp thông tin chuyên sâu về nguồn gốc kết nối (IP/Vị trí), thiết bị sử dụng và nội dung giải trình hệ thống về các tác động dữ liệu thực tế. Đây là công cụ quan trọng giúp Manager đánh giá mức độ tuân thủ, giải trình các sai lệch dữ liệu hoặc truy vết sự cố kỹ thuật từ phía người dùng.
+
 ## 3. Operator Screens
 
 ### 3.1 Dashboard
