@@ -11,9 +11,8 @@
 8. Đăng xuất khỏi hệ thống sau khi hoàn thành kiểm tra.
 
 ### Kiểm tra số lượng tồn kho
-#### Step by step:
 1. Đăng nhập vào hệ thống với vai trò Manager.
-2. Truy cập chức năng "Quản lý tồn kho" hoặc "Kiểm tra tồn kho" trên giao diện hệ thống.
+2. Truy cập chức năng "Quản lý tồn kho" trên giao diện hệ thống.
 3. Sử dụng bộ lọc hoặc nhập thông tin (mã hàng, tên hàng, kho, vị trí...) để xác định phạm vi kiểm tra.
 4. Hệ thống hiển thị danh sách hàng hóa cùng số lượng tồn kho hiện tại cho từng mặt hàng.
 5. Chọn hàng hóa cụ thể để xem chi tiết số lượng tồn kho tại từng vị trí/kho.
@@ -24,11 +23,10 @@
 
 
 ### Cập nhật thông tin hàng hóa
-#### Step by step:
 1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Quản lý hàng hóa" trên giao diện hệ thống.
 3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm hàng hóa cần cập nhật.
-4. Chọn hàng hóa cụ thể và nhấn vào chức năng "Cập nhật" hoặc "Chỉnh sửa".
+4. Chọn hàng hóa cụ thể và nhấn vào chức năng "Chỉnh sửa".
 5. Thực hiện chỉnh sửa các thông tin cần thiết (tên, mã, loại, mô tả, nhà cung cấp, hạn sử dụng, trạng thái, v.v.).
 6. Kiểm tra lại thông tin đã chỉnh sửa, xác nhận tính chính xác.
 7. Nhấn "Lưu" hoặc "Cập nhật" để hệ thống ghi nhận thay đổi.
