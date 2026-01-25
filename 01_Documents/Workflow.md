@@ -293,7 +293,7 @@
 ## Theo dõi trạng thái hệ thống
 #### Step by step:
 1. Đăng nhập vào hệ thống giám sát với vai trò IT Administrator.
-2. Truy cập Dashboard "Giám sát hệ thống" hoặc trang "Monitoring" trên giao diện quản trị.
+2. Truy cập Dashboard "Giám sát hệ thống" trên giao diện quản trị.
 3. Kiểm tra trạng thái server, dịch vụ, các chỉ số hiệu năng (CPU, RAM, dung lượng ổ đĩa, kết nối mạng).
 4. Theo dõi các cảnh báo về sự cố hoặc hiệu năng bất thường do hệ thống gửi về.
 
@@ -306,13 +306,27 @@
 5. Ghi nhận lại quá trình xử lý lỗi vào hệ thống để phục vụ truy vết và báo cáo.
 
 ## Đảm bảo an toàn và sao lưu dữ liệu
-#### Step by step:
+### Thiết lập và kiểm tra lịch trình sao lưu dữ liệu tự động
 1. Đăng nhập vào hệ thống quản trị với vai trò IT Administrator.
 2. Truy cập chức năng "Sao lưu & Phục hồi dữ liệu" trên giao diện quản trị.
-3. Thiết lập và kiểm tra lịch trình sao lưu dữ liệu tự động.
-4. Kiểm tra trạng thái các bản sao lưu gần nhất trên hệ thống.
-5. Thực hiện phục hồi dữ liệu thử nghiệm để đảm bảo khả năng khôi phục khi có sự cố.
-6. Đánh giá rủi ro mất mát dữ liệu khi server gặp sự cố và đề xuất biện pháp phòng ngừa.
+3. Chọn mục "Thiết lập lịch trình sao lưu tự động".
+4. Thiết lập các thông số lịch trình:
+  - Chọn loại dữ liệu cần sao lưu (database, file hệ thống, logs...)
+  - Chọn tần suất sao lưu (hàng ngày, hàng tuần, hàng tháng...)
+  - Chọn thời gian thực hiện sao lưu (giờ, ngày cụ thể)
+  - Chọn vị trí lưu trữ bản sao lưu (ổ đĩa nội bộ, máy chủ dự phòng, cloud...)
+  - Thiết lập số lượng bản sao lưu cần giữ lại (retention policy)
+5. Lưu cấu hình lịch trình sao lưu. Hệ thống xác nhận và kích hoạt lịch trình tự động.
+6. Kiểm tra trạng thái lịch trình sao lưu:
+  - Xem lịch sử các lần sao lưu gần nhất (thành công/thất bại, thời gian, dung lượng...)
+  - Kiểm tra cảnh báo lỗi (nếu có) về quá trình sao lưu.
+7. Thực hiện sao lưu thủ công (nếu cần) để kiểm tra cấu hình vừa thiết lập.
+8. Đảm bảo hệ thống gửi thông báo (email, dashboard) khi sao lưu thành công hoặc gặp lỗi.
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành thiết lập và kiểm tra.
+
+
+### Kiểm tra trạng thái các bản sao lưu gần nhất
+### Thực hiện phục hồi dữ liệu để đảm bảo khả năng khôi phục khi có sự cố
 
 ## Báo cáo và đánh giá hệ thống
 #### Step by step:
