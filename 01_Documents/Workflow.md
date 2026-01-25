@@ -58,6 +58,14 @@
 10. Đăng xuất khỏi hệ thống sau khi hoàn thành xác nhận.
 
 ### Lưu trữ, tra cứu lịch sử giao dịch kho
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Lịch sử giao dịch kho" trên giao diện hệ thống.
+3. Sử dụng bộ lọc hoặc nhập thông tin (mã hàng, loại giao dịch, thời gian, người thực hiện...) để tìm kiếm giao dịch cần tra cứu.
+4. Hệ thống hiển thị danh sách các giao dịch nhập, xuất, điều chỉnh tồn kho, kiểm kê... phù hợp với tiêu chí tìm kiếm.
+5. Chọn một giao dịch cụ thể để xem chi tiết (thời gian, hàng hóa, số lượng, người thực hiện, lý do, chứng từ liên quan...).
+6. Có thể xuất dữ liệu lịch sử giao dịch ra file (PDF/Excel) hoặc in trực tiếp từ hệ thống để lưu trữ theo quy định.
+7. Đăng xuất khỏi hệ thống sau khi hoàn thành tra cứu hoặc lưu trữ.
+
 ### Kiểm tra cảnh báo về hàng hóa hết hạn, hàng tồn kho lâu ngày
 ### Xuất báo cáo kiểm kê định kỳ phục vụ kiểm toán và thanh tra
 
