@@ -110,7 +110,7 @@
 
 ## Quản lý user của hệ thống
 ### Thêm mới user
-1. Đăng nhập vào hệ thống với vai trò Manager hoặc Admin.
+1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
 3. Nhấn nút "Thêm mới user" hoặc "Tạo tài khoản mới".
 4. Nhập đầy đủ thông tin user: họ tên, email, tên đăng nhập, mật khẩu, số điện thoại, vai trò (role), phòng ban, v.v.
@@ -122,7 +122,7 @@
 10. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
 
 ### Chỉnh sửa thông tin user, thay đổi quyền truy cập.
-1. Đăng nhập vào hệ thống với vai trò Manager hoặc Admin.
+1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
 3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm user cần chỉnh sửa.
 4. Chọn user cụ thể và nhấn vào chức năng "Chỉnh sửa" hoặc "Cập nhật thông tin".
@@ -134,7 +134,7 @@
 10. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
 
 ### Khóa/mở khóa tài khoản user khi cần thiết
-1. Đăng nhập vào hệ thống với vai trò Manager hoặc Admin.
+1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
 3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm user cần khóa/mở khóa.
 4. Chọn user cụ thể và nhấn vào chức năng "Khóa tài khoản" hoặc "Mở khóa tài khoản".
@@ -145,6 +145,15 @@
 9. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
 
 ### Theo dõi lịch sử hoạt động của user để đảm bảo tuân thủ quy định nội bộ và pháp luật.
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Lịch sử hoạt động user" hoặc trên giao diện hệ thống.
+3. Sử dụng bộ lọc để tìm kiếm theo user, thời gian, loại thao tác (đăng nhập, chỉnh sửa, xóa, xuất báo cáo, v.v.).
+4. Hệ thống hiển thị danh sách các hoạt động của user: thời gian, thao tác, đối tượng tác động, địa chỉ IP, trạng thái thành công/thất bại...
+5. Chọn một hoạt động cụ thể để xem chi tiết nếu cần (ví dụ: nội dung chỉnh sửa, dữ liệu bị xóa, file đã xuất...).
+6. Đánh giá mức độ tuân thủ quy định nội bộ và pháp luật dựa trên lịch sử hoạt động.
+7. Nếu phát hiện vi phạm, thực hiện các bước xử lý theo quy trình nội bộ (cảnh báo, khóa tài khoản, báo cáo cấp trên...).
+8. Lưu trữ hoặc xuất lịch sử hoạt động ra file (PDF/Excel) để phục vụ kiểm tra, kiểm toán khi cần thiết.
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
 
 # Quality Control Technician
 ## Kiểm soát chất lượng đầu vào (Inbound Quality Control)
