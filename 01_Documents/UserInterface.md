@@ -21,7 +21,7 @@ Tài liệu này mô tả các màn hình giao diện người dùng của hệ 
 ## 1. Auth Screens
 ### 1.1 Đăng nhập hệ thống
 
-![Login Screen](./Images/Auth/login.png)
+![Login Screen](./Images/Auth/Login.png)
 
 Màn hình đăng nhập cho phép người dùng nhập tên đăng nhập (username) và mật khẩu (password) để truy cập vào hệ thống. Giao diện gồm các trường nhập liệu, nút đăng nhập. Sau khi nhập thông tin hợp lệ và nhấn nút đăng nhập, hệ thống sẽ xác thực và chuyển sang giao diện chính nếu thành công.
 
@@ -29,7 +29,7 @@ Màn hình đăng nhập cho phép người dùng nhập tên đăng nhập (use
 
 ### 1.2 Đăng ký tài khoản
 
-![Register Screen](./Images/Auth/register.png)
+![Register Screen](./Images/Auth/Register.png)
 
 Màn hình đăng ký cho phép người dùng tạo tài khoản mới bằng cách nhập các thông tin như tên đăng nhập, mật khẩu, xác nhận mật khẩu và chọn role. Sau khi điền đầy đủ thông tin và nhấn nút đăng ký, hệ thống sẽ kiểm tra hợp lệ và tạo tài khoản mới cho người dùng.
 
@@ -69,7 +69,31 @@ Người dùng chọn biểu tượng chỉnh sửa tại màn hình quản lý 
 
 ---
 
-### 2.5 Stock Screen
+### 2.5 Import/Export Management Screen
+
+![Import/Export Management Screen](./Images/Manager/ImportExportManagement.png)
+
+Khi người dùng nhấn vào mục "Quản lý nhập/xuất kho" trên thanh điều hướng, hệ thống hiển thị giao diện Import/Export Management để quản trị các yêu cầu điều chuyển hàng hóa tập trung. Màn hình cung cấp danh sách các phiếu đang ở trạng thái "Chờ xác nhận" kèm theo thông tin chi tiết về loại giao dịch, kho lưu trữ và định danh người thực hiện. Manager có thể sử dụng thanh tìm kiếm nhanh mã phiếu hoặc thực hiện in và tải xuống chứng từ PDF trực tiếp từ danh sách để phục vụ công tác lưu trữ hồ sơ pháp lý.
+
+---
+
+### 2.6 Create Import Screen
+
+![Create Import Screen](./Images/Manager/CreateImport.png)
+
+Giao diện Create Import xuất hiện dưới dạng modal khi Manager nhấn nút "Tạo phiếu nhập kho" để thực hiện quy trình tiếp nhận dược phẩm mới vào kho. Biểu mẫu yêu cầu khai báo đầy đủ thông tin về mã hàng, số lượng thực tế, vị trí kho lưu trữ mục tiêu và lý do nhập kho cụ thể. Hệ thống tích hợp tính năng đính kèm chứng từ (hóa đơn, hợp đồng) và yêu cầu xác nhận trách nhiệm về tính chính xác của dữ liệu theo quy định pháp luật trước khi hoàn tất khởi tạo.
+
+---
+
+### 2.7 Create Export Screen
+
+![Create Export Screen](./Images/Manager/CreateExport.png)
+
+Khi chọn nút "Tạo phiếu xuất kho", màn hình Create Export hiển thị cho phép Manager thiết lập các lệnh giải phóng hàng hóa khỏi kho dược phẩm. Người dùng thực hiện lựa chọn danh mục thuốc cần xuất, chỉ định kho nguồn và bổ sung các tài liệu minh chứng như lệnh điều động hoặc hợp đồng cung ứng. Thao tác "Tạo phiếu ngay" sẽ ghi nhận giao dịch vào hệ thống ở trạng thái chờ xác nhận, đảm bảo mọi luồng hàng đi đều được kiểm soát chặt chẽ và lưu vết phục vụ kiểm toán.
+
+---
+
+### 2.8 Stock Screen
 
 ![Stock Screen](./Images/Manager/StockScreen.png)
 
@@ -77,7 +101,7 @@ Truy cập mục "Tồn kho" trên navbar sẽ dẫn Manager đến StockScreen 
 
 ---
 
-### 2.6 Stock Detail Screen
+### 2.9 Stock Detail Screen
 
 ![Stock Detail Screen](./Images/Manager/StockDetail.png)
 
@@ -86,7 +110,7 @@ Khi nhấn vào "Xem chi tiết & đối chiếu" từ màn hình tồn kho, gia
 ---
 
 
-### 2.7 Report Screen
+### 2.10 Report Screen
 
 ![Report Screen](./Images/Manager/ReportScreen.png)
 
@@ -94,7 +118,7 @@ Khi chọn mục "Báo cáo" trên navbar, ReportScreen hiển thị danh sách 
 
 ---
 
-### 2.8 Report Detail Screen
+### 2.11 Report Detail Screen
 
 ![Report Detail Screen](./Images/Manager/ReportDetail.png)
 
@@ -102,13 +126,13 @@ Khi nhấn nút "Xem chi tiết" tại danh sách báo cáo, màn hình ReportDe
 
 ---
 
-### 2.9 Approve Report Screen
+### 2.12 Approve Report Screen
 
 ![Approve Report Screen](./Images/Manager/ApproveReport.png)
 
 Khi nhấn nút "Đối chiếu & Xử lý" tại màn hình báo cáo, giao diện ApproveReport xuất hiện để Manager phê duyệt kết quả kiểm kê thực tế từ Operator. Màn hình trình bày bảng so sánh chênh lệch chi tiết, khu vực nhập lý do xử lý và ô xác nhận chữ ký số (Digital Signature) phục vụ kiểm toán. Thao tác "Duyệt báo cáo & Đăng xuất" sẽ đánh dấu trạng thái "Completed" cho đợt kiểm kê và hoàn tất quy trình làm việc của quản lý.
 
-### 2.11 Manage User Screen
+### 2.13 Manage User Screen
 
 ![Manage User Screen](./Images/Manager/ManageUserScreen.png)
 
@@ -116,7 +140,7 @@ Khi người dùng nhấn vào mục "Quản lý User" trên thanh điều hư�
 
 ---
 
-### 2.12 Edit User Screen
+### 2.14 Edit User Screen
 
 ![Edit User Screen](./Images/Manager/EditUser.png)
 
@@ -124,7 +148,7 @@ Bằng cách nhấn vào biểu tượng chỉnh sửa tại danh sách, giao di
 
 ---
 
-### 2.13 User Management History Screen
+### 2.15 User Management History Screen
 
 ![User Management History Screen](./Images/Manager/UserManagementHistory.png)
 
@@ -132,7 +156,7 @@ Khi chuyển sang tab "Lịch sử hoạt động", màn hình UserManagementHis
 
 ---
 
-### 2.14 User History Detail Screen
+### 2.16 User History Detail Screen
 
 ![User History Detail Screen](./Images/Manager/UserHistoryDetail.png)
 
