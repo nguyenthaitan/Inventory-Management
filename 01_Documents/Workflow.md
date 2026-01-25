@@ -326,10 +326,49 @@
 
 
 ### Kiểm tra trạng thái các bản sao lưu gần nhất
+1. Đăng nhập vào hệ thống quản trị với vai trò IT Administrator.
+2. Truy cập chức năng "Sao lưu & Phục hồi dữ liệu" trên giao diện quản trị.
+3. Chọn mục "Lịch sử sao lưu".
+4. Xem danh sách các bản sao lưu gần nhất, bao gồm:
+  - Thời gian thực hiện sao lưu
+  - Loại dữ liệu đã sao lưu (database, file hệ thống, logs...)
+  - Dung lượng bản sao lưu
+  - Trạng thái (thành công/thất bại)
+  - Vị trí lưu trữ bản sao lưu
+  - Người thực hiện (nếu có)
+5. Kiểm tra chi tiết từng bản sao lưu nếu cần:
+  - Nhấn vào bản sao lưu để xem log chi tiết, thông báo lỗi (nếu có)
+  - Kiểm tra checksum hoặc xác thực tính toàn vẹn của file sao lưu
+6. Đánh giá tổng thể trạng thái các bản sao lưu:
+  - Đảm bảo có bản sao lưu thành công gần nhất, không bị lỗi
+  - Kiểm tra cảnh báo về bản sao lưu thất bại hoặc thiếu dung lượng
+7. Nếu phát hiện lỗi hoặc thiếu bản sao lưu, thực hiện sao lưu thủ công hoặc điều chỉnh lịch trình sao lưu.
+8. Lưu lại báo cáo kiểm tra trạng thái sao lưu (nếu cần) để phục vụ kiểm toán hoặc báo cáo nội bộ.
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành kiểm tra.
+
+
+
 ### Thực hiện phục hồi dữ liệu để đảm bảo khả năng khôi phục khi có sự cố
+1. Đăng nhập vào hệ thống quản trị với vai trò IT Administrator.
+2. Truy cập chức năng "Sao lưu & Phục hồi dữ liệu" trên giao diện quản trị.
+3. Chọn mục "Phục hồi dữ liệu".
+4. Chọn bản sao lưu cần phục hồi dựa trên thời gian, loại dữ liệu, trạng thái thành công.
+5. Kiểm tra thông tin chi tiết của bản sao lưu (dung lượng, checksum, log sao lưu, vị trí lưu trữ).
+6. Xác định phạm vi phục hồi:
+  - Phục hồi toàn bộ hệ thống (full restore) hoặc chỉ một phần dữ liệu (database, file cấu hình...)
+  - Chọn vị trí đích phục hồi (trên hệ thống chính, máy chủ dự phòng, môi trường test...)
+7. Nhấn "Bắt đầu phục hồi" và xác nhận thao tác (hệ thống có thể yêu cầu xác thực lại hoặc nhập lý do).
+8. Theo dõi tiến trình phục hồi trên dashboard:
+  - Xem log chi tiết, trạng thái thành công/thất bại, thời gian hoàn thành
+  - Kiểm tra cảnh báo lỗi (nếu có)
+9. Sau khi phục hồi hoàn tất:
+  - Kiểm tra tính toàn vẹn và hoạt động của dữ liệu/hệ thống vừa phục hồi
+  - Thực hiện test chức năng cơ bản để đảm bảo hệ thống hoạt động bình thường
+10. Lưu lại báo cáo quá trình phục hồi (log, kết quả, người thực hiện) để phục vụ kiểm toán hoặc báo cáo nội bộ.
+11. Đăng xuất khỏi hệ thống sau khi hoàn thành phục hồi và kiểm tra.
+
 
 ## Báo cáo và đánh giá hệ thống
-#### Step by step:
 1. Đăng nhập vào hệ thống quản trị với vai trò IT Administrator.
 2. Truy cập chức năng "Báo cáo hệ thống" trên giao diện quản trị.
 3. Xuất báo cáo tình trạng hệ thống, lịch sử lỗi, trạng thái sao lưu.
