@@ -2,7 +2,7 @@
 
 > **Figma UI Design:** [https://www.figma.com/make/M4oBqro4C0xRpbjKkpVFaK/Simple-Auth-for-Inventory-System?t=xN4GnleNv06fS01O-20&fullscreen=1](https://www.figma.com/make/M4oBqro4C0xRpbjKkpVFaK/Simple-Auth-for-Inventory-System?t=xN4GnleNv06fS01O-20&fullscreen=1)
 
-UI có cả phiên bản cho web máy tính (desktop) và mobile.
+UI có cả phiên bản cho web máy tính và mobile.
 
 
 **Mockdata đăng nhập cho các vai trò:**
@@ -384,11 +384,19 @@ Bằng cách nhấn vào nút "Lịch sử xử lý", hệ thống hiển thị 
 
 ![Backup Screen](./Images/ITAdministrator/BackupScreen.png)
 
-Khi chọn mục "Sao lưu & khôi phục", người dùng truy cập vào trung tâm quản lý an toàn dữ liệu với bảng phân tích rủi ro và các đề xuất phòng ngừa cụ thể. Quản trị viên có thể thiết lập lịch trình sao lưu tự động theo tần suất và thời gian tùy chỉnh, đồng thời kiểm tra trạng thái "Verified" của các bản sao lưu gần nhất. Đặc biệt, tính năng "Recovery Drill Console" cho phép thực hiện phục hồi thử nghiệm trong môi trường Sandbox để đảm bảo khả năng khôi phục dữ liệu 100% khi có sự cố thật xảy ra.
+Khi người dùng nhấn vào mục "Sao lưu & Phục hồi" trên thanh điều hướng, giao diện BackupScreen xuất hiện đóng vai trò là trung tâm kiểm soát an toàn dữ liệu tập trung cho hệ thống. Màn hình này cung cấp danh sách nhật ký sao lưu chi tiết kèm theo các nhãn trạng thái trực quan và tính năng "Sandbox Recovery Console" để diễn tập phục hồi dữ liệu trong môi trường giả lập. Quản trị viên có thể chủ động theo dõi các bản ghi lỗi phát sinh hoặc thực hiện lệnh sao lưu thủ công tức thời nhằm đảm bảo hạ tầng PharmaWMS luôn trong trạng thái sẵn sàng ứng phó sự cố.
 
 ---
 
-### 5.6 Report Screen
+### 5.6 Backup Detail Screen
+
+![Backup Detail Screen](./Images/ITAdministrator/BackupDetail.png)
+
+Khi người dùng nhấn vào biểu tượng kính lúp tại danh sách lịch sử, cửa sổ modal BackupDetail hiển thị hồ sơ kỹ thuật chuyên sâu của một bản sao lưu cụ thể. Giao diện cung cấp mã Checksum (sha256) duy nhất để xác thực tính toàn vẹn của dữ liệu và thông tin chính xác về vị trí lưu trữ vật lý như AWS S3 Bucket. Đây là công cụ quan trọng giúp IT Administrator truy vết chính xác định danh người thực hiện và đảm bảo mọi tệp tin sao lưu đều tuân thủ nghiêm ngặt các quy chuẩn an toàn thông tin dược phẩm.
+
+---
+
+### 5.7 Report Screen
 
 ![Report Screen](./Images/ITAdministrator/ReportScreen.png)
 
