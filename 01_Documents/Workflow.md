@@ -79,6 +79,17 @@
 7. Ghi nhận kết quả xử lý hoặc cập nhật trạng thái hàng hóa trên hệ thống.
 8. Đăng xuất khỏi hệ thống sau khi hoàn thành kiểm tra và xử lý cảnh báo.
 
+### Tạo báo cáo kiểm kê định kỳ
+#### Step by step:
+1. Lên kế hoạch kiểm kê: đăng nhập với vai trò Manager và vào "Báo cáo kiểm kê" để tạo đợt kiểm kê mới (chọn phạm vi: kho, nhóm hàng, ngày kiểm kê).
+2. Phân công nhân sự: chỉ định Operator phụ trách từng khu vực trên hệ thống (gán nhiệm vụ kiểm kê).
+3. Thực hiện kiểm kê thực tế: Operator thực hiện kiểm kê, quét mã/nhập số liệu thực tế vào form kiểm kê trên hệ thống.
+4. Thu thập dữ liệu kiểm kê: hệ thống tổng hợp số liệu từ các phiếu kiểm kê, hiển thị số lượng thực tế theo vị trí/kho.
+5. Đối chiếu và xử lý chênh lệch: Manager kiểm tra các chênh lệch, ghi nhận lý do và thực hiện điều chỉnh (nếu cần) hoặc lập phiếu điều tra.
+6. Duyệt và lưu báo cáo kiểm kê: sau khi xác nhận, Manager duyệt báo cáo kiểm kê trên hệ thống và lưu phiên bản báo cáo.
+7. Gắn thẻ/ghi chú cho kiểm toán: thêm các thông tin bổ sung (chứng từ kèm theo, chữ ký số nếu có) vào báo cáo trên hệ thống để phục vụ kiểm toán.
+8. Hoàn tất: hệ thống đánh dấu trạng thái đợt kiểm kê là "Completed" và lưu lịch sử; Manager đăng xuất.
+
 ### Xuất báo cáo kiểm kê định kỳ phục vụ kiểm toán và thanh tra
 1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Báo cáo kiểm kê" trên giao diện hệ thống.
