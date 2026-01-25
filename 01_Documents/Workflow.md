@@ -11,9 +11,8 @@
 8. Đăng xuất khỏi hệ thống sau khi hoàn thành kiểm tra.
 
 ### Kiểm tra số lượng tồn kho
-#### Step by step:
 1. Đăng nhập vào hệ thống với vai trò Manager.
-2. Truy cập chức năng "Quản lý tồn kho" hoặc "Kiểm tra tồn kho" trên giao diện hệ thống.
+2. Truy cập chức năng "Quản lý tồn kho" trên giao diện hệ thống.
 3. Sử dụng bộ lọc hoặc nhập thông tin (mã hàng, tên hàng, kho, vị trí...) để xác định phạm vi kiểm tra.
 4. Hệ thống hiển thị danh sách hàng hóa cùng số lượng tồn kho hiện tại cho từng mặt hàng.
 5. Chọn hàng hóa cụ thể để xem chi tiết số lượng tồn kho tại từng vị trí/kho.
@@ -24,11 +23,10 @@
 
 
 ### Cập nhật thông tin hàng hóa
-#### Step by step:
 1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Quản lý hàng hóa" trên giao diện hệ thống.
 3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm hàng hóa cần cập nhật.
-4. Chọn hàng hóa cụ thể và nhấn vào chức năng "Cập nhật" hoặc "Chỉnh sửa".
+4. Chọn hàng hóa cụ thể và nhấn vào chức năng "Chỉnh sửa".
 5. Thực hiện chỉnh sửa các thông tin cần thiết (tên, mã, loại, mô tả, nhà cung cấp, hạn sử dụng, trạng thái, v.v.).
 6. Kiểm tra lại thông tin đã chỉnh sửa, xác nhận tính chính xác.
 7. Nhấn "Lưu" hoặc "Cập nhật" để hệ thống ghi nhận thay đổi.
@@ -36,7 +34,29 @@
 9. Đăng xuất khỏi hệ thống sau khi hoàn thành cập nhật.
 
 ### Cập nhật số lượng tồn kho
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Quản lý tồn kho" trên giao diện hệ thống.
+3. Sử dụng bộ lọc hoặc tìm kiếm để xác định hàng hóa cần cập nhật số lượng.
+4. Chọn hàng hóa cụ thể và nhấn vào chức năng "Chỉnh sửa tồn kho".
+5. Nhập số lượng mới hoặc điều chỉnh tăng/giảm số lượng tồn kho theo thực tế hoặc theo phiếu nhập/xuất.
+6. Ghi chú lý do điều chỉnh (nếu hệ thống yêu cầu).
+7. Kiểm tra lại thông tin, xác nhận tính chính xác của số lượng cập nhật.
+8. Nhấn "Lưu" để hệ thống ghi nhận thay đổi.
+9. Hệ thống thông báo kết quả cập nhật thành công hoặc lỗi (nếu có).
+10. Đăng xuất khỏi hệ thống sau khi hoàn thành cập nhật.
+
 ### Xác nhận nhập/xuất kho theo quy trình và quy định pháp luật 
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Quản lý nhập/xuất kho" trên giao diện hệ thống.
+3. Xem danh sách các phiếu nhập/xuất kho đang chờ xác nhận.
+4. Chọn phiếu nhập/xuất kho cần xác nhận để xem chi tiết (thông tin hàng hóa, số lượng, chứng từ, lý do nhập/xuất, người thực hiện...).
+5. Đối chiếu thông tin trên phiếu với chứng từ thực tế và quy định pháp luật hiện hành. 
+6. Nếu hợp lệ, nhấn "Xác nhận" để hệ thống ghi nhận giao dịch nhập/xuất kho.
+7. Nếu không hợp lệ, từ chối xác nhận và ghi rõ lý do trên hệ thống.
+8. Hệ thống cập nhật trạng thái phiếu và lưu lại lịch sử xác nhận.
+9. Có thể xuất phiếu nhập/xuất kho đã xác nhận ra file (PDF/Excel) hoặc in trực tiếp từ hệ thống để lưu trữ theo quy định.
+10. Đăng xuất khỏi hệ thống sau khi hoàn thành xác nhận.
+
 ### Lưu trữ, tra cứu lịch sử giao dịch kho
 ### Kiểm tra cảnh báo về hàng hóa hết hạn, hàng tồn kho lâu ngày
 ### Xuất báo cáo kiểm kê định kỳ phục vụ kiểm toán và thanh tra
