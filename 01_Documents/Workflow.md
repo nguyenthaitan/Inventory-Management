@@ -110,9 +110,8 @@
 
 ## Quản lý user của hệ thống
 ### Thêm mới user
-#### Step by step:
 1. Đăng nhập vào hệ thống với vai trò Manager hoặc Admin.
-2. Truy cập chức năng "Quản lý user" hoặc "Quản trị hệ thống" trên giao diện hệ thống.
+2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
 3. Nhấn nút "Thêm mới user" hoặc "Tạo tài khoản mới".
 4. Nhập đầy đủ thông tin user: họ tên, email, tên đăng nhập, mật khẩu, số điện thoại, vai trò (role), phòng ban, v.v.
 5. Chọn quyền truy cập/phân quyền cho user (Operator, QC, Manager, IT Admin...).
@@ -122,8 +121,19 @@
 9. Gửi thông tin tài khoản cho user mới (qua email hoặc thông báo nội bộ nếu có chức năng này).
 10. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
 
-### Phân quyền user theo vai trò
 ### Chỉnh sửa thông tin user, thay đổi quyền truy cập.
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Admin.
+2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
+3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm user cần chỉnh sửa.
+4. Chọn user cụ thể và nhấn vào chức năng "Chỉnh sửa" hoặc "Cập nhật thông tin".
+5. Thực hiện chỉnh sửa các thông tin cần thiết (họ tên, email, số điện thoại, phòng ban, v.v.) hoặc thay đổi quyền truy cập/vai trò (role) của user.
+6. Kiểm tra lại thông tin đã chỉnh sửa, xác nhận tính chính xác.
+7. Nhấn "Lưu" để hệ thống ghi nhận thay đổi.
+8. Hệ thống thông báo kết quả cập nhật thành công hoặc lỗi (nếu có).
+9. Thông báo cho user về thay đổi (qua email hoặc thông báo nội bộ nếu có chức năng này).
+10. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
+
+
 ### Khóa/mở khóa tài khoản user khi cần thiết
 ### Theo dõi lịch sử hoạt động của user để đảm bảo tuân thủ quy định nội bộ và pháp luật.
 
