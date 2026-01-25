@@ -34,6 +34,7 @@
 9. Đăng xuất khỏi hệ thống sau khi hoàn thành cập nhật.
 
 ### Cập nhật số lượng tồn kho
+#### Step by step:
 1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Quản lý tồn kho" trên giao diện hệ thống.
 3. Sử dụng bộ lọc hoặc tìm kiếm để xác định hàng hóa cần cập nhật số lượng.
@@ -80,16 +81,13 @@
 ### Xuất báo cáo kiểm kê định kỳ phục vụ kiểm toán và thanh tra
 
 ## Theo dõi và quản lý báo cáo
-### Truy cập chức năng báo cáo tổng hợp: tồn kho, nhập/xuất, doanh thu, chi phí
-### Lọc, tìm kiếm báo cáo theo thời gian, loại hàng hóa, nhà cung cấp
-### Xuất báo cáo ra các định dạng (PDF, Excel) phục vụ lưu trữ hoặc gửi cho cơ quan chức năng
-
-## Quản lý user của hệ thống
-### Thêm mới user
-### Phân quyền user theo vai trò
-### Chỉnh sửa thông tin user, thay đổi quyền truy cập.
-### Khóa/mở khóa tài khoản user khi cần thiết
-### Theo dõi lịch sử hoạt động của user để đảm bảo tuân thủ quy định nội bộ và pháp luật.
+#### Step by step:
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Báo cáo tổng hợp" trên giao diện hệ thống (bao gồm các loại báo cáo: tồn kho, nhập/xuất, doanh thu, chi phí...).
+3. Sử dụng bộ lọc hoặc nhập thông tin (thời gian, loại hàng hóa, nhà cung cấp...) để tìm kiếm báo cáo phù hợp.
+4. Xem chi tiết báo cáo trên hệ thống.
+5. Nếu cần, xuất báo cáo ra các định dạng (PDF, Excel) để lưu trữ hoặc gửi cho cơ quan chức năng.
+6. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
 
 # Quality Control Technician
 ## Kiểm soát chất lượng đầu vào (Inbound Quality Control)
@@ -111,6 +109,7 @@
 3. Tải lên hình ảnh bằng chứng (nếu có) từ thiết bị kiểm tra.
 4. Hệ thống tự động tạo phiếu "Yêu cầu trả hàng/Hủy hàng" gửi đến Manager.
 5. Hệ thống cập nhật trạng thái lô hàng thành Rejected và khóa cứng (Operator không thể quét mã này để nhập kho).
+
 ## Kiểm soát chất lượng hàng tồn kho (Inventory Quality Assurance)
 ### Tái kiểm tra định kỳ (Periodic Re-test)
 1. Truy cập chức năng "Cảnh báo chất lượng" (Quality Alert).
@@ -143,44 +142,66 @@
 
 # Operator
 ## Nhập kho
-### Tiếp nhận yêu cầu nhập kho từ quản lý hoặc hệ thống
-### Kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan
-### Thực hiện thao tác nhập kho trên hệ thống (cập nhật số lượng, vị trí lưu trữ)
-### Xác nhận hoàn thành nhập kho, lưu lại lịch sử giao dịch
+#### Step by step:
+1. Đăng nhập vào hệ thống với vai trò Operator.
+2. Truy cập Dashboard "Yêu cầu nhập kho" hoặc mục "Nhập kho" trên giao diện hệ thống.
+3. Tiếp nhận và kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan của từng yêu cầu nhập kho.
+4. Thực hiện thao tác nhập kho trên hệ thống: cập nhật số lượng, vị trí lưu trữ cho từng mặt hàng.
+5. Xác nhận hoàn thành nhập kho trên hệ thống, hệ thống tự động lưu lại lịch sử giao dịch.
 
 ## Xuất kho
-### Tiếp nhận yêu cầu xuất kho từ quản lý hoặc hệ thống
-### Kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan
-### Thực hiện thao tác xuất kho trên hệ thống (cập nhật số lượng, vị trí xuất)
-### Xác nhận hoàn thành xuất kho, lưu lại lịch sử giao dịch
+#### Step by step:
+1. Đăng nhập vào hệ thống với vai trò Operator.
+2. Truy cập Dashboard "Yêu cầu xuất kho" hoặc mục "Xuất kho" trên giao diện hệ thống.
+3. Tiếp nhận và kiểm tra thông tin hàng hóa, số lượng, chứng từ liên quan của từng yêu cầu xuất kho.
+4. Thực hiện thao tác xuất kho trên hệ thống: cập nhật số lượng, vị trí xuất cho từng mặt hàng.
+5. Xác nhận hoàn thành xuất kho trên hệ thống, hệ thống tự động lưu lại lịch sử giao dịch.
 
 ## Kiểm kê kho
-### Thực hiện kiểm kê thực tế và đối chiếu với số liệu trên hệ thống
-### Cập nhật kết quả kiểm kê, báo cáo cho quản lý
+#### Step by step:
+1. Đăng nhập vào hệ thống với vai trò Operator.
+2. Truy cập chức năng "Kiểm kê kho" trên giao diện hệ thống.
+3. Thực hiện kiểm kê thực tế tại kho, ghi nhận số liệu từng mặt hàng.
+4. Đối chiếu số liệu thực tế với số liệu trên hệ thống.
+5. Cập nhật kết quả kiểm kê vào hệ thống.
+6. Xuất báo cáo kiểm kê và gửi cho quản lý nếu cần.
 
 ## Tra cứu, theo dõi lịch sử giao dịch
-### Truy cập chức năng tra cứu lịch sử nhập/xuất kho
-### Lọc, tìm kiếm giao dịch theo thời gian, loại hàng hóa
-### Xuất báo cáo giao dịch khi cần thiết
+#### Step by step:
+1. Đăng nhập vào hệ thống với vai trò Operator.
+2. Truy cập chức năng "Lịch sử giao dịch kho" hoặc "Tra cứu giao dịch" trên giao diện hệ thống.
+3. Sử dụng bộ lọc để tìm kiếm giao dịch theo thời gian, loại hàng hóa, mã giao dịch...
+4. Xem chi tiết từng giao dịch nhập/xuất kho khi cần thiết.
+5. Xuất báo cáo giao dịch ra file (PDF, Excel) nếu cần gửi cho quản lý hoặc lưu trữ.
 
 # IT Administrator
 ## Theo dõi trạng thái hệ thống
-### Kiểm tra dashboard/trang giám sát trạng thái server, dịch vụ
-### Theo dõi các chỉ số hiệu năng (CPU, RAM, dung lượng ổ đĩa, kết nối mạng)
-### Nhận cảnh báo khi có sự cố hoặc hiệu năng bất thường
+#### Step by step:
+1. Đăng nhập vào hệ thống giám sát với vai trò IT Administrator.
+2. Truy cập Dashboard "Giám sát hệ thống" hoặc trang "Monitoring" trên giao diện quản trị.
+3. Kiểm tra trạng thái server, dịch vụ, các chỉ số hiệu năng (CPU, RAM, dung lượng ổ đĩa, kết nối mạng).
+4. Theo dõi các cảnh báo về sự cố hoặc hiệu năng bất thường do hệ thống gửi về.
 
 ## Kiểm tra và xử lý lỗi hệ thống
-### Truy cập nhật ký hệ thống (log files, error logs)
-### Phân tích lỗi, xác định nguyên nhân
-### Thực hiện thao tác khắc phục lỗi (restart service, sửa cấu hình, cập nhật phần mềm...)
-### Ghi nhận lại quá trình xử lý lỗi trên hệ thống
+#### Step by step:
+1. Đăng nhập vào hệ thống quản trị với vai trò IT Administrator.
+2. Truy cập mục "Nhật ký hệ thống" (log files, error logs) trên giao diện quản trị.
+3. Phân tích lỗi, xác định nguyên nhân dựa trên thông tin log.
+4. Thực hiện thao tác khắc phục lỗi: restart service, sửa cấu hình, cập nhật phần mềm... trên hệ thống.
+5. Ghi nhận lại quá trình xử lý lỗi vào hệ thống để phục vụ truy vết và báo cáo.
 
 ## Đảm bảo an toàn và sao lưu dữ liệu
-### Thiết lập và kiểm tra lịch trình sao lưu dữ liệu tự động
-### Kiểm tra trạng thái các bản sao lưu gần nhất
-### Thực hiện phục hồi dữ liệu thử nghiệm để đảm bảo khả năng khôi phục khi có sự cố
-### Đánh giá rủi ro mất mát dữ liệu khi server gặp sự cố
+#### Step by step:
+1. Đăng nhập vào hệ thống quản trị với vai trò IT Administrator.
+2. Truy cập chức năng "Sao lưu & Phục hồi dữ liệu" trên giao diện quản trị.
+3. Thiết lập và kiểm tra lịch trình sao lưu dữ liệu tự động.
+4. Kiểm tra trạng thái các bản sao lưu gần nhất trên hệ thống.
+5. Thực hiện phục hồi dữ liệu thử nghiệm để đảm bảo khả năng khôi phục khi có sự cố.
+6. Đánh giá rủi ro mất mát dữ liệu khi server gặp sự cố và đề xuất biện pháp phòng ngừa.
 
 ## Báo cáo và đánh giá hệ thống
-### Xuất báo cáo tình trạng hệ thống, lịch sử lỗi, trạng thái sao lưu
-### Đề xuất cải tiến, nâng cấp hệ thống khi cần thiết
+#### Step by step:
+1. Đăng nhập vào hệ thống quản trị với vai trò IT Administrator.
+2. Truy cập chức năng "Báo cáo hệ thống" trên giao diện quản trị.
+3. Xuất báo cáo tình trạng hệ thống, lịch sử lỗi, trạng thái sao lưu.
+4. Đề xuất cải tiến, nâng cấp hệ thống khi cần thiết dựa trên kết quả báo cáo.
