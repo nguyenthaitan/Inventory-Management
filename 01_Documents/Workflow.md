@@ -74,7 +74,54 @@
 ### Theo dõi lịch sử hoạt động của user để đảm bảo tuân thủ quy định nội bộ và pháp luật.
 
 # Quality Control Technician
-
+## Kiểm soát chất lượng đầu vào (Inbound Quality Control)
+### Đánh giá lô hàng chờ nhập (Pending Batch Evaluation)
+1. Đăng nhập hệ thống, truy cập Dashboard "Danh sách chờ kiểm định" (Pending QC).
+2. Sử dụng bộ lọc để chọn các lô hàng có trạng thái Pending (Đang chờ) vừa được Operator nhận.
+3. Chọn lô hàng cụ thể, hệ thống hiển thị thông tin: Nhà cung cấp, Số lượng, và Specification (Tiêu chuẩn kỹ thuật) tương ứng của nguyên liệu đó.
+4. Tiến hành lấy mẫu thực tế tại khu vực nhận hàng (Staging Area).
+5. Nhập kết quả kiểm nghiệm vào form trên hệ thống (Ví dụ: Độ ẩm, Hàm lượng, Cảm quan...).
+6. Hệ thống tự động so sánh kết quả nhập với Specification chuẩn.
+7. Ra quyết định chuyển trạng thái lô hàng (Batch Status):
+  - Chọn Approve (Chấp thuận) nếu đạt.
+  - Chọn Reject (Từ chối) nếu hỏng.
+  - Chọn Hold (Tạm giữ) nếu cần thêm ý kiến quản lý.
+8. Xác nhận lưu. Hệ thống mở khóa cho Operator (nếu Approve) hoặc chặn nhập kho (nếu Reject).
+### Xử lý hàng không đạt chuẩn (Rejection Handling)
+1. Tại màn hình kiểm định, sau khi chọn trạng thái Reject.
+2. Hệ thống yêu cầu nhập lý do bắt buộc (Ví dụ: Bao bì rách, Sai nồng độ...).
+3. Tải lên hình ảnh bằng chứng (nếu có) từ thiết bị kiểm tra.
+4. Hệ thống tự động tạo phiếu "Yêu cầu trả hàng/Hủy hàng" gửi đến Manager.
+5. Hệ thống cập nhật trạng thái lô hàng thành Rejected và khóa cứng (Operator không thể quét mã này để nhập kho).
+## Kiểm soát chất lượng hàng tồn kho (Inventory Quality Assurance)
+### Tái kiểm tra định kỳ (Periodic Re-test)
+1. Truy cập chức năng "Cảnh báo chất lượng" (Quality Alert).
+2. Lọc danh sách các lô hàng sắp hết hạn (Near Expiry) hoặc đến hạn tái kiểm tra (Re-test Date).
+3. Di chuyển đến vị trí kho (Bin Location) được hiển thị trên hệ thống để lấy mẫu.
+4. Thực hiện kiểm tra lại chất lượng.
+5. Cập nhật kết quả mới vào hệ thống.
+6. Quyết định trạng thái mới:
+  - Gia hạn (Extend): Cập nhật ngày hết hạn mới nếu chất lượng vẫn tốt.
+  - Hủy bỏ (Discard): Chuyển trạng thái sang Expired/Rejected nếu hàng đã hỏng.
+7. Hệ thống ghi nhận lịch sử tái kiểm tra.
+### Cách ly hàng hóa (Quarantine Process)
+1. Nhận thông báo sự cố (ví dụ: kho bị dột, nhiệt độ kho vượt mức cho phép).
+2. Tìm kiếm các lô hàng bị ảnh hưởng trong khu vực đó trên hệ thống.
+3. Thực hiện thao tác Bulk Action (Thao tác hàng loạt) chuyển trạng thái các lô hàng này sang Quarantine (Cách ly).
+4. Hệ thống tạm khóa toàn bộ các lô hàng này, ngăn Operator xuất kho cho đến khi có kết quả kiểm tra lại.
+## Báo cáo & Truy vết (Reporting & Traceability)
+### Truy xuất nguồn gốc lô hàng (Batch Traceability)
+1. Truy cập chức năng "Lịch sử lô hàng" (Batch History).
+2. Quét mã QR hoặc nhập ID của lô hàng cần kiểm tra.
+3. Hệ thống hiển thị dòng thời gian (Timeline): Ngày nhập -> Người kiểm tra (QC Name) -> Kết quả test -> Ngày duyệt -> Ngày tái kiểm tra.
+4. Kiểm tra xem lô hàng này đã từng bị từ chối hay sửa đổi thông tin không.
+5. Xuất dữ liệu này ra file PDF (Certificate of Analysis - COA) nếu cần gửi cho các bên liên quan.
+### Báo cáo hiệu suất nhà cung cấp (Supplier Quality Report)
+1. Truy cập module Báo cáo (Reporting).
+2. Chọn loại báo cáo "Tỷ lệ lỗi theo Nhà cung cấp".
+3. Chọn khoảng thời gian (Tháng/Quý).
+4. Hệ thống tổng hợp dữ liệu từ các lần nhập kho (Bao nhiêu Batch Approved, bao nhiêu Batch Rejected).
+5. Sử dụng dữ liệu này để đánh giá xem Nhà cung cấp nào ổn định, Nhà cung cấp nào hay giao hàng lỗi.
 
 # Operator
 ## Nhập kho
