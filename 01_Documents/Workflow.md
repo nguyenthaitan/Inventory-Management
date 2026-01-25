@@ -78,7 +78,16 @@
 6. Đánh giá và xác định phương án xử lý (ví dụ: lên kế hoạch tiêu hủy, khuyến mãi, chuyển kho, báo cáo quản lý cấp trên...).
 7. Ghi nhận kết quả xử lý hoặc cập nhật trạng thái hàng hóa trên hệ thống.
 8. Đăng xuất khỏi hệ thống sau khi hoàn thành kiểm tra và xử lý cảnh báo.
+
 ### Xuất báo cáo kiểm kê định kỳ phục vụ kiểm toán và thanh tra
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Báo cáo kiểm kê" trên giao diện hệ thống.
+3. Chọn kỳ kiểm kê cần xuất báo cáo (theo tháng, quý, năm hoặc theo đợt kiểm kê).
+4. Sử dụng bộ lọc để chọn phạm vi báo cáo (kho, nhóm hàng, vị trí, v.v.).
+5. Xem trước báo cáo kiểm kê trên hệ thống, kiểm tra các thông tin: số lượng thực tế, số lượng trên hệ thống, chênh lệch, lý do điều chỉnh (nếu có), người thực hiện kiểm kê...
+6. Nhấn "Xuất báo cáo" để tải về file (PDF, Excel) hoặc in trực tiếp từ hệ thống.
+7. Lưu trữ báo cáo theo quy định hoặc gửi cho bộ phận kiểm toán/thanh tra khi có yêu cầu.
+8. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
 
 ## Theo dõi và quản lý báo cáo
 #### Step by step:
