@@ -101,13 +101,59 @@
 8. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
 
 ## Theo dõi và quản lý báo cáo
-#### Step by step:
 1. Đăng nhập vào hệ thống với vai trò Manager.
 2. Truy cập chức năng "Báo cáo tổng hợp" trên giao diện hệ thống (bao gồm các loại báo cáo: tồn kho, nhập/xuất, doanh thu, chi phí...).
 3. Sử dụng bộ lọc hoặc nhập thông tin (thời gian, loại hàng hóa, nhà cung cấp...) để tìm kiếm báo cáo phù hợp.
 4. Xem chi tiết báo cáo trên hệ thống.
 5. Nếu cần, xuất báo cáo ra các định dạng (PDF, Excel) để lưu trữ hoặc gửi cho cơ quan chức năng.
 6. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
+
+## Quản lý user của hệ thống
+### Thêm mới user
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
+3. Nhấn nút "Thêm mới user" hoặc "Tạo tài khoản mới".
+4. Nhập đầy đủ thông tin user: họ tên, email, tên đăng nhập, mật khẩu, số điện thoại, vai trò (role), phòng ban, v.v.
+5. Chọn quyền truy cập/phân quyền cho user (Operator, QC, Manager, IT Admin...).
+6. Kiểm tra lại thông tin, xác nhận tính chính xác.
+7. Nhấn "Lưu" hoặc "Tạo mới" để hệ thống ghi nhận và tạo tài khoản user.
+8. Hệ thống thông báo kết quả tạo user thành công hoặc lỗi (nếu có).
+9. Gửi thông tin tài khoản cho user mới (qua email hoặc thông báo nội bộ nếu có chức năng này).
+10. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
+
+### Chỉnh sửa thông tin user, thay đổi quyền truy cập.
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
+3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm user cần chỉnh sửa.
+4. Chọn user cụ thể và nhấn vào chức năng "Chỉnh sửa" hoặc "Cập nhật thông tin".
+5. Thực hiện chỉnh sửa các thông tin cần thiết (họ tên, email, số điện thoại, phòng ban, v.v.) hoặc thay đổi quyền truy cập/vai trò (role) của user.
+6. Kiểm tra lại thông tin đã chỉnh sửa, xác nhận tính chính xác.
+7. Nhấn "Lưu" để hệ thống ghi nhận thay đổi.
+8. Hệ thống thông báo kết quả cập nhật thành công hoặc lỗi (nếu có).
+9. Thông báo cho user về thay đổi (qua email hoặc thông báo nội bộ nếu có chức năng này).
+10. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
+
+### Khóa/mở khóa tài khoản user khi cần thiết
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
+3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm user cần khóa/mở khóa.
+4. Chọn user cụ thể và nhấn vào chức năng "Khóa tài khoản" hoặc "Mở khóa tài khoản".
+5. Xác nhận thao tác khóa/mở khóa (hệ thống có thể yêu cầu nhập lý do hoặc xác thực lại thao tác).
+6. Hệ thống cập nhật trạng thái tài khoản user (bị khóa hoặc được mở khóa) và ghi nhận lịch sử thao tác.
+7. Hệ thống thông báo kết quả thao tác thành công hoặc lỗi (nếu có).
+8. Thông báo cho user về việc tài khoản bị khóa/mở khóa (qua email hoặc thông báo nội bộ nếu có chức năng này).
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
+
+### Theo dõi lịch sử hoạt động của user để đảm bảo tuân thủ quy định nội bộ và pháp luật.
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Lịch sử hoạt động user" hoặc trên giao diện hệ thống.
+3. Sử dụng bộ lọc để tìm kiếm theo user, thời gian, loại thao tác (đăng nhập, chỉnh sửa, xóa, xuất báo cáo, v.v.).
+4. Hệ thống hiển thị danh sách các hoạt động của user: thời gian, thao tác, đối tượng tác động, địa chỉ IP, trạng thái thành công/thất bại...
+5. Chọn một hoạt động cụ thể để xem chi tiết nếu cần (ví dụ: nội dung chỉnh sửa, dữ liệu bị xóa, file đã xuất...).
+6. Đánh giá mức độ tuân thủ quy định nội bộ và pháp luật dựa trên lịch sử hoạt động.
+7. Nếu phát hiện vi phạm, thực hiện các bước xử lý theo quy trình nội bộ (cảnh báo, khóa tài khoản, báo cáo cấp trên...).
+8. Lưu trữ hoặc xuất lịch sử hoạt động ra file (PDF/Excel) để phục vụ kiểm tra, kiểm toán khi cần thiết.
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác.
 
 # Quality Control Technician
 ## Kiểm soát chất lượng đầu vào (Inbound Quality Control)
