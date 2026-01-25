@@ -133,8 +133,17 @@
 9. Thông báo cho user về thay đổi (qua email hoặc thông báo nội bộ nếu có chức năng này).
 10. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
 
-
 ### Khóa/mở khóa tài khoản user khi cần thiết
+1. Đăng nhập vào hệ thống với vai trò Manager hoặc Admin.
+2. Truy cập chức năng "Quản lý user" trên giao diện hệ thống.
+3. Sử dụng thanh tìm kiếm hoặc bộ lọc để tìm user cần khóa/mở khóa.
+4. Chọn user cụ thể và nhấn vào chức năng "Khóa tài khoản" hoặc "Mở khóa tài khoản".
+5. Xác nhận thao tác khóa/mở khóa (hệ thống có thể yêu cầu nhập lý do hoặc xác thực lại thao tác).
+6. Hệ thống cập nhật trạng thái tài khoản user (bị khóa hoặc được mở khóa) và ghi nhận lịch sử thao tác.
+7. Hệ thống thông báo kết quả thao tác thành công hoặc lỗi (nếu có).
+8. Thông báo cho user về việc tài khoản bị khóa/mở khóa (qua email hoặc thông báo nội bộ nếu có chức năng này).
+9. Đăng xuất khỏi hệ thống sau khi hoàn thành thao tác (nếu cần).
+
 ### Theo dõi lịch sử hoạt động của user để đảm bảo tuân thủ quy định nội bộ và pháp luật.
 
 # Quality Control Technician
