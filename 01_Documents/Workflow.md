@@ -67,6 +67,16 @@
 7. Đăng xuất khỏi hệ thống sau khi hoàn thành tra cứu hoặc lưu trữ.
 
 ### Kiểm tra cảnh báo về hàng hóa hết hạn, hàng tồn kho lâu ngày
+1. Đăng nhập vào hệ thống với vai trò Manager.
+2. Truy cập chức năng "Quản lý tồn kho" trên giao diện hệ thống.
+3. Xem danh sách cảnh báo do hệ thống tự động phát hiện, bao gồm:
+  - Hàng hóa sắp hết hạn hoặc đã hết hạn sử dụng.
+  - Hàng tồn kho lâu ngày, không phát sinh giao dịch trong thời gian dài.
+4. Sử dụng bộ lọc để xem chi tiết từng loại cảnh báo (theo nhóm hàng, thời gian, vị trí kho...).
+5. Chọn hàng hóa cụ thể để xem thông tin chi tiết (ngày nhập, hạn sử dụng, số ngày tồn kho, lịch sử giao dịch...).
+6. Đánh giá và xác định phương án xử lý (ví dụ: lên kế hoạch tiêu hủy, khuyến mãi, chuyển kho, báo cáo quản lý cấp trên...).
+7. Ghi nhận kết quả xử lý hoặc cập nhật trạng thái hàng hóa trên hệ thống.
+8. Đăng xuất khỏi hệ thống sau khi hoàn thành kiểm tra và xử lý cảnh báo.
 ### Xuất báo cáo kiểm kê định kỳ phục vụ kiểm toán và thanh tra
 
 ## Theo dõi và quản lý báo cáo
