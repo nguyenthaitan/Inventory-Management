@@ -318,7 +318,7 @@ Chuyển sang tab "Cách ly hàng hóa (Quarantine)", người dùng có thể q
 
 ### 4.8 Report & Traceability Screen
 
-![Report & Traceability Screen](./Images/QualityControlTechnician/ReportAndTraceabilityScreen.png)
+![Report & Traceability Screen](./Images/QualityControlTechnician/Report&TraceabilityScreen.png)
 
 Mục "Báo cáo & Truy vết" hỗ trợ người dùng tìm kiếm nhanh vòng đời của từng lô hàng thông qua mã định danh hoặc tính năng quét mã QR tiện lợi. Giao diện hiển thị các thẻ thông tin tóm tắt về trạng thái hiện hành của sản phẩm như "Active" (đang lưu hành) hoặc "Rejected" (đã bị từ chối). Từ đây, kỹ thuật viên có thể truy cập vào sơ đồ lịch sử chi tiết để phục vụ công tác thanh tra hoặc báo cáo thu hồi sản phẩm.
 
