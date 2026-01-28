@@ -1,233 +1,176 @@
 # 02_Domain Model
 
-## Các khái niệm chính
-- Material management: Nguyên vật liệu, hàng hóa — quản lý cấu trúc sản phẩm, đơn vị tính (UoM), bill of materials (nếu cần), và lifecycle của vật tư (receive → store → pick → ship).
-- Inventory lot tracking & control: Theo dõi lô hàng tồn kho — quản lý Batch/Lot/Serial, ngày sản xuất/hết hạn, traceability cho recall, và chiến lược xuất hàng (FIFO / FEFO / FEFO biến thể).
-- Label generation & printing: Tạo và in nhãn — sinh barcode/QR, mẫu nhãn cho pallet/lô/sản phẩm, in nhãn khi nhận hàng hoặc chuyển vị trí, tích hợp với máy in nhãn và thiết bị cầm tay.
-- Reporting & analytics: Báo cáo và phân tích — dashboard thời gian thực (tồn, tồn khả dụng, nhập/xuất), báo cáo turnover, ABC/SKU analysis, slow/fast-moving, inventory valuation; hỗ trợ export CSV/Excel và lịch sử giá (PriceHistory).
+## Domain Knowledge
+
+### Material Management
+Quản lý vật tư: nhập xuất, số lượng, đơn vị tính, trạng thái tồn kho.
+
+### Inventory Lot Tracking & Control
+- Mỗi lô hàng có UID duy nhất
+- Thông tin: nhà cung cấp, số lượng, ngày hết hạn
+- Lot Status: `Quarantine`, `Accepted`, `Rejected`, `Depleted`
+- Traceability: nguồn gốc, lịch sử sử dụng
+
+### Label Generation & Printing
+Khi nhập hàng, tự động gen label với:
+- Ngày nhập
+- Số lượng nhập
+- Nguồn (nhà cung cấp)
+- Thông tin kiểm tra chất lượng
+- Barcode / QR Code
+
+### Reporting
+- Báo cáo sử dụng vật tư
+- Kiểm soát chất lượng
+- Báo cáo tuân thủ quy định
+
+### Security
+- Đăng nhập bằng username/password
+- Role-based access control
+- CSRF protection
+- DDoS protection
+- Data encryption
 
 ---
 
-## Các thực thể chính (Entities)
-Mỗi thực thể liệt kê các thuộc tính chính (không giới hạn) và ghi chú.
+## Core Entities
 
-1. Product (Sản phẩm)
-   - id (PK) — UUID / ObjectId
-   - sku (string) — mã hàng (unique)
-   - name (string)
-   - description (text)
-   - categoryId (FK)
-   - unit (string) — đơn vị tính (ví dụ: cái, kg)
-   - priceCost (decimal) — giá nhập (có thể có lịch sử)
-   - priceSale (decimal) — giá bán
-   - status (enum) — Active/Inactive
-   - attributes (map) — thuộc tính mở rộng (size, color, v.v.)
-   - lowStockThreshold (integer)
-   Ghi chú: Product là thực thể trung tâm; một Product có thể có nhiều Batch/Lot hoặc nhiều SKU variant tuỳ mô hình.
+### 1. Product
+- id, sku, name, description
+- categoryId, unit
+- lowStockThreshold
+- status: Active/Inactive
 
-2. Category (Danh mục)
-   - id (PK)
-   - name
-   - parentId (nullable)
-   Ghi chú: phục vụ phân loại và tìm kiếm.
+### 2. Category
+- id, name, parentId
 
-3. Warehouse (Kho)
-   - id (PK)
-   - code, name, address
-   - managerUserId (FK)
-   - status
-   Ghi chú: Một hệ thống có thể có nhiều kho vật lý.
+### 3. Warehouse
+- id, code, name, address
+- managerUserId
 
-4. Location (Vị trí trong kho)
-   - id (PK)
-   - warehouseId (FK)
-   - code (kệ, vị trí)
-   - description
-   Ghi chú: Location giúp theo dõi vị trí vật lý chi tiết trong warehouse.
+### 4. Location
+- id, warehouseId, code
 
-5. InventoryRecord / Stock (Bản ghi tồn)
-   - id (PK) hoặc composite (productId + locationId)
-   - productId (FK)
-   - warehouseId (FK)
-   - locationId (FK, nullable)
-   - quantityAvailable (decimal)
-   - quantityReserved (decimal)
-   - lastUpdated (timestamp)
-   - batchId (optional)
-   Ghi chú: Đây là thực thể đại diện cho trạng thái tồn kho (số lượng) tại một vị trí/kho.
+### 5. Batch/Lot
+- id (UID), productId
+- batchCode, supplierId
+- quantity, manufactureDate, expiryDate
+- lotStatus: Quarantine | Accepted | Rejected | Depleted
+- qualityCheckInfo (JSON)
 
-6. Batch / Lot (Lô hàng)
-   - id (PK)
-   - productId (FK)
-   - batchCode
-   - quantity
-   - manufactureDate, expiryDate (nullable)
-   Ghi chú: Dùng khi quản lý theo lô, hết hạn, traceability.
+### 6. Label
+- id, batchId, productId
+- receiptDate, quantity, source
+- barcode, qrCode
+- qualityCheckInfo
 
-7. Supplier (Nhà cung cấp)
-   - id (PK)
-   - name, contact, address
-   - code
-   Ghi chú: Nhà cung cấp liên quan đến phiếu nhập (Purchase Order).
+### 7. InventoryRecord
+- productId, warehouseId, locationId, batchId
+- quantityAvailable, quantityReserved
 
-8. Customer (Khách hàng)
-   - id (PK)
-   - name, contact, address
-   Ghi chú: Liên quan đến phiếu xuất/bán hàng.
+### 8. Supplier
+- id, code, name, contact, address
 
-9. PurchaseOrder (Phiếu/đơn nhập)
-   - id (PK)
-   - code
-   - supplierId (FK)
-   - createdBy (userId)
-   - status (Draft / Confirmed / Received / Cancelled)
-   - createdAt, updatedAt
-   - lines: array of PurchaseOrderLine
+### 9. Customer
+- id, name, contact, address
 
-   PurchaseOrderLine
-   - id (PK)
-   - purchaseOrderId (FK)
-   - productId (FK)
-   - quantityOrdered
-   - quantityReceived
-   - unitPrice
-   - batch (optional)
+### 10. PurchaseOrder
+- id, code, supplierId, createdBy
+- status: Draft | Confirmed | Received | Cancelled
+- lines: [{ productId, quantityOrdered, quantityReceived, unitPrice, batchId }]
 
-   Ghi chú: PO tạo ra khi nhập hàng từ nhà cung cấp.
+### 11. SalesOrder
+- id, code, customerId, createdBy
+- status: Draft | Confirmed | Picked | Shipped | Completed | Cancelled
+- lines: [{ productId, quantity, unitPrice, allocatedQuantity }]
 
-10. SalesOrder / Shipment / Picking (Phiếu xuất / Bán)
-    - id (PK)
-    - code
-    - customerId (FK)
-    - createdBy
-    - status (Draft / Confirmed / Picked / Shipped / Completed / Cancelled)
-    - lines: array of SalesOrderLine
+### 12. StockMove
+- id, code, type: IN | OUT | TRANSFER | ADJUSTMENT
+- fromWarehouseId, toWarehouseId, fromLocationId, toLocationId
+- createdBy, createdAt
+- lines: [{ productId, quantity, batchId }]
 
-    SalesOrderLine
-    - id
-    - salesOrderId
-    - productId
-    - quantity
-    - unitPrice
-    - allocatedQuantity (số đã reservation)
+### 13. User
+- id, username, email, passwordHash
+- roleId, assignedWarehouseIds
 
-    Ghi chú: SalesOrder liên quan đến kiểm tra tồn, reservation và ghi giảm khi xuất.
+### 14. Role
+- id, name, permissions[]
 
-11. Transaction / StockMove (Giao dịch tồn kho / Phiếu điều chuyển)
-    - id (PK)
-    - code
-    - type (IN / OUT / TRANSFER / ADJUSTMENT)
-    - relatedDocument (PO / SO / Transfer code)
-    - fromWarehouseId, toWarehouseId
-    - fromLocationId, toLocationId
-    - createdBy, createdAt
-    - lines: array of StockMoveLine
+### 15. AuditLog
+- id, userId, action, entityType, entityId, timestamp, details
 
-    StockMoveLine
-    - id
-    - productId
-    - quantity
-    - batchId (optional)
+### 16. QualityControl
+- id, batchId, productId
+- inspectorUserId, inspectionDate
+- testResults (JSON), status: Pass | Fail | Pending
+- notes
 
-    Ghi chú: Dùng để ghi nhận mọi thay đổi thực tế trên tồn.
+### 17. StockAlert
+- id, productId, warehouseId
+- alertType: LowStock | Expiring | Expired | Overstock
+- threshold, currentQuantity
+- triggeredAt, resolvedAt
 
-12. Invoice (Hóa đơn)
-    - id, code
-    - relatedOrderId (salesOrderId / purchaseOrderId)
-    - totalAmount, tax, status
-
-13. User (Người dùng)
-    - id, username, displayName, email
-    - roleId
-    - assignedWarehouseIds
-
-14. Role / Permission
-    - roleId, name, permissions
-
-15. AuditLog (Nhật ký sửa đổi)
-    - id, userId, action, entityType, entityId, timestamp, details
-    Ghi chú: Quan trọng cho truy vết hoạt động.
-
-16. PriceHistory (Lịch sử giá)
-    - id, productId, priceCost, priceSale, startDate, endDate
+### 18. Report
+- id, reportType, generatedBy, generatedAt
+- parameters (JSON), filePath
+- status: Generating | Completed | Failed
 
 ---
 
-## Mối quan hệ chính (Relationships)
-Trình bày dạng "EntityA (cardinality) — mô tả — EntityB (cardinality)".
+## Entity Relationships
 
-- Product (1) — thuộc về — Category (1..1) (một Product có một Category chính; Category có thể có nhiều Product)
-- Warehouse (1) — có nhiều — Location (0..*)
-- Warehouse (1) — có nhiều — InventoryRecord (0..*)
-- Location (1) — chứa — InventoryRecord (0..*)
-- Product (1) — có nhiều — InventoryRecord (0..*) (mỗi bản ghi là product tại một vị trí/kho)
-- Product (1) — có nhiều — Batch (0..*)
-- Supplier (1) — cung cấp — PurchaseOrder (0..*)
-- PurchaseOrder (1) — có nhiều — PurchaseOrderLine (1..*) — mỗi line tham chiếu Product
-- Customer (1) — tạo — SalesOrder (0..*)
-- SalesOrder (1) — có nhiều — SalesOrderLine (1..*) — mỗi line tham chiếu Product
-- SalesOrder (1) — khi xuất — tạo — StockMove (0..1)
-- User (1) — thực hiện — Transaction / PurchaseOrder / SalesOrder (0..*)
-- Product (1) — có nhiều — PriceHistory (0..*)
-- AnyEntity (1) — được ghi lại bởi — AuditLog (0..*)
-
----
-
-## ER sơ đồ (text-based)
-Một bản tóm tắt ER đơn giản bằng ASCII để dễ hình dung:
-
-Product(pk: id, sku, name, categoryId) 1---* InventoryRecord(pk: id, productId, warehouseId, locationId, qty)
-InventoryRecord *---1 Warehouse(pk: id, name)
-InventoryRecord *---1 Location(pk: id, code)
-Product 1---* Batch(pk: id, productId, batchCode)
-PurchaseOrder(pk: id, supplierId) 1---* PurchaseOrderLine(pk: id, productId, qty)
-SalesOrder(pk: id, customerId) 1---* SalesOrderLine(pk: id, productId, qty)
-StockMove(pk: id) 1---* StockMoveLine(pk: id, productId, qty)
+- Product 1 → * Batch
+- Product 1 → * InventoryRecord
+- Batch 1 → * InventoryRecord
+- Batch 1 → * Label
+- Batch 1 → 0..1 QualityControl
+- Warehouse 1 → * Location
+- Warehouse 1 → * InventoryRecord
+- Location 1 → * InventoryRecord
+- Supplier 1 → * PurchaseOrder
+- Customer 1 → * SalesOrder
+- PurchaseOrder 1 → * StockMove (IN)
+- SalesOrder 1 → * StockMove (OUT)
+- User 1 → * AuditLog
+- Product 1 → * StockAlert
 
 ---
 
-## Quy tắc nghiệp vụ quan trọng (Business Rules)
-- Tồn kho thực tế được giữ trong InventoryRecord (product + location/warehouse). Mọi thay đổi số lượng phải qua một Transaction/StockMove để đảm bảo lịch sử.
-- Trước khi xác nhận SalesOrder phải check và reserve (đặt giữ) quantity trên InventoryRecord.
-- Khi nhận hàng từ PurchaseOrder, tạo StockMove IN và cập nhật InventoryRecord, có thể gắn Batch/Lot.
-- Cần phân biệt quantityAvailable vs quantityReserved để tránh oversell.
-- Mỗi phiếu (PO, SO, StockMove) có trạng thái rõ ràng (Draft, Confirmed, Completed, Cancelled) và không cho phép ghi giảm trái phép.
-- Quyền hạn: chỉ role có quyền mới có thể approve/cancel các document nhất định.
+## Business Rules
 
----
+### Inventory Management
+- Mọi thay đổi số lượng phải qua StockMove
+- Phân biệt quantityAvailable vs quantityReserved để tránh oversell
+- Khi inventory < lowStockThreshold → tạo StockAlert
+- Không cho phép số lượng âm (negative stock)
 
-## Aggregate boundaries & transactional considerations
-Đề xuất aggregates theo DDD để dễ quản lý consistency:
+### Lot Control
+- Lot status workflow: Quarantine → Quality Check (QualityControl) → Accepted/Rejected
+- Lot Depleted khi quantityAvailable = 0
+- Lot Expired khi expiryDate < currentDate → tạo StockAlert
+- Lot sắp hết hạn (< 30 days) → tạo StockAlert Expiring
+- FEFO (First Expired First Out): ưu tiên xuất lô gần hết hạn nhất
 
-- Product Aggregate: Product + PriceHistory + (tham chiếu readonly tới Category)
-- Inventory Aggregate: InventoryRecord (productId + locationId) là root; mọi StockMove phải cập nhật aggregate này bằng transaction (or eventual consistency via events)
-- Order Aggregate: PurchaseOrder hoặc SalesOrder gồm các OrderLine; việc thay đổi qty/price nằm trong aggregate.
-- User/Permission Aggregate: quản lý user và role.
+### Order Processing
+- PurchaseOrder workflow: Draft → Confirmed → Received
+- SalesOrder workflow: Draft → Confirmed → Picked → Shipped → Completed
+- SalesOrder phải check và reserve inventory trước khi confirm
+- Khi nhận PurchaseOrder: tạo StockMove IN + gen Label + tạo Batch + QualityControl + cập nhật InventoryRecord
+- Khi xuất SalesOrder: tạo StockMove OUT + release reserved quantity + cập nhật InventoryRecord
 
-Ghi chú: Cross-aggregate operations (ví dụ: chuyển kho nhiều InventoryRecord) nên dùng sagas/long-running transaction hoặc event-driven workflow để đảm bảo an toàn.
+### Quality Control
+- Batch mới nhận phải qua QualityControl trước khi chuyển từ Quarantine → Accepted
+- QualityControl.status = Fail → Batch.lotStatus = Rejected
+- Batch Rejected không được phép xuất kho
 
----
+### Security & Authorization
+- Role-based approval: chỉ role có quyền mới approve/cancel documents
+- Mọi thao tác quan trọng phải ghi AuditLog
+- User chỉ thao tác trên assignedWarehouses
 
-## Gợi ý thiết kế DB & indexing
-- Bảng InventoryRecord: index theo (productId), (warehouseId), (productId, warehouseId), hoặc composite (productId, locationId) để lookup nhanh.
-- Product: unique index trên sku.
-- PurchaseOrder/SalesOrder: index theo status và createdAt để lọc nhanh.
-- AuditLog: partition hoặc lưu vào separate store (Elasticsearch) nếu lớn.
-
----
-
-## Các edge-cases & lưu ý
-- Negative stock: cho phép hoặc không? Nếu cho phép, phải có flag và quy trình audit.
-- Concurrency: nhiều nhân viên thao tác trên cùng product/location — cần lock optimistic/pessimistic hoặc kiểm tra version (row version) trước cập nhật.
-- Returns / Refunds: cần model thêm CreditNote / ReturnOrder để xử lý trả hàng.
-- Hàng theo lot/hạn dùng: nếu cần, mọi StockMove/InventoryRecord cần gắn batchId.
-
----
-
-## Kết luận & bước tiếp theo
-- Tài liệu này là nền tảng cho việc thiết kế schema và API. Bước tiếp theo:
-  1. Phân tách rõ bảng/collection cho SQL vs NoSQL (ví dụ: InventoryRecord và transactional docs -> SQL; AuditLog, Log -> Elasticsearch/MongoDB).
-  2. Viết các API contract (Request/Response) cho các thao tác chính: CRUD sản phẩm, tạo PO/SO, thực hiện StockMove, kiểm tra tồn và reservation.
-  3. Nếu cần, tôi có thể chuyển phần này thành sơ đồ UML (Mermaid) hoặc tạo migration/schema mẫu (SQL/TypeORM) — cho tôi biết chọn option nào.
-
-Nếu bạn muốn tôi chỉnh sửa tên trường, thêm thực thể hoặc xuất ra sơ đồ Mermaid/UML, nói rõ yêu cầu và tôi sẽ mở rộng ngay.
+### Reporting
+- Report tuân thủ: theo dõi Batch traceability, QualityControl history
+- Report sử dụng: dựa trên StockMove (IN/OUT)
+- Report cảnh báo: dựa trên StockAlert
