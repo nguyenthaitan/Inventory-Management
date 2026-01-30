@@ -51,13 +51,11 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 | Thành phần | Công nghệ đề xuất |
 | :--- | :--- |
-| **Backend** | Java (Spring Boot) hoặc Golang (tối ưu concurrency) |
-| **Frontend** | React.js hoặc Next.js (Dashboard quản trị) |
-| **Mobile App** | Flutter hoặc React Native (Quét mã vạch tại kho) |
-| **Database** | PostgreSQL (Main), Redis (Caching/Locking) |
-| **Message Queue** | Apache Kafka (Xử lý đồng bộ tồn kho giữa các kênh) |
+| **Backend** | Node.js (NestJS) |
+| **Frontend** | React.js(typescript)|
+| **Database** | MongoDB, Redis (Caching/Locking), ELK |
 | **DevOps** | Docker, Kubernetes, Jenkins/GitHub Actions |
-| **Phần cứng** | Máy quét Zebra (Android-based), RFID Tags |
+| **Security** | Okta |
 
 ---
 
