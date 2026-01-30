@@ -39,8 +39,11 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
 ---
 
 ## 3. Các khái niệm chính
+- Supply chain: Chuỗi cung ứng
 - Material management: Nguyên vật liệu, hàng hóa
 - Inventory lot tracking & control: Theo dõi lô hàng tồn kho
+- Inventory transactions: Giao dịch tồn kho (nhập, xuất, điều chuyển)
+- Quality control testing: Kiểm tra chất lượng
 - Label generation & printing: Tạo và in nhãn
 - Reporting & analytics: Báo cáo và phân tích
 
