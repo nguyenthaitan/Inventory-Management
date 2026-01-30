@@ -53,9 +53,11 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 | :--- | :--- |
 | **Backend** | Node.js (NestJS) |
 | **Frontend** | React.js(typescript)|
-| **Database** | MongoDB, Redis (Caching/Locking), ELK |
+| **Database** | MongoDB, Redis (Caching/Locking)|
 | **DevOps** | Docker, Kubernetes, Jenkins/GitHub Actions |
 | **Security** | Okta |
+| **Logging** | ELK |
+| **Monitoring** | Prometheus & Grafana |
 
 ---
 
