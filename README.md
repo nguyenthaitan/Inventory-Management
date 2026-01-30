@@ -64,7 +64,8 @@ Hệ thống được xây dựng theo mô hình **Web Application hiện đại
   - Barcode
   - QR code
 - Reporting:
-  - Báo cáo việc sử dụng
+  - Inventory status: tồn kho hiện tại, sắp hết hạn, đã hết hạn
+  - Báo cáo việc sử dụng: nguyên vật liệu, nhập xuất
   - Kiểm soát chất lượng
   - Báo cáo tuân thủ quy định (audit)
 - Security:
