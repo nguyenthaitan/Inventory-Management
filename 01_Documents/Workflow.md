@@ -1,163 +1,351 @@
-# Workflow (Phiên bản đồng bộ với DB schema)
+# Workflow (Theo mô hình: Materials → InventoryLots → InventoryTransactions → QCTests / ProductionBatches / BatchComponents / LabelTemplates)
 
-> Lưu ý: Các tên bảng/field trong ngoặc đơn dùng để tham chiếu kỹ thuật cho dev: ví dụ `products` (id, sku, name), `batches` (id, batchCode, productId, quantity, expiryDate, lotStatus), `stock_moves` (id, type, fromWarehouseId, toWarehouseId), `stock_move_lines` (stockMoveId, productId, quantity, batchId), `inventory_records` (productId, warehouseId, locationId, batchId, quantityAvailable, quantityReserved), `quality_controls` (id, batchId, inspectorUserId, testResults, status), `audit_logs` (userId, action, entityType, entityId, details), `backups` (id, type, createdAt, status).
-
----
-
-## Các vai trò chính và mapping quyền
-- Manager (role: `roles.name = "Manager"`) — có quyền duyệt/confirm `stock_moves`, duyệt `reports`, quản lý `users`.
-- Operator (role: `roles.name = "Operator"`) — tạo `purchase_orders` / `stock_moves` (draft), thực hiện quét/nhập/xuất (tạo `stock_moves` với `createdBy`).
-- Quality Control Technician (role: `roles.name = "QualityControl"`) — thực hiện `quality_controls` trên `batches`.
-- IT Administrator (role: `roles.name = "ITAdmin"`) — quản lý `backups`, `audit_logs`, cấu hình hệ thống.
-
-Mọi thao tác quan trọng (tạo/confirm/delete) phải ghi `audit_logs` (userId, action, entityType, entityId, details).
+Mục tiêu: Mô tả các quy trình vận hành theo roles (Manager, Operator, Quality Control Technician, IT Administrator) và cách các hành động ánh xạ vào các thực thể dữ liệu chính: Materials, InventoryLots, InventoryTransactions, QCTests, ProductionBatches, BatchComponents, LabelTemplates/labels, Users, audit_logs.
 
 ---
 
-## 1. Quy trình Tạo và Xác nhận Phiếu Nhập (Receiving)
+## Tóm tắt thực thể chính
+- Materials (vật tư / sản phẩm): định nghĩa material/product (id, code, name, unit, etc.).
+- InventoryLots (lô tồn kho): mỗi material có thể có nhiều lots (id, lot_code, material_id, quantity, available_quantity, is_sample, manufacture_date, expiry_date, status).
+- InventoryTransactions: các giao dịch liên quan tới một InventoryLot (id, inventory_lot_id, type: RECEIPT/USAGE/SPLIT/ADJUSTMENT/TRANSFER, quantity, location_id, reference_id, performed_by, created_at, status).
+- QCTests: kết quả kiểm nghiệm trên InventoryLot (id, inventory_lot_id, test_type, test_results(JSON), status: Pending/Pass/Fail/Hold, verified_by, verified_at).
+- ProductionBatches: lô sản xuất (id, batch_code, product_id (references Materials), planned_qty, produced_qty, status, started_at, finished_at).
+- BatchComponents: thành phần của ProductionBatch liên kết tới InventoryLots (id, production_batch_id, inventory_lot_id, planned_quantity, actual_quantity).
+- LabelTemplates: mẫu nhãn (id, template_code, label_type (Raw Material / Sample / API / Status / Finished Product / Intermediate), template_content, fields).
+- Labels: nhãn sinh ra cho InventoryLots / ProductionBatches (id, template_id, inventory_lot_id, production_batch_id, rendered_content, barcode_value, created_by, created_at).
+- Users: (id, username, role_id).
+- Audit logs: (id, user_id, action, entity_type, entity_id, details, timestamp).
 
-Mục tiêu: Khi nhận hàng, hệ thống phải tạo record lô, QC nếu cần, sinh label, tạo stock move để cập nhật tồn.
+---
+
+## Roles & Quyền tổng quan
+- Manager: duyệt/confirm transactions quan trọng (adjustments, returns), phê duyệt production batch, review và quyết định QCTest nếu cần, truy vấn báo cáo, quản lý label templates.
+- Operator: tạo Receipts (InventoryLot + InventoryTransaction), thực hiện InventoryTransactions (usage, transfer, split), tạo Labels, khởi tạo ProductionBatch consumptions (BatchComponents).
+- Quality Control Technician (QC): tạo và thực hiện QCTests, verify test results, set lot status (Accepted/Rejected/Hold) theo policy.
+- IT Administrator: quản lý LabelTemplates, hệ thống in nhãn, backups, quyền truy cập, audit logs.
+
+Mỗi hành động quan trọng phải lưu performed_by / added_by / verified_by (user id hoặc username) và ghi audit_logs.
+
+---
+
+## Quy trình chi tiết theo luồng dữ liệu
+
+### 1) Tạo Material
+- Hành động: Người (Manager/Operator) tạo record `Materials` (material_code, name, unit, default_label_template_id, low_stock_threshold...).
+- Ghi audit_logs: action = "create_material", entity_type = "Materials", entity_id = material_id, user = created_by.
+
+---
+
+### 2) Nhận nguyên liệu → Tạo InventoryLot → InventoryTransaction(Receipt) → Sinh Label
+Mô tả: Khi nguyên liệu về kho, Operator tạo InventoryLot cho mỗi lô thực tế và tạo InventoryTransaction kiểu RECEIPT để phản ánh +quantity.
 
 Step-by-step:
-1. Operator tạo Purchase Order (PO) (bảng `purchase_orders` với lines chứa `productId`, `quantityOrdered`) — UI gọi endpoint tạo `purchase_orders`.
-2. Khi hàng về kho, Operator tạo phiếu nhận (Receive) — tạo `stock_moves` (type = "IN", fromWarehouseId = supplier/null, toWarehouseId = warehouseId) và `stock_move_lines` (productId, quantityReceived, batchId (nếu đã có) hoặc tạo batch mới). (bảng `stock_moves`, `stock_move_lines`)
-3. Nếu batch mới: tạo `batches` (batchCode, productId, supplierId, quantity, manufactureDate, expiryDate, lotStatus="Quarantine"). (bảng `batches`)
-4. Sinh nhãn (label): tạo `labels` liên kết `batchId`, `productId`, `receiptDate`, `quantity`. (bảng `labels`)
-5. Tự động tạo `quality_controls` record với `status = "Pending"` nếu quy tắc yêu cầu kiểm tra (ví dụ: hàng nhập phải QC theo `purchase_order` hoặc `product` policy). (bảng `quality_controls`)
-6. Ghi `audit_logs` cho hành động tạo PO / Stock Move / Batch / QC. (bảng `audit_logs`)
-7. Phiếu nhận lưu trạng thái `stock_moves.status = "Pending Confirmation"` cho phép người có quyền (Manager/role có permission) kiểm tra và Confirm. (bảng `stock_moves`, field `status`)
-
-Xác nhận (Confirm):
-1. Manager vào danh sách phiếu chờ (lọc `stock_moves.status = "Pending Confirmation"`).
-2. Mở chi tiết, đối chiếu chứng từ (attachments) → nếu hợp lệ, nhấn "Confirm": hệ thống sẽ:
-   - cập nhật `stock_moves.status = "Confirmed"`;
-   - với mỗi `stock_move_line`: cập nhật hoặc tạo `inventory_records` tương ứng: `quantityAvailable += line.quantity` (với `productId`, `warehouseId`, `locationId`, `batchId`); nếu dùng reserve flow, có thể update `quantityReserved`. (bảng `inventory_records`)
-   - ghi `audit_logs`. (bảng `audit_logs`)
-3. Nếu không hợp lệ → từ chối (set `stock_moves.status = "Rejected"`) và ghi lý do (chi tiết trong `audit_logs` / `stock_moves.notes`).
-
-Ghi chú kỹ thuật:
-- Không cho phép thay đổi `inventory_records` trực tiếp ngoài `stock_moves` (all quantity changes must be via `stock_moves` type=IN/OUT/ADJUSTMENT).
-- Nếu `batches.lotStatus = "Quarantine"`, `inventory_records` cho batch đó có thể bị locked (không cho xuất) cho tới khi QC pass.
+1. Operator tạo `InventoryLot`:
+   - Tạo bản ghi `inventory_lots` với fields: lot_code (ví dụ: lot-uuid-001), material_id (ví dụ: MAT-001), quantity = 25.5 (kg), available_quantity = 25.5, is_sample = false (mặc định), manufacture_date, expiry_date, status = "Quarantine" (nếu yêu cầu QC).
+   - fields performed_by/added_by lưu user id.
+2. Tạo `InventoryTransaction` type = RECEIPT:
+   - `inventory_transactions` record: inventory_lot_id = lot-uuid-001, type = "RECEIPT", quantity = +25.5, location_id, reference_id (purchase_order_id), performed_by = operator.
+   - Khi transaction được ghi (và Confirm nếu cần), hệ thống cập nhật `inventory_lots.available_quantity += quantity`.
+3. Sinh nhãn Raw Material:
+   - Hệ thống lấy `LabelTemplate` với label_type = 'Raw Material' (ví dụ template_code = TPL-RM-01).
+   - Render `template_content` với dữ liệu từ `inventory_lots` (material_name, lot_id, manufacturer_lot, expiration_date, storage_location, quantity, etc.).
+   - Tạo `labels` record với rendered_content và barcode/qr_value.
+   - In nhãn lên thùng/lô.
+4. Nếu policy yêu cầu QC ngay khi nhận, tạo `QCTest` records cho lot:
+   - `qc_tests` với inventory_lot_id = lot-uuid-001, test_type = Identity/Assay/Purity..., status = "Pending".
+5. Ghi `audit_logs` cho tất cả hành động (create inventory_lot, receipt transaction, label generation, qctest creation).
 
 ---
 
-## 2. Quy trình Kiểm soát chất lượng (QC)
+### 3) QC trên InventoryLot (QCTests)
+1. QC Technician thực hiện các test và lưu kết quả vào `qc_tests.test_results` (JSON) và set `qc_tests.status` = Pass/Fail/Hold, recorded `verified_by` & `verified_at`.
+2. Nếu tất cả QCTests liên quan tới lot đều Pass → hệ thống cập nhật `inventory_lots.status = "Accepted"` và unlock sử dụng cho Production/Export.
+3. Nếu bất kỳ test Fail → `inventory_lots.status = "Rejected"` → hệ thống có thể tự sinh `InventoryTransaction` type = RETURN/ADJUSTMENT để xử lý trả hàng hoặc huỷ. Đồng thời có thể sinh `Status` label (label_type = 'Status') ghi rõ trạng thái Rejected.
+4. Nếu Hold → set `inventory_lots.status = "On Hold"` chờ Manager quyết định.
+5. Ghi `audit_logs` cho verify actions.
 
-Mục tiêu: Đảm bảo batch được kiểm tra trước khi cho vào lưu thông. QC thay đổi `batches.lotStatus` thông qua `quality_controls`.
+---
+
+### 4) Tạo mẫu (Sample) từ InventoryLot → Sample Label
+- Nếu tạo sample (is_sample = true): tạo một `InventoryLot` mới nhỏ hơn (ví dụ sample-uuid-001) với parent_lot_id = lot-uuid-001.
+- Ghi `InventoryTransaction` type = SPLIT on parent lot (-sample_qty).
+- Sinh Label theo LabelTemplate type = 'Sample' chứa thông tin sample (parent lot, sample_date, sampled_by).
+- Ghi audit_logs.
+
+---
+
+### 5) Sản xuất: ProductionBatch, BatchComponents và Usage Transactions
+Mục tiêu: Liên kết nguyên liệu theo lot vào ProductionBatch thông qua BatchComponents và tạo InventoryTransactions để giảm tồn theo lot.
 
 Step-by-step:
-1. Sau khi tạo `batches` với `lotStatus = "Quarantine"`, hệ thống tạo `quality_controls` (status = "Pending"). (bảng `quality_controls`)
-2. QC Technician mở `quality_controls` liên quan tới `batchId`:
-   - Thực hiện test, nhập `testResults` (JSON) gồm các chỉ tiêu (độ ẩm, hàm lượng, cảm quan...). (field `quality_controls.testResults`)
-3. Ra quyết định:
-   - Nếu Pass → cập nhật `quality_controls.status = "Pass"` và cập nhật `batches.lotStatus = "Accepted"`. Hệ thống unlock batch để `inventory_records` của batch có thể được sử dụng cho xuất.
-   - Nếu Fail → cập nhật `quality_controls.status = "Fail"` và `batches.lotStatus = "Rejected"`; tạo phiếu trả hàng/hủy (ghi vào `stock_moves` type=ADJUSTMENT hoặc create return document). (bảng `quality_controls`, `batches`, `stock_moves`)
-   - Nếu Hold → `quality_controls.status = "Hold"`; chờ Manager quyết định.
-4. Ghi `audit_logs` cho mọi quyết định QC.
-
-Truy vết & Certificate:
-- Từ `batchId`, có thể xuất timeline: `batches` → `quality_controls` → `stock_moves` (IN/OUT) → `labels`. (Sử dụng liên kết id để phục vụ COA/traceability.)
-
----
-
-## 3. Quy trình Xuất kho (Sales / Picking / Shipping)
-
-Mục tiêu: Khi có Sales Order, reserve inventory, tạo pick/stock_move OUT, cập nhật `inventory_records`.
-
-Step-by-step:
-1. Sales Order (bảng `sales_orders`) được tạo/chốt; trước khi Confirm cần kiểm tra tồn: hệ thống reserve inventory bằng cách cập nhật `inventory_records.quantityReserved` hoặc tạo reservation record. (bảng `inventory_records`)
-2. Khi bắt đầu picking: tạo `stock_moves` type = "OUT" (fromWarehouseId, toWarehouseId = customer/null) với `stock_move_lines` (productId, quantity, batchId nếu FEFO/lot-based). (bảng `stock_moves`, `stock_move_lines`)
-3. Khi hoàn tất pick/ship: cập nhật `inventory_records.quantityAvailable -= shippedQty`; nếu có `quantityReserved`, giảm tương ứng. (bảng `inventory_records`)
-4. Ghi `audit_logs` cho thao tác confirm/out.
-
-FEFO logic:
-- Chọn batch để xuất theo `batches.expiryDate` (prioritize earliest expiry) và `inventory_records.quantityAvailable` per batch.
+1. Production Planner tạo `ProductionBatch` (batch_code = batch-uuid-001, product_id = PROD-001 (tham chiếu Materials), planned_qty).
+2. Planner hoặc Operator xác định BatchComponents: cho mỗi nguyên liệu dùng cho lô sản xuất, tạo `batch_components` record (production_batch_id = batch-uuid-001, inventory_lot_id = lot-uuid-001, planned_quantity = 2.0 (kg)).
+3. Khi nguyên liệu được thực tế dùng trong sản xuất:
+   - Tạo `InventoryTransaction` type = USAGE/CONSUMPTION: inventory_lot_id = lot-uuid-001, quantity = -2.0, reference_id = production_batch_id, performed_by = operator.
+   - Cập nhật `batch_components.actual_quantity` = 2.0.
+   - Sau confirm, cập nhật `inventory_lots.available_quantity -= 2.0`.
+4. Khi ProductionBatch hoàn tất (status → Complete, produced_qty cập nhật), hệ thống tạo `InventoryLot`(s) cho finished/intermediate goods (ví dụ finished-lot-uuid-001) với liên kết `production_batch_id`.
+5. Sinh nhãn Finished Product:
+   - Chọn `LabelTemplate` label_type = 'Finished Product'.
+   - Render template với batch data (batch_number, product_name, manufacture_date, expiry_date, batch_size, etc.) và tạo `labels` record.
+6. Ghi `audit_logs` cho create batch, consume transactions, create finished lots, label generation.
 
 ---
 
-## 4. Cập nhật/Điều chỉnh tồn kho (Adjustments & Inventory Count)
-
-Mục tiêu: Mọi điều chỉnh phải có chứng từ (`stock_moves` type = "ADJUSTMENT") và lưu audit.
-
-Step-by-step:
-1. Khi phát hiện chênh lệch (từ kiểm kê hoặc phát hiện), tạo `stock_moves` type = "ADJUSTMENT" với `stock_move_lines` chi tiết (productId, batchId, deltaQuantity).
-2. Khi `stock_moves` ADJUSTMENT được Confirm bởi role có quyền, hệ thống cập nhật `inventory_records.quantityAvailable` tương ứng.
-3. Ghi `audit_logs` và nếu cần tạo `reports` (reportType = "inventory_adjustment").
+### 6) Trạng thái thay đổi → Status Label
+- Khi QCTest hoặc manager action thay đổi `inventory_lots.status`, hệ thống có thể tự động sinh một `Status` label (label_type = 'Status') cho InventoryLot để thể hiện Quarantine / Accepted / Rejected.
 
 ---
 
-## 5. Kiểm kê định kỳ (Cycle Count / Full Inventory Count)
-
-Mục tiêu: Thực hiện kiểm kê, so khớp với `inventory_records`, sinh report, và tạo `stock_moves` ADJUSTMENT nếu cần.
-
-Step-by-step:
-1. Manager tạo đợt kiểm kê (tạo `reports` entry type = "inventory_count", `reports.parameters` chứa phạm vi: warehouseId, locationIds, productIds). (bảng `reports`)
-2. Phân công Operator cho từng khu vực (ghi vào nhiệm vụ, liên kết userId → `users.assignedWarehouseIds`).
-3. Operator thực hiện kiểm kê thực tế, nhập số liệu (per `productId` + `batchId` + `locationId`). Hệ thống so sánh với `inventory_records`.
-4. Với mỗi chênh lệch, Manager xét duyệt và tạo `stock_moves` ADJUSTMENT để cập nhật `inventory_records`.
-5. Hoàn tất: `reports.status = "Completed"`, lưu file (PDF/Excel) vào `reports.filePath`. Ghi `audit_logs`.
-
----
-
-## 6. Cảnh báo tồn kho & Hết hạn (Alerts)
-
-- Hệ thống định kỳ kiểm tra `inventory_records.quantityAvailable` và `batches.expiryDate` để tạo `stock_alerts` (alertType: LowStock | NearExpiry | Expired) khi thỏa điều kiện (dựa trên `products.lowStockThreshold` và `batches.expiryDate`).
-- Manager có thể xem `stock_alerts` và tạo action (move, promotion, discard) — mọi action tạo `stock_moves` hoặc `quality_controls` tương ứng.
+## Ví dụ Data Flow (bằng dữ liệu mẫu bạn cung cấp)
+1. Material tạo: MAT-001 (Vitamin D3).
+2. Nhận lot: InventoryLot `lot-uuid-001` cho MAT-001, quantity = 25.5 kg.
+   - Tạo InventoryTransaction (RECEIPT) +25.5 kg liên kết `lot-uuid-001`.
+   - Sinh Label Raw Material dùng LabelTemplate `TPL-RM-01` (label_type = 'Raw Material'). Template được populate các trường: material_name = "Vitamin D3", lot_id = "lot-uuid-001", manufacturer_lot, expiration_date, storage_location, quantity = 25.5 kg.
+3. QC: tạo QCTests (Identity, Potency) cho lot-uuid-001. Khi tất cả pass → set lot-uuid-001.status = Accepted.
+4. Sample: nếu tạo sample từ lot-uuid-001 (is_sample = true) → tạo sample lot, InventoryTransaction SPLIT, và phát sinh Sample label (label_type = 'Sample') chứa parent lot và sample_date.
+5. Production: tạo ProductionBatch `batch-uuid-001` cho product `PROD-001`.
+   - Tạo BatchComponent linking batch-uuid-001 ← lot-uuid-001 với planned_quantity = 2.0 kg.
+   - Khi thực tế dùng 2.0 kg: tạo InventoryTransaction type = USAGE -2.0 kg cho lot-uuid-001, cập nhật batch_components.actual_quantity = 2.0.
+6. Khi batch-uuid-001 chuyển sang status = Complete: tạo Finished Product label (label_type = 'Finished Product') dựa trên LabelTemplate tương ứng, populate các trường batch_number, product_name, manufacture_date, expiration_date, batch_size.
+7. Nếu QC thay đổi lot status (e.g., Rejected) → tạo Status label (label_type = 'Status') phản ánh trạng thái mới trên nhãn.
 
 ---
 
-## 7. Quản lý user & phân quyền
-
-Thao tác:
-1. Tạo user → insert `users` (username, email, passwordHash, roleId, assignedWarehouseIds). Ghi `audit_logs`. (bảng `users`)
-2. Sửa user/phân quyền → update `users.roleId` hoặc `users.assignedWarehouseIds`. Ghi `audit_logs`.
-3. Khóa/mở khóa → update `users.status` hoặc `users.locked` (tùy schema), ghi `audit_logs`.
-
-Quy tắc:
-- Quá trình thay đổi quyền phải có trace (`audit_logs`) và thông báo cho người liên quan (nếu hệ thống hỗ trợ email).
+## Ghi chú thiết kế & nguyên tắc thực thi
+- Single source of truth: mọi thay đổi số lượng lot phải được thể hiện bằng `inventory_transactions` (không update trực tiếp quantity của inventory_lots mà không có transaction).
+- Mỗi `InventoryTransaction` cần lưu performed_by/verified_by để audit.
+- QCTests quyết định trạng thái lot (Accepted/Rejected/On Hold) và điều khiển khả năng sử dụng lot cho Production hoặc xuất.
+- BatchComponents cho phép truy vết nguồn nguyên liệu (by lot) cho từng ProductionBatch.
+- LabelTemplates tách rời dữ liệu và format: template_content có thể là templating string (ví dụ Mustache/Handlebars) sẽ được render với dữ liệu lot/batch.
+- Labels lưu rendered_content & barcode_value để truy xuất lịch sử in nhãn.
 
 ---
 
-## 8. Báo cáo & Truy vết (Reporting & Traceability)
-
-- Các báo cáo chính (inventory, inbound/outbound, QC, supplier performance) lưu thành `reports` với `parameters` và `filePath`.
-- Truy vết lô: từ `batchId` theo dõi `quality_controls`, `stock_moves` (IN/OUT), và `labels` để xuất timeline/COA.
-
-Ví dụ fields để reference:
-- `reports.reportType` = "inventory", "qc", "supplier_performance"
-- `reports.generatedBy` = users.id
-- `reports.parameters` = JSON filter (warehouseId, dateRange)
+## Truy vết (Traceability)
+- Từ Finished Product (production_batch_id hoặc finished inventory_lot) → có thể truy vết ngược: ProductionBatch → BatchComponents → InventoryLots (source lots) → InventoryTransactions và QCTests.
+- Từ một InventoryLot → có thể liệt kê tất cả InventoryTransactions (receipt, usage, split...), QCTests, Labels, và BatchComponents liên quan.
 
 ---
 
-## 9. Nhật ký & Audit (Audit Logs)
-
-- Mọi thao tác quan trọng (tạo/confirm/reject/adjust) phải lưu `audit_logs` (userId, action, entityType, entityId, timestamp, details).
-- IT/Manager có thể tra cứu `audit_logs` theo user/time/action để phục vụ kiểm toán.
-
----
-
-## 10. IT Admin — Sao lưu & Phục hồi (Backups & Restore)
-
-- IT Admin kiểm tra `backups` (id, type, createdAt, status, filePath).
-- Tạo lịch trình backup (table `backups` lưu metadata), kiểm tra `backups.status` (success/failure), và thực hiện restore theo record đã chọn.
-- Ghi `audit_logs` cho mọi restore (restore là hành động nhạy cảm).
+## Audit & Logging
+- Mọi hành động (create/update/confirm/reject/print) cần ghi `audit_logs` với user_id, action, entity_type, entity_id, details, timestamp.
+- Các trường performed_by / added_by / verified_by lưu user id (hoặc username theo config) để thuận tiện cho truy vết.
 
 ---
 
-## Phụ lục: Bảng/Field thường tham chiếu trong workflows
-- `users` (id, username, email, roleId, assignedWarehouseIds)
-- `roles` (id, name, permissions)
-- `products` (id, sku, name, lowStockThreshold)
-- `batches` (id, batchCode, productId, supplierId, quantity, expiryDate, lotStatus)
-- `labels` (id, batchId, productId, barcode, qrCode, receiptDate)
-- `warehouses` (id, code, name)
-- `locations` (id, warehouseId, code)
-- `inventory_records` (id, productId, warehouseId, locationId, batchId, quantityAvailable, quantityReserved)
-- `stock_moves` (id, code, type, fromWarehouseId, toWarehouseId, status, createdBy, createdAt)
-- `stock_move_lines` (id, stockMoveId, productId, quantity, batchId)
-- `quality_controls` (id, batchId, inspectorUserId, testResults, status, notes)
-- `stock_alerts` (id, productId, warehouseId, alertType, threshold, currentQuantity)
-- `reports` (id, reportType, generatedBy, parameters, filePath, status)
-- `audit_logs` (id, userId, action, entityType, entityId, timestamp, details)
-- `backups` (id, type, createdAt, status, filePath, retention)
+## Phụ lục: ví dụ bảng/field (gợi ý)
+- materials (id, material_code, name, unit, default_label_template_id)
+- inventory_lots (id, lot_code, material_id, quantity, available_quantity, is_sample, manufacture_date, expiry_date, status, parent_lot_id)
+- inventory_transactions (id, inventory_lot_id, type, quantity, location_id, reference_id, performed_by, created_at, status)
+- qc_tests (id, inventory_lot_id, test_type, test_results, status, verified_by, verified_at)
+- production_batches (id, batch_code, product_id, planned_qty, produced_qty, status, started_at, finished_at)
+- batch_components (id, production_batch_id, inventory_lot_id, planned_quantity, actual_quantity)
+- label_templates (id, template_code, label_type, template_content, fields)
+- labels (id, template_id, inventory_lot_id, production_batch_id, rendered_content, barcode_value, created_by, created_at)
+- users (id, username, role_id)
+- audit_logs (id, user_id, action, entity_type, entity_id, details, timestamp)
+
+---
+
+## Bảng bị thay đổi — Chi tiết trường đọc / ghi & ví dụ payload
+Phần này mô tả rõ hơn: với mỗi hành động workflow, các bảng nào sẽ được đọc (read) và những bảng/trường nào sẽ được ghi/cập nhật (write/update). Kèm ví dụ JSON payload tối thiểu cho thao tác viết chính.
+
+A. Receive / Create InventoryLot + Receipt Transaction
+- Đọc:
+  - `materials` (id, material_code, name, unit, default_label_template_id)
+  - `label_templates` (id, template_code, label_type)
+- Ghi/Update:
+  - `inventory_lots` (INSERT): { lot_code, material_id, quantity, available_quantity, is_sample, manufacture_date, expiry_date, status, parent_lot_id, created_by }
+  - `inventory_transactions` (INSERT): { inventory_lot_id, type='RECEIPT', quantity, location_id, reference_id (purchase_order_id), performed_by, created_at, status }
+  - `labels` (optional INSERT): { template_id, inventory_lot_id, rendered_content, barcode_value, created_by }
+  - `inventory_lots.available_quantity` (UPDATE) — applied when transaction is confirmed
+- Ví dụ payload (create InventoryLot + Receipt):
+{
+  "lot_code": "lot-uuid-001",
+  "material_id": "MAT-001",
+  "quantity": 25.5,
+  "unit": "kg",
+  "manufacture_date": "2026-01-10",
+  "expiry_date": "2028-01-10",
+  "created_by": "operator1",
+  "receipt_transaction": {
+    "type": "RECEIPT",
+    "quantity": 25.5,
+    "location_id": "WH-01",
+    "reference_id": "PO-12345",
+    "performed_by": "operator1"
+  }
+}
+
+B. Generate Label (Raw Material / Sample / Finished / Status)
+- Đọc:
+  - `label_templates` (template_content, fields)
+  - `inventory_lots` or `production_batches` (fields needed by template)
+- Ghi/Update:
+  - `labels` (INSERT): { template_id, inventory_lot_id?, production_batch_id?, rendered_content, barcode_value, created_by, created_at }
+- Ví dụ payload (generate label for lot):
+{
+  "template_id": "TPL-RM-01",
+  "inventory_lot_id": "lot-uuid-001",
+  "render_data": { "material_name": "Vitamin D3", "lot_code": "lot-uuid-001", "expiry_date": "2028-01-10", "quantity": "25.5 kg" },
+  "created_by": "operator1"
+}
+
+C. Create QCTest / Verify QCTest Result
+- Đọc:
+  - `inventory_lots` (id, status)
+  - `qc_tests` (existing for same lot)
+- Ghi/Update:
+  - `qc_tests` (INSERT): { inventory_lot_id, test_type, test_results(JSON), status='Pending', created_by }
+  - `qc_tests` (UPDATE on verify): { status=('Pass'|'Fail'|'Hold'), test_results, verified_by, verified_at }
+  - `inventory_lots.status` (UPDATE) — set 'Accepted'/'Rejected'/'On Hold' when applicable
+  - optional `inventory_transactions` (INSERT): RETURN/ADJUSTMENT if rejected
+  - optional `labels` (INSERT): Status label
+- Ví dụ payload (submit QCTest result):
+{
+  "inventory_lot_id": "lot-uuid-001",
+  "test_type": "Identity",
+  "test_results": { "method": "HPLC", "result": "Match" },
+  "status": "Pass",
+  "verified_by": "qc_user_1",
+  "verified_at": "2026-01-20T10:30:00Z"
+}
+
+D. Create Sample / Split from InventoryLot
+- Đọc:
+  - `inventory_lots` parent (id, available_quantity)
+- Ghi/Update:
+  - `inventory_lots` (INSERT new sample lot): { lot_code, material_id, quantity, is_sample=true, parent_lot_id, created_by }
+  - `inventory_transactions` (INSERT on parent): { inventory_lot_id=parent, type='SPLIT', quantity = -sample_qty, performed_by }
+  - `inventory_lots.available_quantity` (UPDATE parent) when transaction confirmed
+  - `labels` (INSERT sample label)
+- Ví dụ payload (create sample):
+{
+  "parent_lot_id": "lot-uuid-001",
+  "quantity": 0.1,
+  "is_sample": true,
+  "created_by": "operator1"
+}
+
+E. Create ProductionBatch & BatchComponents (planning)
+- Đọc:
+  - `materials` (product details), `inventory_lots` (available lots)
+- Ghi/Update:
+  - `production_batches` (INSERT): { batch_code, product_id, planned_qty, status, created_by }
+  - `batch_components` (INSERT per component): { production_batch_id, inventory_lot_id, planned_quantity }
+- Ví dụ payload (create batch + components):
+{
+  "batch_code": "batch-uuid-001",
+  "product_id": "PROD-001",
+  "planned_qty": 1000,
+  "components": [ { "inventory_lot_id": "lot-uuid-001", "planned_quantity": 2.0 } ],
+  "created_by": "planner1"
+}
+
+F. Consume InventoryLot for Production (Usage transaction)
+- Đọc:
+  - `inventory_lots` (available_quantity), `batch_components`
+- Ghi/Update:
+  - `inventory_transactions` (INSERT): { inventory_lot_id, type='USAGE', quantity = -x, reference_id=production_batch_id, performed_by }
+  - `batch_components.actual_quantity` (UPDATE)
+  - `inventory_lots.available_quantity` (UPDATE after confirmation)
+- Ví dụ payload (usage):
+{
+  "inventory_lot_id": "lot-uuid-001",
+  "type": "USAGE",
+  "quantity": -2.0,
+  "reference_id": "batch-uuid-001",
+  "performed_by": "operator1"
+}
+
+G. Complete ProductionBatch → Create Finished InventoryLot(s)
+- Đọc:
+  - `production_batches`, `batch_components`
+- Ghi/Update:
+  - `production_batches` (UPDATE): { status='Complete', produced_qty, finished_at }
+  - `inventory_lots` (INSERT finished lot): { lot_code, production_batch_id, material_id=product_id, quantity=produced_qty, status='Available' }
+  - `labels` (INSERT finished product label)
+- Ví dụ payload (complete batch):
+{
+  "production_batch_id": "batch-uuid-001",
+  "produced_qty": 1000,
+  "finished_at": "2026-01-25T14:00:00Z",
+  "completed_by": "supervisor1"
+}
+
+H. Inventory Adjustment / Return
+- Đọc:
+  - `inventory_lots`, `inventory_transactions`
+- Ghi/Update:
+  - `inventory_transactions` (INSERT): { inventory_lot_id, type='ADJUSTMENT'|'RETURN', quantity, reason, performed_by }
+  - `inventory_lots.available_quantity` (UPDATE after approval)
+- Ví dụ payload (adjustment):
+{
+  "inventory_lot_id": "lot-uuid-001",
+  "type": "ADJUSTMENT",
+  "quantity": -1.5,
+  "reason": "count discrepancy",
+  "performed_by": "operator1"
+}
+
+I. Status change triggered by QC or Manager decision
+- Đọc:
+  - `qc_tests`, `inventory_lots`
+- Ghi/Update:
+  - `inventory_lots` (UPDATE): { status = 'Accepted'|'Rejected'|'On Hold', status_reason }
+  - `labels` (optional INSERT): { template_id (Status), inventory_lot_id, rendered_content }
+  - `audit_logs` (INSERT)
+- Ví dụ payload (set status):
+{
+  "inventory_lot_id": "lot-uuid-001",
+  "status": "Accepted",
+  "status_reason": "All QC tests passed",
+  "changed_by": "qc_user_1"
+}
+
+J. User management actions
+- Đọc:
+  - `roles` (if exists)
+- Ghi/Update:
+  - `users` (INSERT/UPDATE): { username, role_id, assigned_warehouses }
+  - `audit_logs`
+- Ví dụ payload (create user):
+{
+  "username": "operator1",
+  "role_id": "Operator",
+  "assigned_warehouses": ["WH-01"]
+}
+
+K. LabelTemplate management (IT/Admin)
+- Đọc: `label_templates`
+- Ghi/Update: `label_templates` (INSERT/UPDATE/DELETE): { template_code, label_type, template_content, fields }
+- Ví dụ payload (create template):
+{
+  "template_code": "TPL-RM-01",
+  "label_type": "Raw Material",
+  "template_content": "{{material_name}} - {{lot_code}} - Exp: {{expiry_date}}",
+  "fields": ["material_name","lot_code","expiry_date"]
+}
+
+L. Reports / Trace queries
+- Đọc: various tables (read-only) — may create `reports` record if persisted.
+- Ví dụ payload (generate report request):
+{
+  "report_type": "inventory_count",
+  "parameters": { "warehouse_id": "WH-01", "date_range": ["2026-01-01","2026-01-31"] },
+  "generated_by": "manager1"
+}
+
+M. Audit logging (central)
+- Ghi/Update:
+  - `audit_logs` (INSERT): { user_id, action, entity_type, entity_id, details, timestamp }
+- Ví dụ payload:
+{
+  "user_id": "operator1",
+  "action": "create_inventory_lot",
+  "entity_type": "inventory_lots",
+  "entity_id": "lot-uuid-001",
+  "details": "receipt PO-12345",
+  "timestamp": "2026-01-20T09:45:00Z"
+}
