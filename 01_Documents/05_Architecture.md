@@ -68,4 +68,205 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 3.  **Traceability:** Khả năng truy xuất nguồn gốc theo từng số Serial hoặc số Lô (Batch number).
 
 ---
-*Tài liệu được biên soạn cho mục đích thiết kế hệ thống IMS hiện đại.*
+
+## 5. Architectural View Model
+### 1. Logical View
+*Logical View này mô tả cấu trúc nghiệp vụ. Khi triển khai trên MongoDB, các quan hệ 1:N chặt chẽ (như Batch và BatchComponents) sẽ được triển khai theo dạng **Embedded Document** để tối ưu tốc độ đọc, các quan hệ lỏng hơn sẽ dùng **Reference***
+
+<img width="922" height="881" alt="image" src="https://github.com/user-attachments/assets/96175130-cc04-4b76-acb5-99f32f627f3e" />
+
+#### Nguyên liệu & Sản phẩm (Materials)
+**Materials** đóng vai trò là thực thể trung tâm của hệ thống:
+* Định nghĩa các nguyên liệu đầu vào (cấp phát cho **InventoryLots**).
+* Định nghĩa thành phẩm đầu ra của các mẻ sản xuất (**ProductionBatches**) thông qua liên kết `product_id`.
+
+#### Quản lý Lô hàng (InventoryLots)
+Lưu trữ thông tin chi tiết giúp kiểm soát vòng đời sản phẩm:
+* Ghi nhận nhà sản xuất, hạn sử dụng và trạng thái kiểm định chất lượng.
+* Sử dụng mối quan hệ tự thân (**self-reference**) qua `parent_lot_id` để hỗ trợ kỹ thuật chia tách lô (lot splitting), đảm bảo tính liên tục của dữ liệu.
+
+#### Truy xuất nguồn gốc (Traceability)
+Mọi biến động về số lượng (tăng/giảm) của từng lô hàng cụ thể đều được ghi lại chi tiết trong **InventoryTransactions**, cho phép kiểm soát lịch sử nhập xuất chính xác 100%.
+
+#### Cầu nối Sản xuất (BatchComponents)
+Đây là thực thể quan trọng nhất trong việc kết nối giữa Kho và Sản xuất:
+* Xác định chính xác mã lô nguyên liệu nào được tiêu thụ cho mẻ sản xuất nào.
+* Đảm bảo tính minh bạch từ nguyên liệu thô đến thành phẩm cuối cùng.
+
+#### Kiểm soát Chất lượng (Quality Control - QC)
+Quy trình đảm bảo tiêu chuẩn sản phẩm thông qua **QCTests**:
+* Lưu trữ các kết quả phân tích định tính và định lượng.
+* Là căn cứ để hệ thống tự động hoặc hỗ trợ người dùng chuyển trạng thái lô hàng từ biệt trữ (**Quarantine**) sang chấp nhận (**Accepted**) hoặc từ chối (**Rejected**).
+
+#### Hệ thống Nhãn (Labeling)
+Sử dụng **LabelTemplates** như một thực thể dùng chung để chuẩn hóa quy trình in ấn:
+* Cung cấp định dạng in ấn chuyên nghiệp cho cả nguyên liệu thô và thành phẩm.
+* Đảm bảo thông tin trên nhãn khớp hoàn toàn với dữ liệu trong hệ thống.
+### 3. Deployment View
+
+<img width="1089" height="995" alt="image" src="https://github.com/user-attachments/assets/59ae026e-99d7-45f1-993a-a2d7de45f13b" />
+
+#### Giao diện Người dùng (User's Device)
+Hệ thống hỗ trợ đa nền tảng bao gồm **React Web** và **Mobile App**. Tất cả các kết nối từ thiết bị người dùng đến hệ thống đều được thực hiện qua giao thức **HTTPS** để đảm bảo tính bảo mật và mã hóa dữ liệu.
+
+#### Kubernetes Cluster (K8s)
+* **Ingress Controller:** Đóng vai trò là điểm tiếp nhận duy nhất, thực hiện điều hướng (Routing) để phân biệt yêu cầu truy cập giao diện (Frontend) hay dữ liệu (Backend API).
+* **IMS Pod (Monolith):** Mã nguồn NestJS chạy tập trung trong các Pods. Có khả năng nhân bản (Scaling) linh hoạt trên K8s để xử lý tải khi cần thiết.
+
+#### Bảo mật (Security - Okta)
+Backend thực hiện xác thực và định danh người dùng thông qua kết nối trực tiếp với dịch vụ **Okta** bên ngoài cụm K8s, đảm bảo an toàn truy cập.
+
+#### Tầng Dữ liệu (Data Tier)
+Được triển khai trên các Nodes chuyên dụng nhằm tối ưu hiệu suất lưu trữ:
+* **MongoDB:** Lưu trữ dữ liệu chính của hệ thống.
+* **Redis:** Xử lý Caching và cơ chế **Locking tồn kho** với tốc độ cực nhanh, tránh xung đột dữ liệu.
+
+#### Tầng Giám sát (Observability Tier)
+* **ELK Stack:** Thu thập và lưu trữ Logs từ Backend, hỗ trợ IT Admin truy vết lỗi và kiểm soát vận hành.
+* **Prometheus & Grafana:** Thu thập số liệu (Metrics) từ phần cứng và ứng dụng, cung cấp cái nhìn trực quan về sức khỏe hệ thống theo thời gian thực.
+  
+### 4. Process View
+
+<img width="1727" height="1025" alt="image" src="https://github.com/user-attachments/assets/5ef84afb-f075-44d6-aea1-5c4ca88a2a72" />
+
+
+#### Logic So sánh Tự động
+Tại bước xử lý dữ liệu, **Business Logic của NestJS** thực hiện đối soát tự động:
+* So sánh các giá trị thực tế nhập vào với ngưỡng thông số cho phép được cấu hình trong Database.
+* Hệ thống tự động phản hồi tín hiệu trực quan, thực hiện **bôi đỏ trên giao diện** nếu dữ liệu nằm ngoài ngưỡng an toàn, giúp nhân viên nhận diện sai sót tức thì.
+
+#### Cập nhật Trạng thái Tức thời
+Ngay khi quy trình QC hoàn thành đánh giá:
+* Trạng thái lô hàng được cập nhật đồng bộ ngay lập tức trên hệ thống.
+* Cho phép nhân viên vận hành (**Operator**) thực hiện lệnh cất hàng (**Put-away**) ngay khi đạt chuẩn, hoặc hệ thống sẽ tự động chặn hoàn toàn nếu hàng bị đánh giá lỗi.
+
+#### Cơ chế Khóa Cứng (Hard-locking)
+Để đảm bảo an toàn tuyệt đối cho chuỗi cung ứng, hệ thống sử dụng **Redis** để quản lý trạng thái khóa:
+* Khi một lô hàng bị trạng thái **Rejected**, cơ chế Hard-locking sẽ được kích hoạt.
+* Hệ thống sẽ chặn mọi lệnh lấy hàng (**Picking**) hoặc điều chuyển (**Transfer**) liên quan đến lô hàng đó, loại bỏ rủi ro xuất nhầm hàng lỗi.
+
+#### Tính Minh bạch & Truy xuất (Traceability)
+Hệ thống đảm bảo khả năng giám sát toàn diện thông qua luồng dữ liệu thời gian thực:
+* Mọi sự kiện thay đổi chất lượng đều được đẩy qua **Kafka** để lưu trữ vào nhật ký truy xuất nguồn gốc.
+* Tính năng này giúp IT và Quản lý có thể truy xuất lại toàn bộ "vòng đời chất lượng" của một lô hàng bất kỳ trong thời gian **dưới 3 giây**.
+
+---
+
+## 6. Security
+
+---
+
+## 7. Database Schema
+Hệ thống sử dụng **MongoDB**. Dữ liệu được tổ chức thành các **Collections**. Các quan hệ được quản lý thông qua **References** (tương tự Foreign Keys) để đảm bảo tính toàn vẹn cho hệ thống quản lý kho phức tạp.
+
+### Users Collection
+Lưu trữ thông tin người dùng và phân quyền.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `_id` | String/UUID | PK, NOT NULL | ID duy nhất |
+| `username` | String | NOT NULL, UNIQUE | Tên đăng nhập |
+| `email` | String | NOT NULL, UNIQUE | Email người dùng |
+| `password` | String | NOT NULL | Hash Bcrypt |
+| `role` | String (Enum) | NOT NULL | Admin, InventoryManager, QualityControl, Production, Viewer |
+| `is_active` | Boolean | Default: true | Trạng thái tài khoản |
+| `last_login` | Date | Nullable | Lần đăng nhập cuối |
+| `created_at` | Date | Default: NOW | Ngày tạo |
+
+### Materials Collection
+Dữ liệu gốc về vật tư, nguyên liệu và sản phẩm.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `material_id` | String | PK, NOT NULL | Mã vật tư nội bộ |
+| `part_number` | String | NOT NULL, UNIQUE | Mã Part Number (VD: PART-12345) |
+| `material_name` | String | NOT NULL | Tên hiển thị |
+| `material_type` | String (Enum) | NOT NULL | API, Excipient, Container, v.v. |
+| `storage_conditions` | String | Nullable | Điều kiện bảo quản |
+| `spec_doc` | String | Nullable | Tham chiếu tài liệu kỹ thuật |
+
+### InventoryLots Collection
+Chi tiết từng lô hàng nhập kho hoặc lô sản xuất.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `lot_id` | String/UUID | PK, NOT NULL | ID lô hàng |
+| `material_id` | String | Ref: Materials | Liên kết với vật tư |
+| `mfr_name` | String | NOT NULL | Tên nhà sản xuất |
+| `mfr_lot` | String | NOT NULL | Số lô của nhà sản xuất |
+| `status` | String (Enum) | NOT NULL | Quarantine, Accepted, Rejected, Depleted |
+| `quantity` | Decimal128 | NOT NULL | Số lượng hiện tại |
+| `uom` | String | NOT NULL | Đơn vị tính (kg, L, each) |
+| `expiration_date` | Date | NOT NULL | Ngày hết hạn |
+| `parent_lot_id` | String | Ref: InventoryLots | ID lô gốc (nếu là lô tách) |
+| `is_sample` | Boolean | Default: false | Đánh dấu hàng mẫu |
+
+### InventoryTransactions Collection
+Lịch sử biến động của từng lô hàng.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `transaction_id` | String/UUID | PK, NOT NULL | ID giao dịch |
+| `lot_id` | String | Ref: InventoryLots | Lô hàng bị tác động |
+| `type` | String (Enum) | NOT NULL | Receipt, Usage, Split, Transfer, Adjustment |
+| `quantity` | Decimal128 | NOT NULL | Lượng thay đổi (+/-) |
+| `performed_by` | String | NOT NULL | Người/Hệ thống thực hiện |
+| `transaction_date`| Date | Default: NOW | Thời điểm thực hiện |
+
+### ProductionBatches Collection
+Thông tin các mẻ sản xuất thành phẩm.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `batch_id` | String/UUID | PK, NOT NULL | ID mẻ sản xuất |
+| `product_id` | String | Ref: Materials | Sản phẩm đầu ra |
+| `batch_number` | String | UNIQUE, NOT NULL | Số hiệu mẻ (Human-readable) |
+| `batch_size` | Decimal128 | NOT NULL | Quy mô mẻ |
+| `status` | String (Enum) | NOT NULL | Planned, In Progress, Complete, Rejected |
+| `manufacture_date`| Date | NOT NULL | Ngày sản xuất |
+
+### BatchComponents Collection
+Liên kết mẻ sản xuất với các lô nguyên liệu đầu vào.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `component_id` | String/UUID | PK, NOT NULL | ID thành phần |
+| `batch_id` | String | Ref: ProductionBatches| Thuộc mẻ sản xuất nào |
+| `lot_id` | String | Ref: InventoryLots | Lô nguyên liệu sử dụng |
+| `planned_qty` | Decimal128 | NOT NULL | Số lượng dự định |
+| `actual_qty` | Decimal128 | Nullable | Số lượng thực tế sử dụng |
+
+### QCTests Collection
+Kết quả kiểm định chất lượng cho lô hàng.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `test_id` | String/UUID | PK, NOT NULL | ID bài kiểm tra |
+| `lot_id` | String | Ref: InventoryLots | Lô hàng được kiểm tra |
+| `test_type` | String (Enum) | NOT NULL | Identity, Potency, Microbial, v.v. |
+| `test_result` | String | NOT NULL | Kết quả thực tế |
+| `result_status` | String (Enum) | Pass, Fail, Pending | Trạng thái đánh giá |
+| `verified_by` | String | Nullable | Người phê duyệt kết quả |
+
+### LabelTemplates Collection
+Mẫu nhãn dùng để in ấn.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `template_id` | String | PK, NOT NULL | ID mẫu |
+| `label_type` | String (Enum) | NOT NULL | Raw Material, Sample, Finished Product, API, Status |
+| `content` | Text | NOT NULL | Markup cấu trúc nhãn (Placeholders) |
+| `width` / `height` | Decimal | NOT NULL | Kích thước nhãn (inches) |
+
+### Entity Relationship Overview
+* **Materials (1) ── (N) InventoryLots:** Một loại vật tư có thể có nhiều lô nhập về.
+* **InventoryLots (1) ── (N) InventoryTransactions:** Một lô hàng có nhiều biến động kho.
+* **InventoryLots (1) ── (N) QCTests:** Một lô hàng có thể trải qua nhiều bài kiểm tra QC.
+* **ProductionBatches (1) ── (N) BatchComponents:** Một mẻ sản xuất tiêu thụ nhiều nguyên liệu (từ các lô hàng khác nhau).
+* **LabelTemplates (Used by):** InventoryLots & ProductionBatches dựa trên `label_type`.
+
+### Example Data Flow
+1. **Tiếp nhận:** Material `MAT-001` được nhập -> Tạo `InventoryLot` (lot-uuid-001) -> Ghi `InventoryTransaction` (Receipt).
+2. **Dán nhãn:** Hệ thống lấy `LabelTemplate` (TPL-RM-01) -> Điền dữ liệu lô hàng -> In nhãn vật tư.
+3. **Kiểm định:** Tạo `QCTest` cho lô hàng -> Trạng thái lô chuyển từ `Quarantine` sang `Accepted`.
+4. **Sản xuất:** Tạo `ProductionBatch` -> `BatchComponent` liên kết lô nguyên liệu -> Trừ kho tự động thông qua `InventoryTransaction` (Usage).
