@@ -76,9 +76,16 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
     - Tạo các Role và User mẫu trên Keycloak để kiểm thử.
 
 2. **Tích hợp Keycloak vào Frontend (ReactJS)**
-    - Cài đặt thư viện hỗ trợ Keycloak cho React (ví dụ: `keycloak-js`, `@react-keycloak/web`).
+    - Cài đặt thư viện hỗ trợ Keycloak cho React (ví dụ: `@react-keycloak/web`).
     - Khởi tạo Keycloak instance trong ứng dụng React, cấu hình với thông tin Realm, Client ID, URL Keycloak.
-    - Thực hiện luồng đăng ký/đăng nhập bằng giao diện Keycloak (redirect hoặc popup).
+    - Thực hiện luồng đăng ký/đăng nhập bằng giao diện Keycloak (redirect hoặc popup):
+        - Khi người dùng nhấn nút "Đăng nhập" trên giao diện ReactJS, ứng dụng sẽ gọi hàm keycloak.login() (nếu dùng @react-keycloak/web).
+        - Trình duyệt sẽ được chuyển hướng (redirect) sang trang đăng nhập của Keycloak.
+        - Người dùng nhập tên đăng nhập và mật khẩu trên giao diện Keycloak.
+        - Sau khi xác thực thành công, Keycloak sẽ chuyển hướng lại về ứng dụng ReactJS (theo redirect URI đã cấu hình), kèm theo mã xác thực (authorization code hoặc token).
+        - Ứng dụng ReactJS nhận Access Token (JWT) từ Keycloak, lưu vào localStorage/sessionStorage hoặc state quản lý phiên.
+        - Nếu người dùng chưa có tài khoản, có thể nhấn "Đăng ký" trên giao diện Keycloak để tạo tài khoản mới (nếu bật self-registration).
+        - Sau khi đăng nhập, ứng dụng ReactJS có thể lấy thông tin user (profile) từ token hoặc gọi API userinfo của Keycloak nếu cần.
     - Sau khi đăng nhập thành công, nhận Access Token (JWT) từ Keycloak và lưu vào localStorage/sessionStorage.
     - Gửi Access Token này kèm theo mỗi request API đến backend.
 
