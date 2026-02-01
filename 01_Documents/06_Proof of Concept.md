@@ -76,27 +76,27 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
     - Tạo các Role và User mẫu trên Keycloak để kiểm thử.
 
 2. **Tích hợp Keycloak vào Frontend (ReactJS)**
-   - Cài đặt thư viện hỗ trợ Keycloak cho React (ví dụ: `keycloak-js`, `@react-keycloak/web`).
-   - Khởi tạo Keycloak instance trong ứng dụng React, cấu hình với thông tin Realm, Client ID, URL Keycloak.
-   - Thực hiện luồng đăng ký/đăng nhập bằng giao diện Keycloak (redirect hoặc popup).
-   - Sau khi đăng nhập thành công, nhận Access Token (JWT) từ Keycloak và lưu vào localStorage/sessionStorage.
-   - Gửi Access Token này kèm theo mỗi request API đến backend.
+    - Cài đặt thư viện hỗ trợ Keycloak cho React (ví dụ: `keycloak-js`, `@react-keycloak/web`).
+    - Khởi tạo Keycloak instance trong ứng dụng React, cấu hình với thông tin Realm, Client ID, URL Keycloak.
+    - Thực hiện luồng đăng ký/đăng nhập bằng giao diện Keycloak (redirect hoặc popup).
+    - Sau khi đăng nhập thành công, nhận Access Token (JWT) từ Keycloak và lưu vào localStorage/sessionStorage.
+    - Gửi Access Token này kèm theo mỗi request API đến backend.
 
 3. **Tích hợp xác thực Keycloak vào Backend (NestJS)**
-   - Cài đặt các package hỗ trợ xác thực JWT/OAuth2 (ví dụ: `@nestjs/passport`, `passport-keycloak-oauth2`, `passport-jwt`).
-   - Cấu hình middleware/guard để kiểm tra và xác thực Access Token từ client gửi lên.
-   - Giải mã và xác thực token với public key của Keycloak (hoặc introspect token nếu cần).
-   - Lấy thông tin user từ token (sub, email, roles, ...) để xử lý logic nghiệp vụ.
+    - Cài đặt các package hỗ trợ xác thực JWT/OAuth2 (ví dụ: `@nestjs/passport`, `passport-keycloak-oauth2`, `passport-jwt`).
+    - Cấu hình middleware/guard để kiểm tra và xác thực Access Token từ client gửi lên.
+    - Giải mã và xác thực token với public key của Keycloak (hoặc introspect token nếu cần).
+    - Lấy thông tin user từ token (sub, email, roles, ...) để xử lý logic nghiệp vụ.
 
 4. **Kết nối Backend với MongoDB**
-   - Cài đặt và cấu hình kết nối MongoDB trong NestJS (dùng `@nestjs/mongoose`).
-   - Khi người dùng đăng nhập lần đầu, backend có thể tạo bản ghi user profile mở rộng (không lưu password) vào MongoDB nếu chưa có.
-   - Các thông tin mở rộng (profile, quyền hạn, dữ liệu nghiệp vụ) sẽ lưu ở MongoDB, còn xác thực vẫn do Keycloak quản lý.
+    - Cài đặt và cấu hình kết nối MongoDB trong NestJS (dùng `@nestjs/mongoose`).
+    - Khi người dùng đăng nhập lần đầu, backend có thể tạo bản ghi user profile mở rộng (không lưu password) vào MongoDB nếu chưa có.
+    - Các thông tin mở rộng (profile, quyền hạn, dữ liệu nghiệp vụ) sẽ lưu ở MongoDB, còn xác thực vẫn do Keycloak quản lý.
 
 5. **Kiểm thử luồng đăng ký/đăng nhập**
-   - Đăng ký user mới qua giao diện Keycloak hoặc API (nếu mở chức năng self-registration).
-   - Đăng nhập từ frontend, kiểm tra nhận token và truy cập các API backend thành công khi có token hợp lệ.
-   - Kiểm tra các trường hợp token hết hạn, không hợp lệ, hoặc user không đủ quyền truy cập.
+    - Đăng ký user mới qua giao diện Keycloak hoặc API (nếu mở chức năng self-registration).
+    - Đăng nhập từ frontend, kiểm tra nhận token và truy cập các API backend thành công khi có token hợp lệ.
+    - Kiểm tra các trường hợp token hết hạn, không hợp lệ, hoặc user không đủ quyền truy cập.
 
 ## 6. Kết quả thu được
 ### 6.1. Kết quả đạt được
