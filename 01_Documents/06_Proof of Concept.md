@@ -67,7 +67,27 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
 ### 5.2. Các bước thực hiện chi tiết
 
 1. **Cài đặt và cấu hình Keycloak**
-    - Cài đặt Keycloak server (có thể dùng Docker hoặc bản cài đặt chính thức).
+        - Cài đặt Keycloak server (có thể dùng Docker hoặc bản cài đặt chính thức).
+      
+            **Hướng dẫn cài đặt Keycloak bằng Docker Compose:**
+            1. Tạo file `docker-compose.yml` với nội dung:
+                 ```yaml
+                 version: '3'
+                 services:
+                     keycloak:
+                         image: quay.io/keycloak/keycloak:latest
+                         ports:
+                             - "8080:8080"
+                         environment:
+                             KEYCLOAK_ADMIN: admin
+                             KEYCLOAK_ADMIN_PASSWORD: admin
+                         command: start-dev
+                 ```
+            2. Chạy lệnh sau trong thư mục chứa file `docker-compose.yml`:
+                 ```sh
+                 docker compose up -d
+                 ```
+            3. Truy cập Keycloak tại địa chỉ http://localhost:8080 với tài khoản admin/admin.
     - Tạo Realm mới cho hệ thống Inventory Management. **Realm** là một không gian quản lý độc lập trong Keycloak, nơi bạn có thể định nghĩa các user, role, client, v.v. Realm giúp tách biệt các hệ thống hoặc môi trường xác thực khác nhau trên cùng một Keycloak server.
     - Tạo Client cho frontend (ReactJS) với loại Public, cấu hình redirect URI phù hợp.
         - Loại "Public" phù hợp cho ứng dụng chạy phía trình duyệt như ReactJS, vì không cần bảo mật client secret.
