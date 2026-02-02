@@ -9,8 +9,11 @@ export class RolesGuard implements CanActivate {
 
   // Hàm kiểm tra xem request hiện tại có được phép thực hiện hay không
   canActivate(context: ExecutionContext): boolean {
-    // Lấy danh sách các vai trò yêu cầu từ metadata của handler (decorator @Roles)
-    const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler())
+    // Lấy danh sách các vai trò yêu cầu từ metadata (ưu tiên handler, nếu không có thì lấy ở class)
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ])
     // Nếu không có yêu cầu vai trò nào, cho phép truy cập
     if (!requiredRoles) return true
 
