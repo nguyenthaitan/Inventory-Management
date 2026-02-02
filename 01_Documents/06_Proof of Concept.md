@@ -77,7 +77,7 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
                      keycloak:
                          image: quay.io/keycloak/keycloak:latest
                          ports:
-                             - "8080:8080"
+                             - "8081:8080"
                          environment:
                              KEYCLOAK_ADMIN: admin
                              KEYCLOAK_ADMIN_PASSWORD: admin
@@ -87,13 +87,29 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
                  ```sh
                  docker compose up -d
                  ```
-            3. Truy cập Keycloak tại địa chỉ http://localhost:8080 với tài khoản admin/admin.
+            3. Truy cập Keycloak tại địa chỉ http://localhost:8081 với tài khoản admin/admin.
     - Tạo Realm mới cho hệ thống Inventory Management. **Realm** là một không gian quản lý độc lập trong Keycloak, nơi bạn có thể định nghĩa các user, role, client, v.v. Realm giúp tách biệt các hệ thống hoặc môi trường xác thực khác nhau trên cùng một Keycloak server.
+        **Các bước tạo Realm mới:**
+        1. Đăng nhập vào giao diện quản trị Keycloak tại http://localhost:8081 bằng tài khoản admin.
+        2. Ở menu bên trái, chọn **Realms** → nhấn nút **Add realm** (hoặc **Create realm**).
+        3. Nhập tên Realm, ví dụ: `inventory-management`.
+        4. Nhấn **Create** để tạo Realm mới.
+        5. Sau khi tạo xong, đảm bảo bạn đang ở trong Realm vừa tạo (góc trên bên trái giao diện sẽ hiển thị tên Realm).
     - Tạo Client cho frontend (ReactJS) với loại Public, cấu hình redirect URI phù hợp.
+        **Các bước tạo Client mới:**
+        1. Chọn "Clients" trong menu bên trái.
+        2. Nhấn nút "Create" để tạo Client mới.
+        3. Nhập Client ID, ví dụ: `inventory-frontend`.
+        4. Nhấn "Next".
+        5. Nhấn "Next".
+        6. Nhập vào "Valid Redirect URIs", ở đây là: `http://localhost:4000/*` (địa chỉ ứng dụng ReactJS).
+        7. Tắt Client authentication(bởi vì là Public client).
+        8. Nhấn "Save" để hoàn tất tạo Client.
         - Loại "Public" phù hợp cho ứng dụng chạy phía trình duyệt như ReactJS, vì không cần bảo mật client secret.
         - Cấu hình "redirect URI" phù hợp: Là địa chỉ mà Keycloak sẽ chuyển hướng người dùng về sau khi đăng nhập thành công. Thường là URL của ửng dụng ReactJS.   
     - Tạo Client cho backend (NestJS) với loại Confidential (nếu cần xác thực backend với Keycloak).
-    - Tạo các Role và User mẫu trên Keycloak để kiểm thử.
+        - Làm tương tự như tạo Client cho frontend, nhưng bật Client authentication(vì là Confidential client).
+    - Tạo các Role và User mẫu trên Keycloak để kiểm thử. Tham khảo cách tạo Role và User mẫu tại [GeeksforGeeks: Keycloak - Create Realm, Client, Roles and User](https://www.geeksforgeeks.org/java/keycloak-create-realm-client-roles-and-user/)
 
 2. **Tích hợp Keycloak vào Frontend (ReactJS)**
     - Cài đặt thư viện hỗ trợ Keycloak cho React (ví dụ: `@react-keycloak/web`).
