@@ -173,6 +173,112 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
 4. **Tích hợp xác thực Keycloak vào Backend (NestJS)**
     - Cài đặt các package hỗ trợ xác thực JWT/OAuth2 (ví dụ: `@nestjs/passport`, `passport-keycloak-oauth2`, `passport-jwt`).
     - Cấu hình middleware/guard để kiểm tra và xác thực Access Token từ client gửi lên.
+      **Cụ thể hóa quy trình xác thực Access Token trong Guard (NestJS):**
+
+      1. Cài đặt các package cần thiết:
+         ```sh
+         npm install @nestjs/passport passport passport-jwt jwks-rsa jsonwebtoken
+         ```
+
+      2. Lấy JWKS URI của Keycloak (từ OpenID config):
+         - URL: `http://<KEYCLOAK_HOST>/realms/<REALM>/.well-known/openid-configuration`
+         - Trường `jwks_uri` trong file cấu hình chứa endpoint public keys (ví dụ `.../protocol/openid-connect/certs`): http://localhost:8081/realms/inventory-management/protocol/openid-connect/certs.
+
+      3. Phương án A (khuyến nghị): dùng Passport + passport-jwt + jwks-rsa
+         - Tạo `JwtStrategy` kế thừa `PassportStrategy(Strategy)`:
+
+         ```ts
+         // auth/jwt.strategy.ts
+         import { Injectable } from '@nestjs/common'
+         import { PassportStrategy } from '@nestjs/passport'
+         import { Strategy, ExtractJwt } from 'passport-jwt'
+         import * as jwksRsa from 'jwks-rsa'
+
+         @Injectable()
+         export class JwtStrategy extends PassportStrategy(Strategy) {
+           constructor() {
+             super({
+               jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+               // Lấy public key từ JWKS của Keycloak
+               secretOrKeyProvider: jwksRsa.passportJwtSecret({
+                 jwksUri: 'http://localhost:8081/realms/inventory-management/protocol/openid-connect/certs',
+                 cache: true,
+                 rateLimit: true,
+               }),
+               algorithms: ['RS256'],
+             })
+           }
+
+           async validate(payload: any) {
+             // trả về payload để gán vào req.user
+             return payload
+           }
+         }
+         ```
+
+         - Đăng ký strategy trong `AuthModule`, và dùng `@UseGuards(AuthGuard('jwt'))` cho controller/route hoặc cấu hình global guard.
+
+      4. Phương án B: Tự viết Guard (nếu muốn kiểm soát chi tiết hơn)
+         - Ý tưởng: lấy token từ header `Authorization: Bearer ...`, xác thực với JWKS bằng `jwks-rsa` + `jsonwebtoken`.
+
+         ```ts
+         // auth/keycloak.guard.ts
+         import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
+         import * as jwksClient from 'jwks-rsa'
+         import * as jwt from 'jsonwebtoken'
+
+         @Injectable()
+         export class KeycloakGuard implements CanActivate {
+           private jwks = jwksClient({ jwksUri: 'http://localhost:8081/realms/inventory-management/protocol/openid-connect/certs' })
+
+           async canActivate(context: ExecutionContext): Promise<boolean> {
+             const req = context.switchToHttp().getRequest()
+             const auth = req.headers.authorization?.split(' ')[1]
+             if (!auth) throw new UnauthorizedException('Missing token')
+
+             try {
+               const decoded = await new Promise((resolve, reject) => {
+                 jwt.verify(auth, (header, callback) => {
+                   this.jwks.getSigningKey(header.kid)
+                     .then(key => callback(null, key.getPublicKey()))
+                     .catch(err => callback(err))
+                 }, { algorithms: ['RS256'] }, (err, decoded) => {
+                   if (err) reject(err)
+                   else resolve(decoded)
+                 })
+               })
+
+               // gán user info cho request
+               req.user = decoded
+               return true
+             } catch (err) {
+               throw new UnauthorizedException('Invalid token')
+             }
+           }
+         }
+         ```
+
+      5. Kiểm tra quyền (roles)
+         - Role có thể nằm trong `realm_access.roles` hoặc `resource_access[<client>].roles` trong payload token.
+         - Viết thêm `RolesGuard` để kiểm tra `req.user` có role cần thiết hay không.
+
+      6. Phương án thay thế: Token Introspection
+         - Nếu muốn server kiểm tra token trực tiếp bằng introspect endpoint (dùng client credentials):
+           POST `http://<KEYCLOAK_HOST>/realms/<REALM>/protocol/openid-connect/token/introspect` với `client_id` + `client_secret`.
+         - Introspection trả về `active: true/false` và thông tin token nếu còn hợp lệ.
+
+      7. Lưu ý bảo mật & vận hành:
+         - Cache JWKS keys để tránh tải quá nhiều request.
+         - Bắt lỗi rõ ràng khi refresh/introspection thất bại và yêu cầu user đăng nhập lại.
+         - Xác thực signature (RS256) thay vì chỉ decode payload.
+
+      Ví dụ áp dụng guard cho controller:
+      ```ts
+      @Controller('items')
+      @UseGuards(AuthGuard('jwt'))
+      export class ItemsController { ... }
+      ```
+
     - Giải mã và xác thực token với public key của Keycloak (hoặc introspect token nếu cần).
     - Lấy thông tin user từ token (sub, email, roles, ...) để xử lý logic nghiệp vụ.
 
