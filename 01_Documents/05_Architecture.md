@@ -152,7 +152,42 @@ Hệ thống đảm bảo khả năng giám sát toàn diện thông qua luồng
 
 ---
 
-## 6. Security
+# 6. Security - Keycloak Integration
+
+Hệ thống Inventory Management System (IMS) sử dụng **Keycloak** làm nền tảng quản trị định danh và truy cập (IAM) tập trung, tuân thủ các tiêu chuẩn bảo mật **OpenID Connect (OIDC)** và **OAuth 2.0**.
+
+### 6.1 Thành phần bảo mật
+* **Keycloak Identity Provider (IdP):** Quản lý tập trung Realm, Clients, Roles và Users. Lưu trữ thông tin định danh và thực hiện cấp phát Token.
+* **React Frontend (Client):** Sử dụng thư viện `keycloak-js`. Chịu trách nhiệm chuyển hướng đăng nhập, quản lý Access Token và Refresh Token trong phiên làm việc của người dùng.
+* **NestJS Backend (Resource Server):** Sử dụng `nest-keycloak-connect` để xác thực chữ ký JWT từ Keycloak và thực thi phân quyền ở mức API (Method-level Security).
+
+### 6.2 Luồng xác thực & Ủy quyền
+1.  **Authentication (PKCE Flow):** Người dùng đăng nhập qua giao diện tập trung của Keycloak. Sau khi thành công, React nhận về **Access Token (JWT)** chứa thông tin định danh và vai trò (Roles).
+2.  **API Authorization:** Mọi yêu cầu từ Frontend tới Backend phải đính kèm Token trong Header `Authorization: Bearer <Token>`.
+3.  **2FA (Xác thực 2 lớp):** Bắt buộc đối với vai trò **IT Administrator** khi thực hiện các tác vụ nhạy cảm như *Phục hồi dữ liệu (US05)* thông qua cấu hình Authentication Policies trên Keycloak.
+
+### 6.3 Phân quyền dựa trên vai trò (RBAC)
+Hệ thống định nghĩa 4 vai trò chính với các quyền hạn đặc thù dựa trên User Stories:
+
+| Vai trò (Role) | Phạm vi quyền hạn (Permissions) | Ghi chú nghiệp vụ |
+| :--- | :--- | :--- |
+| **Manager** | Tra cứu tập trung, phê duyệt phiếu nhập/xuất, điều chỉnh tồn kho, quản lý người dùng và xem Dashboard. | US01 - US15 (Manager) |
+| **Quality Control** | Đánh giá lô hàng (QC), xử lý hàng Rejected, cách ly hàng hóa (Quarantine), truy xuất nguồn gốc (Traceability). | US01 - US06 (QC) |
+| **Operator** | Tạo phiếu nhập/xuất điện tử, xác thực kiểm đếm thực tế (Blind count), thực hiện kiểm kê tại hiện trường. | US01 - US05 (Operator) |
+| **IT Administrator** | Giám sát sức khỏe hệ thống, quản lý Log tập trung, thiết lập sao lưu và phục hồi dữ liệu (Restore). | US01 - US06 (IT Admin) |
+
+
+### 6.4 Cơ chế bảo vệ đặc thù
+Dựa trên các yêu cầu an ninh từ User Stories, hệ thống triển khai các kỹ thuật sau:
+
+* **Session Termination (Manager US14):** Khi Manager thực hiện khóa tài khoản, hệ thống gọi API `Admin REST` của Keycloak để thu hồi toàn bộ Active Sessions. Đồng thời, NestJS cập nhật Blacklist trong **Redis** để từ chối Access Token hiện tại ngay lập tức.
+* **Audit Trail (Manager US15):** Mọi thao tác (Method, Path, UserID, Payload) được NestJS Interceptor ghi lại và đẩy về **ELK Stack**. Nhật ký này được thiết lập ở chế độ **Read-only** để đảm bảo tính toàn vẹn cho công tác hậu kiểm.
+* **Hard-locking (QC US04):** Khi QC thực hiện lệnh cách ly (Quarantine), trạng thái được ghi vào DB và đồng bộ lên **Redis Cache**. Mọi API liên quan đến `Picking` hoặc `Transfer` sẽ kiểm tra trạng thái này đầu tiên để chặn giao dịch trong < 50ms.
+* **Data Integrity (IT Admin US04):** Các bản sao lưu được bảo vệ bằng mã **Checksum (SHA-256)**. Hệ thống Security kiểm tra mã này trước khi cho phép tiến hành quy trình Restore nhằm đảm bảo dữ liệu không bị thay đổi trái phép.
+
+### 6.5 Quản lý thông tin định danh
+* **Mã hóa:** Thông tin mật khẩu được Keycloak quản lý và băm (hashing) bằng thuật toán **PBKDF2** hoặc **Bcrypt** (tương đương yêu cầu US12).
+* **Linh hoạt quyền hạn:** Manager có thể thay đổi Role của nhân sự trên giao diện quản trị (US13). Keycloak sẽ cập nhật Claims trong Token mới ngay khi người dùng Re-login.
 
 ---
 
