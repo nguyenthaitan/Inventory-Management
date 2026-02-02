@@ -171,9 +171,22 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
     - Gửi Access Token này kèm theo mỗi request API đến backend.
 
 4. **Tích hợp xác thực Keycloak vào Backend (NestJS)**
-    - Cài đặt các package hỗ trợ xác thực JWT/OAuth2 (ví dụ: `@nestjs/passport`, `passport-keycloak-oauth2`, `passport-jwt`).
+    - Cài đặt các package hỗ trợ xác thực JWT/OAuth2 (ví dụ: `@nestjs/passport`, `passport-jwt`, `jwks-rsa`, `jsonwebtoken`).
     - Cấu hình middleware/guard để kiểm tra và xác thực Access Token từ client gửi lên.
       **Cụ thể hóa quy trình xác thực Access Token trong Guard (NestJS):**
+
+      **Trong repository này**: Đã thêm `AuthModule` (thư mục `src/auth`) gồm:
+      - `auth.module.ts` — đăng ký Passport JWT strategy
+      - `jwt.strategy.ts` — lấy public key từ JWKS và xác thực token
+      - `jwt-auth.guard.ts` — guard mở rộng `AuthGuard('jwt')` để bảo vệ route
+      - `roles.guard.ts` — ví dụ kiểm tra role từ token payload
+      - `auth.service.ts` — service placeholder để validate/hoặc tạo profile user
+
+      **Kiểm thử nhanh**:
+      - Chạy backend (`npm run start:dev`).
+      - Gửi request GET tới `http://localhost:<PORT>/profile` kèm header `Authorization: Bearer <access_token>`.
+      - Nếu token hợp lệ, endpoint sẽ trả về payload token (đã được gán vào `req.user`).
+
 
       1. Cài đặt các package cần thiết:
          ```sh
