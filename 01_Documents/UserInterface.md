@@ -162,6 +162,49 @@ Khi chuyển sang tab "Lịch sử hoạt động", màn hình UserManagementHis
 
 Chọn biểu tượng con mắt tại nhật ký hoạt động sẽ mở ra cửa sổ UserHistoryDetail hiển thị hồ sơ chi tiết của một giao dịch cụ thể. Màn hình cung cấp thông tin chuyên sâu về nguồn gốc kết nối (IP/Vị trí), thiết bị sử dụng và nội dung giải trình hệ thống về các tác động dữ liệu thực tế. Đây là công cụ quan trọng giúp Manager đánh giá mức độ tuân thủ, giải trình các sai lệch dữ liệu hoặc truy vết sự cố kỹ thuật từ phía người dùng.
 
+---
+
+### 2.17 Material Management Screen
+
+![Material Management Screen](./Images/Manager/MaterialManagement.png)
+
+Truy cập mục "Quản lý nguyên liệu" dẫn Manager đến giao diện quản trị danh mục vật tư đầu vào với cấu trúc 3 tab: Danh sách, Thêm mới và Yêu cầu. Màn hình hỗ trợ chuẩn hóa thông tin kỹ thuật, định nghĩa điều kiện bảo quản đặc thù và phê duyệt các đề xuất nguyên liệu mới từ bộ phận Operator. Đây là trục dữ liệu gốc đảm bảo mọi vật tư sử dụng trong sản xuất đều được kiểm soát chặt chẽ từ khâu khai báo.
+
+---
+
+### 2.18 Edit Material Screen
+
+![Edit Material Screen](./Images/Manager/EditMaterial.png)
+
+Khi nhấn vào biểu tượng chỉnh sửa tại danh sách nguyên liệu, giao diện modal Edit Material Screen xuất hiện để Manager cập nhật các thông tin kỹ thuật của vật tư. Màn hình cung cấp các trường dữ liệu chi tiết bao gồm tên nguyên liệu, mô tả, phân loại danh mục (Dược chất/Tá dược), đơn vị tính và các điều kiện bảo quản nghiêm ngặt. Thao tác "Cập nhật dữ liệu" giúp ghi nhận các thay đổi vào hệ thống, đảm bảo tính chính xác của dữ liệu gốc phục vụ cho các quy trình nhập kho và sản xuất tiếp theo.
+
+
+---
+
+### 2.19 Create Material Screen
+
+![Create Material Screen](./Images/Manager/CreateMaterial.png)
+
+Khi chuyển sang tab "Thêm mới" tại màn hình quản lý nguyên liệu, giao diện Create Material Screen hiển thị để Manager thực hiện khai báo vật tư mới vào hệ thống. Biểu mẫu yêu cầu cung cấp đầy đủ các thông tin kỹ thuật bao gồm tên nguyên liệu, mô tả chi tiết, phân loại danh mục và đơn vị tính tương ứng. Ngoài ra, người dùng cần thiết lập các điều kiện bảo quản tiêu chuẩn để làm căn cứ kiểm soát chất lượng trong suốt quá trình lưu kho. Thao tác "Lưu nguyên liệu" sẽ cập nhật trực tiếp dữ liệu vào bảng materials trong cơ sở dữ liệu.
+
+---
+
+### 2.20 Require Material Screen
+
+![Require Material Screen](./Images/Manager/RequireMaterial.png)
+
+Khi chuyển sang tab "Yêu cầu" tại màn hình quản lý nguyên liệu, giao diện Require Material Screen hiển thị danh sách các đề xuất khởi tạo vật tư mới được gửi từ bộ phận Operator. Mỗi bản ghi cung cấp thông tin tên nguyên liệu đề xuất và định danh nhân viên thực hiện yêu cầu để Manager thuận tiện thẩm định. Tại đây, người quản lý có thể xem chi tiết nội dung hoặc thực hiện các lệnh "Từ chối" hoặc "Phê duyệt" trực tiếp để chính thức ghi nhận vật tư vào danh mục hoạt động của hệ thống.
+
+---
+
+### 2.21 Detail Require Screen
+
+![Detail Require Screen](./Images/Manager/DetailRequire.png)
+
+Khi chọn biểu tượng con mắt tại danh sách yêu cầu nguyên liệu, hệ thống hiển thị Detail Require Screen dưới dạng cửa sổ modal để Manager xem xét chi tiết nội dung đề xuất. Màn hình trình bày rõ ràng lý do khởi tạo kèm theo các thông số kỹ thuật dự kiến như tên nguyên liệu, mô tả, danh mục và điều kiện bảo quản tiêu chuẩn. Đây là căn cứ quan trọng để người quản lý đánh giá tính hợp lý trước khi đưa ra quyết định phê duyệt chính thức vào danh mục vật tư của hệ thống.
+
+---
+
 ## 3. Operator Screens
 
 ### 3.1 Dashboard
@@ -184,7 +227,7 @@ Khi truy cập mục "Nhập kho" trên thanh điều hướng, màn hình Impor
 
 ![Handling Incoming Goods](./Images/Operator/HandlingIncomingGoods.png)
 
-Bằng cách nhấn vào "Thực hiện nhập kho", hệ thống hiển thị cửa sổ modal HandlingIncomingGoods để nhân viên cập nhật thông tin thực tế khi hàng về. Nhân viên thực hiện nhập số lượng thực nhận và chỉ định vị trí lưu trữ cụ thể theo từng kho hoặc kệ hàng đã được quy định. Thao tác nhấn "Hoàn thành nhập" giúp ghi nhận dữ liệu vào kho và cập nhật trạng thái mới cho chứng từ.
+Khi nhấn vào "Thực hiện nhập kho", hệ thống hiển thị cửa sổ modal Handling Incoming Goods Screen để nhân viên ghi nhận thông tin lô hàng và khởi tạo giao dịch Receipt. Giao diện tối ưu hóa quy trình bằng cách tự động điền thông tin Người thực hiện và Đơn vị tính (UOM) lấy từ dữ liệu gốc. Nhân viên chỉ cần cập nhật các thông số thực tế như số lô sản xuất, hạn sử dụng, số lượng thực nhận và đơn giá kèm vị trí lưu trữ cụ thể. Thao tác "Xác nhận nhập kho" giúp lưu trữ hồ sơ lô hàng và đồng bộ biến động tồn kho trên toàn hệ thống.
 
 ---
 
@@ -192,7 +235,7 @@ Bằng cách nhấn vào "Thực hiện nhập kho", hệ thống hiển thị c
 
 ![Create a Purchase Order](./Images/Operator/CreateAPurchaseOrder.png)
 
-Khi cần khởi tạo một yêu cầu nhập hàng thủ công, nhân viên chọn nút "Tạo phiếu mới" để mở giao diện CreateAPurchaseOrder. Form này yêu cầu nhập các thông tin cơ bản bao gồm mã hóa đơn chứng từ, tên dược phẩm, số lượng dự kiến và đơn vị cung cấp. Đây là bước đầu tiên trong quy trình nhập kho đối với những lô hàng phát sinh ngoài kế hoạch tự động của hệ thống.
+Khi nhấn nút "Tạo phiếu mới", hệ thống hiển thị modal Create A Purchase Order Screen để Operator khởi tạo các lô hàng nhập thủ công. Thay vì nhập tên tự do, nhân viên thực hiện chọn nguyên liệu trực tiếp từ danh mục DB và gán nhãn phân loại (Nguyên liệu thô/Chờ duyệt) để đảm bảo tính nhất quán của dữ liệu. Biểu mẫu yêu cầu cung cấp mã chứng từ kèm số lượng dự kiến, thiết lập tiền đề chính xác cho các bước xử lý nhập kho thực tế tiếp theo.
 
 ---
 
@@ -258,6 +301,73 @@ Mục "Lịch sử" trên navbar dẫn đến HistoryScreen, nơi lưu trữ nh�
 
 Khi chọn biểu tượng mắt tại nhật ký hoạt động, hệ thống hiển thị ActivityDetails cung cấp hồ sơ đầy đủ về một giao dịch cụ thể. Màn hình liệt kê loại giao dịch, mã chứng từ, thời gian ghi nhận và thông tin chi tiết về hàng hóa cùng vị trí lưu kho. Nút "Tải PDF chứng từ" cho phép người dùng trích xuất văn bản giao dịch để lưu trữ hoặc phục vụ công tác kiểm tra khi cần thiết.
 
+---
+
+### 3.13 Material Management
+
+![Material Management](./Images/Operator/MaterialManagement.png)
+
+Khi nhấn vào mục "Quản lý nguyên liệu" trên thanh điều hướng, Operator truy cập giao diện đề xuất vật tư mới gồm hai tab: "Gửi yêu cầu mới" và "Lịch sử yêu cầu". Tại tab mặc định, nhân viên thực hiện khai báo đầy đủ thông tin kỹ thuật như tên nguyên liệu, mô tả, danh mục và đơn vị tính. Operator cần thiết lập điều kiện bảo quản và trình bày rõ "Lý do đề xuất" làm căn cứ cho cấp quản lý thẩm định. Thao tác nhấn nút "Gửi yêu cầu khởi tạo" giúp ghi nhận đề xuất vào hệ thống và chuyển trạng thái chờ phê duyệt.
+
+---
+
+### 3.14 Require History
+
+![Require History](./Images/Operator/RequireHistory.png)
+
+Khi chuyển sang tab "Lịch sử yêu cầu", màn hình Require History Screen hiển thị danh sách các đề xuất nguyên liệu đã gửi kèm trạng thái phê duyệt trực quan (Pending/Approved). Giao diện thực thi nghiêm ngặt logic kiểm soát: Operator chỉ có quyền nhấn "Chỉnh sửa" để cập nhật thông tin đối với các yêu cầu đang ở trạng thái chờ phê duyệt (Pending). Đối với các đề xuất đã được Manager phê duyệt (Approved), hệ thống chỉ cung cấp tùy chọn "Chi tiết" để xem hồ sơ kỹ thuật, nhằm đảm bảo tính toàn vẹn và ngăn chặn các thay đổi ngoài ý muốn đối với dữ liệu vật tư đã chuẩn hóa.
+
+---
+
+### 3.15 Edit Require
+
+![Edit Require](./Images/Operator/EditRequire.png)
+
+Khi nhấn nút "Chỉnh sửa" tại tab Lịch sử yêu cầu (chỉ khả dụng với trạng thái Pending), giao diện modal Edit Require Screen xuất hiện. Màn hình cho phép Operator cập nhật lại toàn bộ thông tin kỹ thuật và lý do đề xuất của nguyên liệu. Thao tác "Cập nhật yêu cầu" giúp ghi nhận các thay đổi mới nhất vào hệ thống để chuẩn bị cho bước phê duyệt chính thức của Manager.
+
+---
+
+### 3.16 Detail Require
+
+![Detail Require](./Images/Operator/DetailRequire.png)
+
+Khi nhấn nút "Chi tiết" tại danh sách các đề xuất đã được phê duyệt, giao diện modal Detail Require Screen hiển thị để Operator xem lại hồ sơ nguyên liệu chính thức. Nhằm đảm bảo tính chuẩn hóa dữ liệu, hệ thống tự động khóa tất cả các trường nhập liệu (chế độ Read-only), không cho phép chỉnh sửa bất kỳ thông tin kỹ thuật nào sau khi Manager đã duyệt. Màn hình cung cấp thông báo xác nhận trạng thái phê duyệt và chỉ cho phép người dùng thực hiện thao tác đóng cửa sổ.
+
+---
+
+### 3.17 Create Product Screen
+
+![Create Product Screen](./Images/Operator/CreateProductScreen.png)
+
+Khi chọn mục "Tạo sản phẩm" trên thanh điều hướng, giao diện Create Product Screen xuất hiện mặc định tại tab "Báo cáo hoàn thành" để Operator khai báo kết quả sản xuất. Màn hình yêu cầu nhập mã lô, chọn thành phẩm và số lượng thu được, kèm theo phần bắt buộc khai báo các Inventory Lot nguyên liệu đã tiêu hao. Thao tác "Xác nhận hoàn tất" giúp khởi tạo lô sản xuất và tự động thực hiện khấu trừ kho nguyên liệu thông qua giao dịch loại usage trên hệ thống.
+
+---
+
+### 3.18 Confirm Create Product Screen
+
+![Confirm Create Product Screen](./Images/Operator/ConfirmCreateProduct.png)
+
+Giao diện modal Confirm Create Product Screen xuất hiện ngay sau khi Operator nhấn hoàn tất báo cáo sản xuất để xác nhận việc khấu trừ nguyên liệu. Màn hình thông báo rõ hành động này sẽ thực hiện trừ tồn kho thực tế của các InventoryLot đã chọn và ghi nhận dữ liệu vào bảng InventoryTransactions với loại giao dịch là 'usage'. Thông tin về Người thực hiện và Ngày giao dịch được hiển thị chi tiết để đảm bảo tính truy vết trước khi nhấn nút "Xác nhận & Khấu trừ" để chính thức cập nhật dữ liệu kho.
+
+---
+
+### 3.19 List Product Screeen
+
+![List Product Screen](./Images/Operator/ListProduct.png)
+
+Khi chuyển sang tab "Lô thành phẩm (QC)" tại màn hình quản lý thành phẩm, giao diện List Product Screen hiển thị danh sách các lô hàng đã hoàn tất sản xuất và đạt trạng thái kiểm định chất lượng. Bảng dữ liệu cung cấp thông tin chi tiết về mã lô (Batch ID), số lượng thực tế thu được và nhãn trạng thái "PASSED" từ bộ phận QC. Tại đây, Operator có thể thực hiện "Khai báo InventoryLot" để chính thức nhập lô hàng vào kho lưu trữ hoặc chọn biểu tượng in để tạo nhãn dán truy vết cho sản phẩm.
+
+---
+
+### 3.20 Create Lot Screen
+
+![Create Lot Screen](./Images/Operator/CreateLot.png)
+
+Khi nhấn nút "Khai báo InventoryLot" tại danh sách thành phẩm, giao diện modal Create Lot Screen xuất hiện để Operator khởi tạo bản ghi tồn kho chính thức cho sản phẩm. Màn hình yêu cầu nhập mã lô kho (Lot ID), chỉ định vị trí lưu trữ thực tế và lựa chọn loại nhãn dán sản phẩm phù hợp. Trạng thái kho được hệ thống tự động thiết lập là "RELEASED" dựa trên kết quả kiểm định QC trước đó để sẵn sàng cho các giao dịch xuất kho. Thao tác "Lưu InventoryLot & Nhập kho" hoàn tất việc đưa dữ liệu thành phẩm vào bảng InventoryLots để chính thức bắt đầu quản lý vòng đời hàng hóa.
+
+---
+
+
 ## 4. Quality Control Screens
 
 ### 4.1 Dashboard Screen
@@ -280,7 +390,7 @@ Khi truy cập mục "Kiểm soát đầu vào" trên thanh điều hướng, m�
 
 ![Check Batch](./Images/QualityControlTechnician/CheckBatch.png)
 
-Bằng cách nhấn "Tiến hành kiểm định", một giao diện modal xuất hiện để người dùng nhập các kết quả phân tích thực tế như độ ẩm, hàm lượng tinh khiết và cảm quan. Màn hình hiển thị rõ các tiêu chuẩn kỹ thuật (Specs) làm căn cứ khoa học để kỹ thuật viên đối chiếu trực tiếp và đưa ra quyết định phê duyệt. Nếu kết quả nhập vào nằm ngoài ngưỡng cho phép, hệ thống sẽ tự động hiển thị cảnh báo để ngăn chặn các sai sót trong đánh giá chất lượng dược phẩm. Người dùng có thể chọn trạng thái lô hàng.
+Bằng cách nhấn "Tiến hành kiểm định", hệ thống hiển thị modal để kỹ thuật viên nhập kết quả phân tích thực tế dựa trên các tiêu chuẩn kỹ thuật (Target Specs) có sẵn. Giao diện tích hợp cảnh báo tự động nếu kết quả nằm ngoài ngưỡng cho phép, hỗ trợ người dùng đưa ra quyết định trạng thái và gắn nhãn phân loại lô hàng (Labeling) chính xác. Thao tác "Xác nhận & Cập nhật hệ thống" sẽ chính thức ghi nhận dữ liệu kiểm định, phục vụ cho các bước lưu kho hoặc xuất hủy tiếp theo.
 
 ---
 
@@ -288,7 +398,7 @@ Bằng cách nhấn "Tiến hành kiểm định", một giao diện modal xuấ
 
 ![Reject Batch](./Images/QualityControlTechnician/RejectBatch.png)
 
-Trong trường hợp chọn trạng thái từ chối (Reject), hệ thống sẽ mở rộng giao diện yêu cầu cung cấp lý do chi tiết và tải lên bằng chứng hình ảnh lỗi. Thông tin này là bắt buộc để hệ thống tự động khởi tạo phiếu hủy hàng và gửi báo cáo trực tiếp đến bộ phận Quản lý (Manager). Quy trình này đảm bảo tính minh bạch và lưu trữ đầy đủ căn cứ pháp lý cho các lô hàng không đạt tiêu chuẩn an toàn.
+Trong trường hợp chọn quyết định trạng thái là "TỪ CHỐI (REJECT)", giao diện modal sẽ tự động mở rộng thêm các trường thông tin bắt buộc để ghi nhận sự cố. Kỹ thuật viên phải nhập lý do từ chối chi tiết (như độ ẩm vượt ngưỡng hoặc có mùi lạ) và có tùy chọn tải lên ảnh bằng chứng kiểm nghiệm thực tế. Việc thiết lập trạng thái này sẽ cập nhật giá trị status của lô hàng thành "Rejected", đảm bảo tính minh bạch và làm căn cứ pháp lý cho các bước xử lý hàng lỗi tiếp theo.
 
 ---
 
@@ -345,6 +455,24 @@ Tab "Hiệu suất Nhà CC" cung cấp bảng thống kê định lượng về 
 ![Error Detail](./Images/QualityControlTechnician/ErrorDetail.png)
 
 Khi người dùng nhấn vào "Chi tiết lỗi" tại danh sách hiệu suất, hệ thống hiển thị modal ErrorDetail cung cấp hồ sơ cụ thể về các lô hàng bị từ chối. Màn hình liệt kê chi tiết lý do lỗi như bao bì rách hoặc độ ẩm vượt ngưỡng, kèm theo ảnh bằng chứng và mức độ nghiêm trọng của từng sự cố. Thông tin này giúp bộ phận QC có bằng chứng xác thực để làm việc với nhà cung cấp về các vấn đề sai hỏng định kỳ.
+
+---
+
+### 4.12 Check Product
+
+![Check Product](./Images/QualityControlTechnician/CheckProduct.png)
+
+Khi chọn mục "Kiểm định sản phẩm" trên thanh điều hướng, hệ thống hiển thị danh sách các lô thành phẩm (productBatches) đang chờ đánh giá chất lượng trước khi nhập kho. Màn hình cung cấp các thông tin chi tiết về mã lô, tên sản phẩm, số lượng sản xuất và ngày hoàn tất để kỹ thuật viên dễ dàng theo dõi. Người dùng có thể sử dụng bộ lọc tìm kiếm và nhấn nút "Tiến hành kiểm định" để mở giao diện nhập kết quả phân tích kỹ thuật cho từng lô hàng cụ thể.
+
+---
+
+### 4.13 Check Product Process
+
+![Check Product Process](./Images/QualityControlTechnician/CheckProductProcess.png)
+
+Khi nhấn "Tiến hành kiểm định" từ danh sách, hệ thống hiển thị modal Check Product Process Screen để kỹ thuật viên ghi nhận kết quả thí nghiệm chi tiết cho lô thành phẩm. Giao diện yêu cầu nhập các chỉ số về độ tinh khiết, vi sinh vật và cảm quan, đồng thời thực hiện lựa chọn quyết định trạng thái (Decision) và gán nhãn sản phẩm (Labeling) tương ứng. Thao tác "Hoàn tất kiểm định" sẽ tự động đồng bộ Metadata vào bảng InventoryLots, đảm bảo hồ sơ lô hàng được cập nhật đầy đủ thông tin kỹ thuật trước khi chính thức lưu kho.
+
+---
 
 ## 5. IT Administrator Screens
 
