@@ -111,7 +111,52 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
         - Làm tương tự như tạo Client cho frontend, nhưng bật Client authentication(vì là Confidential client).
     - Tạo các Role và User mẫu trên Keycloak để kiểm thử. Tham khảo cách tạo Role và User mẫu tại [GeeksforGeeks: Keycloak - Create Realm, Client, Roles and User](https://www.geeksforgeeks.org/java/keycloak-create-realm-client-roles-and-user/)
 
-2. **Tích hợp Keycloak vào Frontend (ReactJS)**
+2. **Khởi tạo dự án ReactJS và NestJS (trước khi tích hợp)**
+    - Tạo dự án frontend (React). Ví dụ sử dụng Create React App (mặc định chạy trên port 3000):
+        ```sh
+        npx create-react-app inventory-frontend
+        cd inventory-frontend
+        npm start   # chạy ở http://localhost:3000
+        ```
+      Hoặc dùng Vite (mặc định chạy trên port 5173):
+        ```sh
+        npm create vite@latest inventory-frontend -- --template react
+        cd inventory-frontend
+        npm install
+        npm run dev # chạy ở http://localhost:5173
+        ```
+      **Lưu ý: nếu muốn dùng port 4000 (thống nhất với hướng dẫn), chỉnh port cho frontend như sau:**
+
+      - React (Create React App): tạo file `.env` trong thư mục project với nội dung:
+        ```env
+        PORT=4000
+        ```
+        rồi chạy `npm start` (ứng dụng sẽ chạy ở http://localhost:4000).
+
+      - React (Vite): chạy lệnh:
+        ```sh
+        npm run dev -- --port 4000
+        ```
+        hoặc chỉnh `package.json` script:
+        ```json
+        "dev": "vite --port 4000"
+        ```
+
+    - Tạo dự án backend (NestJS). Ví dụ:
+        ```sh
+        npm i -g @nestjs/cli
+        nest new inventory-backend
+        cd inventory-backend
+        npm run start:dev  # mặc định chạy ở http://localhost:3000
+        ```
+      Để tránh xung đột port với frontend, bạn có thể thay đổi port backend (ví dụ sang 3000):
+        - Cách nhanh: chạy với biến môi trường (Linux/macOS): `PORT=3000 npm run start:dev`.
+        - Trên Windows (PowerShell): `$env:PORT=3000; npm run start:dev`.
+        - Hoặc chỉnh trực tiếp `src/main.ts` để lấy `process.env.PORT || 3000`.
+
+    - Cập nhật cấu hình Keycloak (Valid Redirect URIs) theo port thực tế của frontend/backend (ví dụ `http://localhost:4000/*` cho React, `http://localhost:3000/*` cho backend nếu bạn đặt như vậy).
+
+3. **Tích hợp Keycloak vào Frontend (ReactJS)**
     - Cài đặt thư viện hỗ trợ Keycloak cho React (ví dụ: `@react-keycloak/web`).
     - Khởi tạo Keycloak instance trong ứng dụng React, cấu hình với thông tin Realm, Client ID, URL Keycloak.
     - Thực hiện luồng đăng ký/đăng nhập bằng giao diện Keycloak (redirect hoặc popup):
@@ -125,18 +170,18 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
     - Sau khi đăng nhập thành công, nhận Access Token (JWT) từ Keycloak và lưu vào localStorage/sessionStorage.
     - Gửi Access Token này kèm theo mỗi request API đến backend.
 
-3. **Tích hợp xác thực Keycloak vào Backend (NestJS)**
+4. **Tích hợp xác thực Keycloak vào Backend (NestJS)**
     - Cài đặt các package hỗ trợ xác thực JWT/OAuth2 (ví dụ: `@nestjs/passport`, `passport-keycloak-oauth2`, `passport-jwt`).
     - Cấu hình middleware/guard để kiểm tra và xác thực Access Token từ client gửi lên.
     - Giải mã và xác thực token với public key của Keycloak (hoặc introspect token nếu cần).
     - Lấy thông tin user từ token (sub, email, roles, ...) để xử lý logic nghiệp vụ.
 
-4. **Kết nối Backend với MongoDB**
+5. **Kết nối Backend với MongoDB**
     - Cài đặt và cấu hình kết nối MongoDB trong NestJS (dùng `@nestjs/mongoose`).
     - Khi người dùng đăng nhập lần đầu, backend có thể tạo bản ghi user profile mở rộng (không lưu password) vào MongoDB nếu chưa có.
     - Các thông tin mở rộng (profile, quyền hạn, dữ liệu nghiệp vụ) sẽ lưu ở MongoDB, còn xác thực vẫn do Keycloak quản lý.
 
-5. **Kiểm thử luồng đăng ký/đăng nhập**
+6. **Kiểm thử luồng đăng ký/đăng nhập**
     - Đăng ký user mới qua giao diện Keycloak hoặc API (nếu mở chức năng self-registration).
     - Đăng nhập từ frontend, kiểm tra nhận token và truy cập các API backend thành công khi có token hợp lệ.
     - Kiểm tra các trường hợp token hết hạn, không hợp lệ, hoặc user không đủ quyền truy cập.
