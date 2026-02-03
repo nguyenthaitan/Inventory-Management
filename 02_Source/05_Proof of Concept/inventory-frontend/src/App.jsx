@@ -62,6 +62,38 @@ function App() {
     }
   }, [initialized, keycloak])
 
+  const [apiResult, setApiResult] = useState(null)
+
+  // Call /test/all with Authorization header (Access Token)
+  const callApiAll = async () => {
+    const token = keycloak?.token || sessionStorage.getItem('access_token')
+    if (!token) {
+      setApiResult({ error: 'No access token available. Please login first.' })
+      return
+    }
+
+    try {
+      const res = await fetch('http://localhost:3000/test/all', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      })
+
+      const contentType = res.headers.get('content-type') || ''
+      const body = contentType.includes('application/json') ? await res.json() : await res.text()
+
+      if (!res.ok) {
+        setApiResult({ error: body?.message || JSON.stringify(body) || res.statusText })
+      } else {
+        setApiResult({ ok: body })
+      }
+    } catch (err) {
+      setApiResult({ error: err.message || String(err) })
+    }
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -92,10 +124,15 @@ function App() {
 
           <div className="controls">
             <div className="btn-group">
-              <button className="btn btn-primary" onClick={() => { /* TODO: call API for all users */ }}>Call API for all users</button>
-              <button className="btn" onClick={() => { /* TODO: call API for managers */ }}>Call API for managers</button>
+              <button className="btn btn-primary" onClick={callApiAll}>Call API for all users</button>
+              <button className="btn btn-primary" onClick={() => { /* TODO: call API for managers */ }}>Call API for managers</button>
             </div>
           </div>
+          {apiResult && (
+            <div className={`api-result ${apiResult.error ? 'error' : 'success'}`}>
+              <pre>{apiResult.error ? apiResult.error : JSON.stringify(apiResult.ok, null, 2)}</pre>
+            </div>
+          )}
         </section>
 
 

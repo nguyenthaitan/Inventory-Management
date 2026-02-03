@@ -54,6 +54,11 @@ h1 { font-size:1.15rem; margin:0; font-weight:700; }
 
 .count { font-size: .95rem; color: var(--muted); }
 
+.api-result { margin-top: .8rem; padding: .75rem; border-radius:8px; background: #f9fafb; border: 1px solid rgba(16,24,40,0.04); font-size:.95rem; text-align:left; max-width:720px; }
+.api-result.success { color:#064e3b; background:#ecfdf5; border-color: rgba(4,120,87,0.12); }
+.api-result.error { color:#881337; background:#fff1f2; border-color: rgba(137,19,55,0.08); }
+.api-result pre { margin:0; white-space:pre-wrap; word-break:break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace; }
+
 .links { display:flex; gap:1rem; margin-top:1rem; }
 
 .link { color:var(--accent-2); text-decoration:none; background:transparent; padding:.4rem .6rem; border-radius:6px; transition:background .18s; }
