@@ -285,7 +285,7 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
 5. **Kiểm thử luồng đăng ký/đăng nhập**
     - Để kiểm thử, trước tiên chúng ta cần thực hiện các bước sau:
       - Tạo module test phía backend (NestJS) để mô phỏng các API cần bảo vệ.
-      - Trong test controller, sử dụng JwtAuthGuard cho một route và sử dụng JwtAuthGuard + RolesGuard cho một route khác để kiểm tra phân quyền.
+      - Trong test controller, sử dụng JwtAuthGuard cho route "all" và sử dụng JwtAuthGuard + RolesGuard cho route "manager" để kiểm tra phân quyền.
       - Tạo các user mẫu trên Keycloak với các role khác nhau để kiểm thử phân quyền.
       - Trên frontend, ở cùng trang chứa nút Login, thêm các nút để gọi API backend đã bảo vệ:
         - Nút "Call API for all users" để gọi route chỉ dùng JwtAuthGuard. 
