@@ -3,7 +3,6 @@ import './App.css'
 import { useKeycloak } from '@react-keycloak/web' 
 
 function App() {
-  const [count, setCount] = useState(0)
   const { keycloak, initialized } = useKeycloak()
 
   // Khi Keycloak sẵn sàng và user đã authenticated, thực hiện các việc sau:
@@ -92,8 +91,10 @@ function App() {
           <p className="subtitle">Modernized UI — cleaner layout, better buttons, responsive by default.</p>
 
           <div className="controls">
-            <button className="btn btn-primary" onClick={() => setCount((c) => c + 1)}>Click me</button>
-            <div className="count">Count: <strong>{count}</strong></div>
+            <div className="btn-group">
+              <button className="btn btn-primary" onClick={() => { /* TODO: call API for all users */ }}>Call API for all users</button>
+              <button className="btn" onClick={() => { /* TODO: call API for managers */ }}>Call API for managers</button>
+            </div>
           </div>
         </section>
 

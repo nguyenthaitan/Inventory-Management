@@ -50,6 +50,8 @@ h1 { font-size:1.15rem; margin:0; font-weight:700; }
 
 .controls { display:flex; align-items:center; gap:1rem; }
 
+.btn-group { display:flex; gap:.5rem; flex-wrap:wrap; }
+
 .count { font-size: .95rem; color: var(--muted); }
 
 .links { display:flex; gap:1rem; margin-top:1rem; }
