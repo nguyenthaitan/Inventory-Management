@@ -64,6 +64,9 @@ function App() {
 
   const [apiResult, setApiResult] = useState(null)
 
+  // Base URL for backend API (configurable via VITE_API_BASE)
+  const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3000'
+
   // Call /test/all with Authorization header (Access Token)
   const callApiAll = async () => {
     const token = keycloak?.token || sessionStorage.getItem('access_token')
@@ -73,7 +76,37 @@ function App() {
     }
 
     try {
-      const res = await fetch('http://localhost:3000/test/all', {
+      const res = await fetch(`${API_BASE}/test/all`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      })
+
+      const contentType = res.headers.get('content-type') || ''
+      const body = contentType.includes('application/json') ? await res.json() : await res.text()
+
+      if (!res.ok) {
+        setApiResult({ error: body?.message || JSON.stringify(body) || res.statusText })
+      } else {
+        setApiResult({ ok: body })
+      }
+    } catch (err) {
+      setApiResult({ error: err.message || String(err) })
+    }
+  }
+
+  // Call /test/manager with Authorization header (requires manager role)
+  const callApiManager = async () => {
+    const token = keycloak?.token || sessionStorage.getItem('access_token')
+    if (!token) {
+      setApiResult({ error: 'No access token available. Please login first.' })
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/test/manager`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -125,7 +158,7 @@ function App() {
           <div className="controls">
             <div className="btn-group">
               <button className="btn btn-primary" onClick={callApiAll}>Call API for all users</button>
-              <button className="btn btn-primary" onClick={() => { /* TODO: call API for managers */ }}>Call API for managers</button>
+              <button className="btn btn-primary" onClick={callApiManager}>Call API for managers</button>
             </div>
           </div>
           {apiResult && (
