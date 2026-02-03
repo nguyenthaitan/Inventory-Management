@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import { useKeycloak } from '@react-keycloak/web'
+import { useKeycloak } from '@react-keycloak/web' 
 
 function App() {
   const [count, setCount] = useState(0)
@@ -66,47 +64,44 @@ function App() {
   }, [initialized, keycloak])
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
+    <div className="app">
+      <header className="app-header">
+        <div className="brand">
+          <h1>Inventory PoC</h1>
+        </div> 
 
-      <h1>Vite + React</h1>
-
-      <div style={{ marginBottom: 16 }}>
-        {initialized ? (
-          keycloak?.authenticated ? (
-            <>
-              <span>Signed in as: {keycloak?.tokenParsed?.preferred_username || keycloak.subject}</span>
-              <button style={{ marginLeft: 8 }} onClick={() => keycloak.logout()}>
-                Logout
-              </button>
-            </>
+        <nav className="user-actions">
+          {initialized ? (
+            keycloak?.authenticated ? (
+              <div className="user">
+                <span className="username">Signed in as: {keycloak?.tokenParsed?.preferred_username || keycloak.subject}</span>
+                <button className="btn btn-ghost" onClick={() => keycloak.logout()}>Logout</button>
+              </div>
+            ) : (
+              <button className="btn" onClick={() => keycloak.login()}>Login</button>
+            )
           ) : (
-            <button onClick={() => keycloak.login()}>Login</button>
-          )
-        ) : (
-          <span>Initializing Keycloak...</span>
-        )}
-      </div>
+            <span className="muted">Initializing Keycloak...</span>
+          )}
+        </nav>
+      </header>
 
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <main className="main">
+        <section className="hero card">
+          <h2>Welcome to Inventory PoC</h2>
+          <p className="subtitle">Modernized UI — cleaner layout, better buttons, responsive by default.</p>
+
+          <div className="controls">
+            <button className="btn btn-primary" onClick={() => setCount((c) => c + 1)}>Click me</button>
+            <div className="count">Count: <strong>{count}</strong></div>
+          </div>
+        </section>
+
+
+      </main>
+
+      <footer className="app-footer muted">Built for demo</footer>
+    </div>
   )
 }
 
