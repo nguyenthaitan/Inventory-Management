@@ -296,12 +296,11 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
 
 ## 6. Kết quả thu được
 ### 6.1. Kết quả đạt được
-
-[Ví dụ: Tính năng hoạt động đúng trong các kịch bản thử nghiệm]
-
-[Ví dụ: Dữ liệu được xử lý và phản hồi chính xác]
-
-[Ví dụ: Độ trễ chấp nhận được trong phạm vi PoC]
+- Tính năng authentication đã được hiện thực hóa thành công với Keycloak, ReactJS và NestJS.
+- Người dùng có thể đăng ký, đăng nhập qua giao diện Keycloak.
+- Frontend (ReactJS) nhận và lưu Access Token (JWT) từ Keycloak.
+- Backend (NestJS) xác thực token từ client và bảo vệ API thành công.
+- Phân quyền dựa trên Role từ token hoạt động đúng như mong đợi.
 
 ### 6.2. Những vấn đề gặp phải
 
@@ -325,15 +324,3 @@ Tiếp tục thiết kế chi tiết
 Mở rộng thành Prototype / MVP
 
 Điều chỉnh lại kiến trúc nếu cần
-
-## 8. Hướng phát triển tiếp theo
-
-Trong giai đoạn tiếp theo, nhóm dự kiến:
-
-[Hoàn thiện kiến trúc]
-
-[Tối ưu hiệu năng]
-
-[Bổ sung bảo mật và kiểm thử]
-
-[Tích hợp vào hệ thống chính]
