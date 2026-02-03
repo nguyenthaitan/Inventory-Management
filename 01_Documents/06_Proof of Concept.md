@@ -304,11 +304,21 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
 
 ### 6.2. Những vấn đề gặp phải
 
-[Vấn đề kỹ thuật 1]
+- **Lưu trữ token trên client (XSS risk):** PoC hiện lưu Access Token trong `sessionStorage`, dễ bị khai thác qua XSS. Trong môi trường production cần cân nhắc dùng cookie HttpOnly hoặc cơ chế token rotation để giảm rủi ro.
 
-[Vấn đề kỹ thuật 2]
+- **Quản lý refresh token và vòng đời token:** Cần xử lý kịch bản token hết hạn, refresh thất bại, và đồng bộ trạng thái session trên nhiều client; khó xử lý nhất khi có nhiều điểm đăng nhập.
 
-[Hạn chế của giải pháp hiện tại]
+- **Phân quyền (roles) phức tạp:** Trong token Keycloak, vai trò (roles) có thể nằm ở nhiều chỗ khác nhau (ví dụ `realm_access` hoặc `resource_access`), nên bạn cần biết lấy role từ đâu. Việc này làm cho việc kiểm tra ai có quyền làm gì trở nên khó hơn và cũng khó viết test — đặc biệt khi có role riêng cho từng resource hoặc client.
+
+- **Xử lý JWKS & key rotation:** Cần cache public keys và xử lý trường hợp Keycloak rotate keys (kid thay đổi) để tránh downtime hoặc lỗi xác thực.
+
+- **Thu hồi token / logout đồng bộ:** Khi access token (JWT) đã cấp, không thể làm cho token đó vô hiệu ngay lập tức trên mọi nơi. Để thực hiện logout toàn hệ thống cần thêm cơ chế (ví dụ: kiểm tra trạng thái token qua introspection, lưu trạng thái session trên server, hoặc phát hành token có thời hạn ngắn), nên việc này phức tạp và cần thiết kế cẩn thận.
+
+- **CORS và cấu hình môi trường:** Đồng bộ origin/port giữa frontend và backend (đặc biệt trong dev) và cấu hình CORS chính xác là nguồn lỗi thường gặp.
+
+- **Sẵn sàng & độ trễ của Keycloak:** Keycloak trở thành thành phần phụ thuộc quan trọng; cần kế hoạch HA, caching, và fallback để giảm tác động khi Keycloak chậm hoặc không khả dụng.
+
+**Hạn chế của giải pháp hiện tại:** PoC chứng minh luồng authentication cơ bản nhưng chưa xử lý các yêu cầu production-grade (HA, monitoring, key rotation, token revocation, secure token storage).
 
 ## 7. Đánh giá và kết luận
 Dựa trên kết quả PoC, nhóm nhận thấy:
