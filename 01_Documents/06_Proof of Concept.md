@@ -288,8 +288,8 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
       - Trong test controller, sử dụng JwtAuthGuard cho một route và sử dụng JwtAuthGuard + RolesGuard cho một route khác để kiểm tra phân quyền.
       - Tạo các user mẫu trên Keycloak với các role khác nhau để kiểm thử phân quyền.
       - Trên frontend, ở cùng trang chứa nút Login, thêm các nút để gọi API backend đã bảo vệ:
-        - Nút "Gọi API chung" để gọi route chỉ dùng JwtAuthGuard. 
-        - Nút "Gọi API phân quyền" để gọi route dùng JwtAuthGuard + RolesGuard.
+        - Nút "Call API for all users" để gọi route chỉ dùng JwtAuthGuard. 
+        - Nút "Call API for managers" để gọi route dùng JwtAuthGuard + RolesGuard.
         - Khi bấm các nút này, gọi API đến backend kèm theo Access Token trong header Authorization. 
     - Đăng ký user mới qua giao diện Keycloak hoặc API (nếu mở chức năng self-registration).
     - Đăng nhập từ frontend, kiểm tra nhận token và truy cập các API backend thành công khi có token hợp lệ. Truy cập các API với các Role khác nhau để kiểm tra phân quyền.
