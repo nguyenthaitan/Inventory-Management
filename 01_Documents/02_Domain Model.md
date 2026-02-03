@@ -350,7 +350,3 @@ Users (standalone)
 10. **User Actions**: Users đăng nhập và thực hiện các actions; `performed_by`/`added_by`/`verified_by` lưu username hoặc user_id để audit trail.
 
 ---
-
-## References
-
-Database schema documentation: https://nhbien.github.io/inventory-mangement-system-database-schema/
