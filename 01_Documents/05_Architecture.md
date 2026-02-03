@@ -102,6 +102,47 @@ Quy trình đảm bảo tiêu chuẩn sản phẩm thông qua **QCTests**:
 Sử dụng **LabelTemplates** như một thực thể dùng chung để chuẩn hóa quy trình in ấn:
 * Cung cấp định dạng in ấn chuyên nghiệp cho cả nguyên liệu thô và thành phẩm.
 * Đảm bảo thông tin trên nhãn khớp hoàn toàn với dữ liệu trong hệ thống.
+
+### 2. Development View
+
+<img width="1117" height="812" alt="image" src="https://github.com/user-attachments/assets/3fe4a702-13ad-4d54-831c-d6f90e129d20" />
+
+#### 01_Source Code: Thư mục gốc chứa toàn bộ mã nguồn và cấu hình triển khai
+* **docker-compose.yml**: File cấu hình Orchestration chính để khởi chạy toàn bộ hệ thống (Backend, Frontend, MongoDB, Redis, Keycloak) trong môi trường phát triển local chỉ với một câu lệnh.
+
+#### frontend/: Ứng dụng giao diện người dùng (React.js + TypeScript)
+* **package.json**: Quản lý các thư viện phụ thuộc như React, Keycloak-js, Axios và các scripts build/run.
+* **src/**: Chứa mã nguồn chính của giao diện.
+    * **App.tsx**: File thành phần gốc, nơi định nghĩa Route và bọc ứng dụng trong Keycloak Provider để quản lý bảo mật.
+    * **main.tsx**: Điểm đầu vào (Entry point) của ứng dụng để render React vào DOM.
+
+#### database/: Cấu hình dữ liệu
+* **mongo-init.js**: Script khởi tạo cơ sở dữ liệu MongoDB, dùng để tạo các Collections ban đầu, Index và User quản trị database khi container khởi chạy lần đầu.
+
+#### backend/: Ứng dụng xử lý nghiệp vụ (NestJS Monolith)
+* **package.json**: Chứa cấu hình các thư viện backend (NestJS, Mongoose, Nest-keycloak-connect, Kafka).
+* **src/**: Thư mục chứa logic nghiệp vụ theo kiến trúc Module-based.
+    * **app.module.ts**: Module gốc kết nối tất cả các sub-modules lại với nhau.
+    * **user/**: Quản lý thông tin định danh và phân quyền nội bộ.
+    * **auth/**: Xử lý tích hợp Keycloak, xác thực JWT và bảo mật API.
+    * **catalog/**: Quản lý danh mục vật tư, nguyên liệu (Master Data).
+    * **inbound/ & outbound/**: Xử lý logic nhập kho và xuất kho vật lý.
+    * **inventory/**: Quản lý tồn kho thời gian thực và lịch sử giao dịch.
+    * **qc/**: Module kiểm định chất lượng, đối chiếu Specification (US01-QC).
+    * **production/**: Quản lý mẻ sản xuất (Batch) và định mức nguyên vật liệu (BOM).
+    * **audit/**: Ghi nhật ký hoạt động hệ thống (US15-Manager).
+    * **reporting/**: Xuất các báo cáo PDF/Excel (US01, US10-Manager).
+
+#### infra/: Hạ tầng và cấu hình triển khai (DevOps)
+* **docker/**: Chứa các Dockerfile riêng biệt để đóng gói ứng dụng.
+    * **backend.Dockerfile**: Build image cho NestJS (Node.js runtime).
+    * **frontend.Dockerfile**: Build image cho React và sử dụng Nginx để phục vụ web static.
+* **k8s/**: Chứa các file YAML để triển khai hệ thống lên cụm Kubernetes.
+    * **deployment.yaml**: Định nghĩa số lượng Pods, tài nguyên CPU/RAM cho các dịch vụ.
+    * **ingress.yaml**: Cấu hình bộ cân bằng tải và Routing (Điều hướng) traffic từ ngoài vào hệ thống.
+    * **mongo-pv.yaml**: Cấu hình Persistent Volume để đảm bảo dữ liệu MongoDB không bị mất khi Pod khởi động lại.
+    * **redis-config.yaml**: Cấu hình cho bộ nhớ đệm Redis phục vụ Locking.
+  
 ### 3. Deployment View
 
 <img width="1089" height="995" alt="image" src="https://github.com/user-attachments/assets/59ae026e-99d7-45f1-993a-a2d7de45f13b" />
