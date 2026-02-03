@@ -321,16 +321,4 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
 **Hạn chế của giải pháp hiện tại:** PoC chứng minh luồng authentication cơ bản nhưng chưa xử lý các yêu cầu production-grade (HA, monitoring, key rotation, token revocation, secure token storage).
 
 ## 7. Đánh giá và kết luận
-Dựa trên kết quả PoC, nhóm nhận thấy:
-
-Tính năng [có / chưa] khả thi về mặt kỹ thuật
-
-Giải pháp đề xuất [có thể / cần điều chỉnh] để áp dụng vào hệ thống chính thức
-
-PoC này là cơ sở để nhóm:
-
-Tiếp tục thiết kế chi tiết
-
-Mở rộng thành Prototype / MVP
-
-Điều chỉnh lại kiến trúc nếu cần
+Dựa trên kết quả PoC, nhóm nhận thấy: Tính năng có khả thi về mặt kỹ thuật. Tuy nhiên, giải pháp đề xuất cần điều chỉnh để áp dụng vào hệ thống chính thức.
