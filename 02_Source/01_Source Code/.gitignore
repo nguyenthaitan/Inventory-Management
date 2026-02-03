@@ -1,0 +1,46 @@
+# --- OS & IDEs ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Node.js (Backend & Frontend) ---
+# Loại bỏ các thư viện đã cài đặt
+node_modules/
+**/node_modules/
+
+# Loại bỏ các thư mục build (khi biên dịch)
+dist/
+**/dist/
+build/
+**/build/
+
+# Các file logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Bảo mật (Cực kỳ quan trọng) ---
+# Không bao giờ đẩy file chứa mật khẩu/token lên Git
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# --- Docker & Infra ---
+# Loại bỏ các file tạm của Docker
+.docker/
+**/data/mongo/    # Nếu bạn ánh xạ volume database vào folder local
+
+# --- TypeScript ---
+# Các file build tạm của TS
+*.tsbuildinfo
+
+# --- Testing ---
+# Các báo cáo kiểm thử (Coverage)
+coverage/
+**/coverage/
