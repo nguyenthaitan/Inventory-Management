@@ -282,15 +282,9 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
     - Giải mã và xác thực token với public key của Keycloak (hoặc introspect token nếu cần).
     - Lấy thông tin user từ token (sub, email, roles, ...) để xử lý logic nghiệp vụ.
 
-5. **Kết nối Backend với MongoDB**
-    - Cài đặt và cấu hình kết nối MongoDB trong NestJS (dùng `@nestjs/mongoose`).
-    - Khi người dùng đăng nhập lần đầu, backend có thể tạo bản ghi user profile mở rộng (không lưu password) vào MongoDB nếu chưa có.
-    - Các thông tin mở rộng (profile, quyền hạn, dữ liệu nghiệp vụ) sẽ lưu ở MongoDB, còn xác thực vẫn do Keycloak quản lý.
-
-6. **Kiểm thử luồng đăng ký/đăng nhập**
+5. **Kiểm thử luồng đăng ký/đăng nhập**
     - Đăng ký user mới qua giao diện Keycloak hoặc API (nếu mở chức năng self-registration).
     - Đăng nhập từ frontend, kiểm tra nhận token và truy cập các API backend thành công khi có token hợp lệ.
-    - Kiểm tra các trường hợp token hết hạn, không hợp lệ, hoặc user không đủ quyền truy cập.
 
 ## 6. Kết quả thu được
 ### 6.1. Kết quả đạt được
