@@ -25,17 +25,5 @@ services:
     depends_on:
       - mongo
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ../infra/docker/frontend.Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
-    restart: always
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-
 volumes:
   mongo_data:

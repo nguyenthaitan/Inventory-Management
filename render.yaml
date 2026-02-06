@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: inventory-backend
+    env: docker
+    plan: free
+    region: singapore
+    branch: main
+    # Specify the build context and Dockerfile path relative to the repository root
+    dockerContext: "02_Source/01_Source Code/backend"
+    dockerfilePath: "02_Source/01_Source Code/infra/docker/backend.Dockerfile"
+        # Render will build the Dockerfile using the specified context.
+    envVars:
+      - key: MONGO_URI
+        sync: false # User must provide this manually or use a provisioned DB
