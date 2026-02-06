@@ -49,15 +49,15 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 ## 3. Công Nghệ và Công Cụ Đề Xuất (Tech Stack)
 
-| Thành phần | Công nghệ đề xuất |
-| :--- | :--- |
-| **Backend** | Node.js (NestJS) |
-| **Frontend** | React.js(typescript)|
-| **Database** | MongoDB, Redis (Caching/Locking)|
+| Thành phần | Công nghệ đề xuất                          |
+| :--- |:-------------------------------------------|
+| **Backend** | Node.js (NestJS)                           |
+| **Frontend** | React.js(typescript)                       |
+| **Database** | MongoDB, Redis (Caching/Locking)           |
 | **DevOps** | Docker, Kubernetes, Jenkins/GitHub Actions |
-| **Security** | Okta |
-| **Logging** | ELK |
-| **Monitoring** | Prometheus & Grafana |
+| **Security** | Keycloak                                   |
+| **Logging** | ELK                                        |
+| **Monitoring** | Prometheus & Grafana                       |
 
 ---
 
