@@ -9,6 +9,10 @@ COPY package*.json ./
 # Cài đặt dependencies
 RUN npm install
 
+# Argument for API URL
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Copy toàn bộ mã nguồn
 COPY . .
 

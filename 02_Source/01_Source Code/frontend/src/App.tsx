@@ -12,7 +12,7 @@ function App() {
   const [materials, setMaterials] = useState<Material[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/materials')
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/materials`)
       .then(response => response.json())
       .then(data => setMaterials(data))
       .catch(error => console.error('Error fetching materials:', error));
