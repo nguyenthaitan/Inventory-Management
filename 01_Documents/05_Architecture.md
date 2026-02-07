@@ -52,7 +52,7 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 | Thành phần | Công nghệ đề xuất                          |
 | :--- |:-------------------------------------------|
 | **Backend** | Node.js (NestJS)                           |
-| **Frontend** | React.js(typescript)                       |
+| **Frontend** | React (Typescript)                       |
 | **Database** | MongoDB, Redis (Caching/Locking)           |
 | **DevOps** | Docker, Kubernetes, Jenkins/GitHub Actions |
 | **Security** | Keycloak                                   |
@@ -73,35 +73,27 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 ### 1. Logical View
 *Logical View này mô tả cấu trúc nghiệp vụ. Khi triển khai trên MongoDB, các quan hệ 1:N chặt chẽ (như Batch và BatchComponents) sẽ được triển khai theo dạng **Embedded Document** để tối ưu tốc độ đọc, các quan hệ lỏng hơn sẽ dùng **Reference***
 
-<img width="922" height="881" alt="image" src="https://github.com/user-attachments/assets/96175130-cc04-4b76-acb5-99f32f627f3e" />
+<img width="1285" height="708" alt="image" src="https://github.com/user-attachments/assets/f4fdaa99-cbd6-40f0-8b94-228e79880a77" />
 
-#### Nguyên liệu & Sản phẩm (Materials)
-**Materials** đóng vai trò là thực thể trung tâm của hệ thống:
-* Định nghĩa các nguyên liệu đầu vào (cấp phát cho **InventoryLots**).
-* Định nghĩa thành phẩm đầu ra của các mẻ sản xuất (**ProductionBatches**) thông qua liên kết `product_id`.
+### Các tầng kiến trúc (Architecture Layers)
+* **Frontend (React + TS):** Lớp giao diện người dùng. Chứa các module quản lý Material (Vật tư), InventoryLot (Lô kho) và ProductionBatch (Mẻ sản xuất). Tích hợp thư viện Keycloak-js để xử lý đăng nhập.
+* **API / Server (NestJS):** Tầng trung gian tiếp nhận yêu cầu. Chịu trách nhiệm điều hướng (Routing), xác thực Token (JWT Validation) và kiểm tra dữ liệu đầu vào (Validation).
+* **Logic / Persistent (NestJS):** Trái tim của hệ thống. Chứa logic nghiệp vụ xử lý các quy tắc phức tạp (ví dụ: tự động khóa lô hàng khi kiểm nghiệm không đạt, tính toán định mức sản xuất).
+* **Database (MongoDB):** Tầng lưu trữ dữ liệu bền vững. Dữ liệu được tổ chức theo các Collection tương ứng với thực thể nghiệp vụ: Vật tư, Lô hàng và Sản xuất.
 
-#### Quản lý Lô hàng (InventoryLots)
-Lưu trữ thông tin chi tiết giúp kiểm soát vòng đời sản phẩm:
-* Ghi nhận nhà sản xuất, hạn sử dụng và trạng thái kiểm định chất lượng.
-* Sử dụng mối quan hệ tự thân (**self-reference**) qua `parent_lot_id` để hỗ trợ kỹ thuật chia tách lô (lot splitting), đảm bảo tính liên tục của dữ liệu.
+### Dịch vụ hạ tầng & Công nghệ (Services & Technologies)
+* **Security Service (Keycloak IdP):** Quản lý định danh tập trung. Cấp phát Token OIDC cho người dùng và xác thực quyền truy cập của các yêu cầu API.
+* **Reporting Service (PDFKit/ExcelJS):** Xử lý việc tổng hợp dữ liệu từ tầng Logic để xuất ra các chứng từ pháp lý như Phiếu nhập kho, Biên bản kiểm kê hoặc nhãn Barcode.
+* **Event Bus (Kafka):** Hệ thống hàng đợi thông điệp. Ghi nhận các sự kiện biến động (ví dụ: "LotChanged") để phục vụ hệ thống Audit Trail hoặc gửi thông báo.
 
-#### Truy xuất nguồn gốc (Traceability)
-Mọi biến động về số lượng (tăng/giảm) của từng lô hàng cụ thể đều được ghi lại chi tiết trong **InventoryTransactions**, cho phép kiểm soát lịch sử nhập xuất chính xác 100%.
-
-#### Cầu nối Sản xuất (BatchComponents)
-Đây là thực thể quan trọng nhất trong việc kết nối giữa Kho và Sản xuất:
-* Xác định chính xác mã lô nguyên liệu nào được tiêu thụ cho mẻ sản xuất nào.
-* Đảm bảo tính minh bạch từ nguyên liệu thô đến thành phẩm cuối cùng.
-
-#### Kiểm soát Chất lượng (Quality Control - QC)
-Quy trình đảm bảo tiêu chuẩn sản phẩm thông qua **QCTests**:
-* Lưu trữ các kết quả phân tích định tính và định lượng.
-* Là căn cứ để hệ thống tự động hoặc hỗ trợ người dùng chuyển trạng thái lô hàng từ biệt trữ (**Quarantine**) sang chấp nhận (**Accepted**) hoặc từ chối (**Rejected**).
-
-#### Hệ thống Nhãn (Labeling)
-Sử dụng **LabelTemplates** như một thực thể dùng chung để chuẩn hóa quy trình in ấn:
-* Cung cấp định dạng in ấn chuyên nghiệp cho cả nguyên liệu thô và thành phẩm.
-* Đảm bảo thông tin trên nhãn khớp hoàn toàn với dữ liệu trong hệ thống.
+### Các mối quan hệ & Luồng dữ liệu (Relationships)
+* **Xác thực (OIDC Auth & JWT):** Người dùng đăng nhập qua Keycloak. Tầng API sử dụng Public Key từ Keycloak để xác thực tính hợp lệ của mọi yêu cầu gửi đến.
+* **Giao tiếp Frontend - Backend:** Sử dụng giao thức **HTTP/REST API** để trao đổi dữ liệu JSON.
+* **Phụ thuộc nghiệp vụ (Internal Logic):**
+    * **InventoryLot ➔ Material:** Khi tạo lô hàng, hệ thống tham chiếu đến Master Data (Material) để lấy thông tin quy cách, tiêu chuẩn kiểm nghiệm.
+    * **ProductionBatch ➔ InventoryLot:** Khi sản xuất, hệ thống thực hiện trừ tồn kho vật lý từ các lô hàng cụ thể (Picking).
+* **Luồng báo cáo (Data Flows):** Tầng Logic đẩy dữ liệu thô vào Reporting Service ➔ Trả về file (PDF/Excel) cho người dùng tải xuống tại giao diện Frontend.
+* **Truy vết (Traceability):** Mọi hành động thay đổi trạng thái dữ liệu ở tầng Logic đều phát một sự kiện (Event) vào Kafka để đảm bảo tính minh bạch và khả năng phục hồi dữ liệu.
 
 ### 2. Development View
 
