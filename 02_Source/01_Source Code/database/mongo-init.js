@@ -1,4 +1,4 @@
-db = db.getSiblingDB('inventory_management_db');
+db = db.getSiblingDB('inventory');
 
 // Create Validated Collection for Materials
 db.createCollection("materials", {
