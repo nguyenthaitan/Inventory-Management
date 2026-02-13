@@ -73,7 +73,7 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 ### 1. Logical View
 *Logical View này mô tả cấu trúc nghiệp vụ. Khi triển khai trên MongoDB, các quan hệ 1:N chặt chẽ (như Batch và BatchComponents) sẽ được triển khai theo dạng **Embedded Document** để tối ưu tốc độ đọc, các quan hệ lỏng hơn sẽ dùng **Reference***
 
-<img width="1285" height="708" alt="image" src="https://github.com/user-attachments/assets/f4fdaa99-cbd6-40f0-8b94-228e79880a77" />
+<img width="1242" height="817" alt="image" src="https://github.com/user-attachments/assets/e0f2a846-f2d5-4389-9ed1-298af0a2f94b" />
 
 ### Các tầng kiến trúc (Architecture Layers)
 * **Frontend (React + TS):** Lớp giao diện người dùng. Chứa các module quản lý Material (Vật tư), InventoryLot (Lô kho) và ProductionBatch (Mẻ sản xuất). Tích hợp thư viện Keycloak-js để xử lý đăng nhập.
