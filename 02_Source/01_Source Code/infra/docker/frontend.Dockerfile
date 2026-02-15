@@ -1,5 +1,5 @@
 # Giai đoạn 1: Build (Biên dịch React code)
-FROM node:18-alpine AS build-stage
+FROM node:22-alpine AS build-stage
 
 WORKDIR /app
 
@@ -8,6 +8,10 @@ COPY package*.json ./
 
 # Cài đặt dependencies
 RUN npm install
+
+# Argument for API URL
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 # Copy toàn bộ mã nguồn
 COPY . .

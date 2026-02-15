@@ -1,5 +1,5 @@
 # Giai đoạn 1: Build (Tải thư viện và biên dịch code)
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Giai đoạn 2: Production (Chỉ giữ lại những thứ cần thiết để chạy)
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
