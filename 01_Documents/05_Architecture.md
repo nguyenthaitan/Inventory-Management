@@ -162,9 +162,9 @@ Hệ thống hỗ trợ đa nền tảng bao gồm **React Web** và **Mobile Ap
 - **Ingress Controller:** Đóng vai trò là điểm tiếp nhận duy nhất, thực hiện điều hướng (Routing) để phân biệt yêu cầu truy cập giao diện (Frontend) hay dữ liệu (Backend API).
 - **IMS Pod (Monolith):** Mã nguồn NestJS chạy tập trung trong các Pods. Có khả năng nhân bản (Scaling) linh hoạt trên K8s để xử lý tải khi cần thiết.
 
-#### Bảo mật (Security - Okta)
+#### Bảo mật (Security - Keycloak)
 
-Backend thực hiện xác thực và định danh người dùng thông qua kết nối trực tiếp với dịch vụ **Okta** bên ngoài cụm K8s, đảm bảo an toàn truy cập.
+Backend và Frontend thực hiện xác thực và định danh người dùng thông qua **Keycloak** (IdP) bên ngoài cụm K8s. Mọi truy cập đều đi qua **HTTPS**, sử dụng chuẩn **OIDC/OAuth2**, Access Token dạng **JWT** được Backend kiểm tra chữ ký trước khi cho phép truy cập tài nguyên.
 
 #### Tầng Dữ liệu (Data Tier)
 
@@ -216,44 +216,392 @@ Hệ thống đảm bảo khả năng giám sát toàn diện thông qua luồng
 
 Hệ thống Inventory Management System (IMS) sử dụng **Keycloak** làm nền tảng quản trị định danh và truy cập (IAM) tập trung, tuân thủ các tiêu chuẩn bảo mật **OpenID Connect (OIDC)** và **OAuth 2.0**.
 
-### 6.1 Thành phần bảo mật
+### 6.1 Thành phần bảo mật (Components)
 
-- **Keycloak Identity Provider (IdP):** Quản lý tập trung Realm, Clients, Roles và Users. Lưu trữ thông tin định danh và thực hiện cấp phát Token.
-- **React Frontend (Client):** Sử dụng thư viện `keycloak-js`. Chịu trách nhiệm chuyển hướng đăng nhập, quản lý Access Token và Refresh Token trong phiên làm việc của người dùng.
-- **NestJS Backend (Resource Server):** Sử dụng `nest-keycloak-connect` để xác thực chữ ký JWT từ Keycloak và thực thi phân quyền ở mức API (Method-level Security).
+#### 6.1.1 Keycloak Identity Provider (IdP)
+- **Vai trò:** Quản lý tập trung Realm, Clients, Roles và Users. Lưu trữ thông tin định danh và thực hiện cấp phát Token.
+- **Technology Stack:**
+  - Keycloak v23+ (Latest LTS)
+  - Quarkus runtime
+  - PostgreSQL Database (cho Keycloak production) hoặc H2 (development)
+  - Java 17+ JRE
+- **Container:** `quay.io/keycloak/keycloak:23.0`
+- **Deployment:** 
+  - Development: Docker Compose (port 8080)
+  - Production: Kubernetes StatefulSet với 2+ replicas
+- **Access Points:**
+  - Admin Console: `https://keycloak.domain.com/admin`
+  - Realm Endpoint: `https://keycloak.domain.com/realms/inventory-management`
+  - Token Endpoint: `https://keycloak.domain.com/realms/inventory-management/protocol/openid-connect/token`
+  - JWKS Endpoint: `https://keycloak.domain.com/realms/inventory-management/protocol/openid-connect/certs`
 
-### 6.2 Luồng xác thực & Ủy quyền
+#### 6.1.2 React Frontend (Client Application)
+- **Vai trò:** Chịu trách nhiệm chuyển hướng đăng nhập, quản lý Access Token và Refresh Token trong phiên làm việc của người dùng.
+- **Technology Stack:**
+  - `@react-keycloak/web` v3.4+ hoặc `keycloak-js` v23+
+  - React 18+, TypeScript
+  - Axios Interceptor (tự động gắn Bearer token)
+  - LocalStorage/SessionStorage (lưu trữ token tạm thời)
+- **Client Configuration:**
+  - Client ID: `inventory-management-frontend`
+  - Client Type: Public
+  - Valid Redirect URIs: `http://localhost:5173/*`, `https://app.domain.com/*`
+  - Web Origins: `http://localhost:5173`, `https://app.domain.com`
+  - PKCE: Enabled (S256)
+- **Access Flow:** Authorization Code Flow with PKCE
 
-1.  **Authentication (PKCE Flow):** Người dùng đăng nhập qua giao diện tập trung của Keycloak. Sau khi thành công, React nhận về **Access Token (JWT)** chứa thông tin định danh và vai trò (Roles).
-2.  **API Authorization:** Mọi yêu cầu từ Frontend tới Backend phải đính kèm Token trong Header `Authorization: Bearer <Token>`.
-3.  **2FA (Xác thực 2 lớp):** Bắt buộc đối với vai trò **IT Administrator** khi thực hiện các tác vụ nhạy cảm như _Phục hồi dữ liệu (US05)_ thông qua cấu hình Authentication Policies trên Keycloak.
+#### 6.1.3 NestJS Backend (Resource Server)
+- **Vai trò:** Xác thực chữ ký JWT từ Keycloak và thực thi phân quyền ở mức API (Method-level Security).
+- **Technology Stack:**
+  - `nest-keycloak-connect` v1.10+
+  - `@nestjs/passport` + `passport-jwt`
+  - NestJS Guards (AuthGuard, RoleGuard, ResourceGuard)
+  - Redis Cache (lưu JWKS và Blacklist tokens)
+- **Client Configuration:**
+  - Client ID: `inventory-management-backend`
+  - Client Type: Confidential
+  - Service Account Enabled: Yes
+  - Client Authenticator: Client Secret
+- **Validation:**
+  - JWT Signature Verification (RS256 algorithm)
+  - Token Expiration Check
+  - Issuer Validation
+  - Audience Validation
+- **Access Points:**
+  - Protected APIs: `https://api.domain.com/api/*`
+  - Health Check: `https://api.domain.com/health` (public)
+  - Swagger UI: `https://api.domain.com/api/docs` (authenticated)
 
-### 6.3 Phân quyền dựa trên vai trò (RBAC)
+### 6.2 Logging và Audit Trail
+
+#### 6.2.1 Keycloak Event Logging
+- **Event Types:**
+  - Login Events: LOGIN, LOGOUT, LOGIN_ERROR, REFRESH_TOKEN
+  - Admin Events: CREATE_USER, UPDATE_USER, DELETE_ROLE, GRANT_CONSENT
+- **Storage:**
+  - Development: Keycloak Database (7 days retention)
+  - Production: Forward to ELK Stack via Filebeat
+- **Log Format:** JSON structured logs
+- **Access:** Admin Console → Events → Login Events / Admin Events
+
+#### 6.2.2 Backend Audit Logs
+- **Captured Information:**
+  - Timestamp (ISO 8601)
+  - User ID & Username (từ JWT claims)
+  - HTTP Method & Path
+  - Request Payload (sanitized, exclude passwords)
+  - Response Status Code
+  - IP Address & User Agent
+  - Session ID
+- **Implementation:** NestJS Interceptor + Winston Logger
+- **Storage:** 
+  - File: `logs/audit-{date}.log` (local development)
+  - ELK: Elasticsearch Index `audit-logs-*` (production)
+- **Retention:** 90 days (compliance requirement)
+- **Query Access:** Kibana Dashboard (IT Administrator role only)
+
+#### 6.2.3 Security Event Monitoring
+- **Critical Events:**
+  - Multiple failed login attempts (> 5 in 5 minutes)
+  - Privilege escalation attempts
+  - Access to Quarantine/Rejected lots
+  - Session termination by Manager
+  - Backup/Restore operations
+- **Alerting:** 
+  - Slack/Email notifications for critical events
+  - Prometheus AlertManager integration
+- **Dashboard:** Grafana Security Overview (realtime metrics)
+
+### 6.3 Luồng xác thực & Ủy quyền
+
+#### 6.3.1 Authentication Flow (PKCE)
+1. **Khởi tạo:** User truy cập Frontend → Redirect sang Keycloak Login Page
+2. **PKCE Challenge:** Frontend tạo `code_verifier` và `code_challenge` (SHA-256)
+3. **Authorization Code:** Keycloak xác thực thông tin → trả về Authorization Code
+4. **Token Exchange:** Frontend gọi Token Endpoint với Code + Code Verifier → nhận Access Token (JWT) & Refresh Token
+5. **Token Storage:** Lưu tokens vào SessionStorage (hoặc Memory cho bảo mật cao hơn)
+
+#### 6.3.2 API Authorization Flow
+```
+Frontend → Backend API Request
+├─ Header: Authorization: Bearer <Access_Token>
+├─ Backend NestJS Guard:
+│  ├─ Extract JWT from Header
+│  ├─ Verify Signature using JWKS (cached in Redis)
+│  ├─ Validate Expiration, Issuer, Audience
+│  ├─ Check Blacklist (Redis)
+│  └─ Extract User Claims (sub, roles, email)
+├─ Role/Resource Guards: Check permissions
+└─ Execute API Logic or Return 401/403
+```
+
+#### 6.3.3 Token Lifecycle Management
+- **Access Token TTL:** 15 minutes (production), 1 hour (development)
+- **Refresh Token TTL:** 8 hours (production)
+- **Refresh Strategy:** Silent refresh 2 minutes before expiration (frontend timer)
+- **Revocation:** 
+  - Logout: Frontend clears storage + Backend adds token to Redis Blacklist
+  - Session Termination: Manager triggers Keycloak Admin API → revoke all user sessions
+
+#### 6.3.4 Two-Factor Authentication (2FA)
+- **Required For:** IT Administrator role
+- **Trigger Scenarios:**
+  - System Backup/Restore operations (US05)
+  - Access to Audit Logs
+  - Critical system configuration changes
+- **Implementation:** Keycloak OTP Policy (TOTP)
+  - Apps: Google Authenticator, Authy, FreeOTP
+  - Recovery Codes: 10 single-use codes generated at setup
+
+### 6.4 Phân quyền dựa trên vai trò (RBAC)
 
 Hệ thống định nghĩa 4 vai trò chính với các quyền hạn đặc thù dựa trên User Stories:
 
-| Vai trò (Role)       | Phạm vi quyền hạn (Permissions)                                                                                | Ghi chú nghiệp vụ      |
-| :------------------- | :------------------------------------------------------------------------------------------------------------- | :--------------------- |
-| **Manager**          | Tra cứu tập trung, phê duyệt phiếu nhập/xuất, điều chỉnh tồn kho, quản lý người dùng và xem Dashboard.         | US01 - US15 (Manager)  |
-| **Quality Control**  | Đánh giá lô hàng (QC), xử lý hàng Rejected, cách ly hàng hóa (Quarantine), truy xuất nguồn gốc (Traceability). | US01 - US06 (QC)       |
-| **Operator**         | Tạo phiếu nhập/xuất điện tử, xác thực kiểm đếm thực tế (Blind count), thực hiện kiểm kê tại hiện trường.       | US01 - US05 (Operator) |
-| **IT Administrator** | Giám sát sức khỏe hệ thống, quản lý Log tập trung, thiết lập sao lưu và phục hồi dữ liệu (Restore).            | US01 - US06 (IT Admin) |
+| Vai trò (Role)       | Phạm vi quyền hạn (Permissions)                                                                                | Ghi chú nghiệp vụ      | Keycloak Roles         |
+| :------------------- | :------------------------------------------------------------------------------------------------------------- | :--------------------- | :--------------------- |
+| **Manager**          | Tra cứu tập trung, phê duyệt phiếu nhập/xuất, điều chỉnh tồn kho, quản lý người dùng và xem Dashboard.         | US01 - US15 (Manager)  | `manager`, `user`      |
+| **Quality Control**  | Đánh giá lô hàng (QC), xử lý hàng Rejected, cách ly hàng hóa (Quarantine), truy xuất nguồn gốc (Traceability). | US01 - US06 (QC)       | `quality_control`, `user` |
+| **Operator**         | Tạo phiếu nhập/xuất điện tử, xác thực kiểm đếm thực tế (Blind count), thực hiện kiểm kê tại hiện trường.       | US01 - US05 (Operator) | `operator`, `user`     |
+| **IT Administrator** | Giám sát sức khỏe hệ thống, quản lý Log tập trung, thiết lập sao lưu và phục hồi dữ liệu (Restore).            | US01 - US06 (IT Admin) | `it_admin`, `user`     |
 
-### 6.4 Cơ chế bảo vệ đặc thù
+#### 6.4.1 Role Mapping Strategy
+- **Realm Roles:** Định nghĩa trong Keycloak Realm `inventory-management`
+- **Composite Roles:** Base role `user` (read-only) được composite vào tất cả roles khác
+- **JWT Claims:** Roles được đưa vào JWT claim `realm_access.roles[]`
+- **Backend Mapping:** 
+  ```typescript
+  @Roles('manager')
+  @Public(false)
+  async approveTransaction() { ... }
+  
+  @Resource('inventory-lots')
+  @Roles('quality_control')
+  async quarantineLot() { ... }
+  ```
+
+#### 6.4.2 Fine-Grained Permissions
+- **Resource-Based Access Control:**
+  - Operator: Chỉ được chỉnh sửa transactions do chính mình tạo
+  - Manager: Có thể override mọi transactions
+  - QC: Chỉ được thao tác trên lots ở trạng thái Quarantine
+- **Implementation:** NestJS Custom Guards + MongoDB ownership queries
+
+### 6.5 Cơ chế bảo vệ đặc thù
 
 Dựa trên các yêu cầu an ninh từ User Stories, hệ thống triển khai các kỹ thuật sau:
 
-- **Session Termination (Manager US14):** Khi Manager thực hiện khóa tài khoản, hệ thống gọi API `Admin REST` của Keycloak để thu hồi toàn bộ Active Sessions. Đồng thời, NestJS cập nhật Blacklist trong **Redis** để từ chối Access Token hiện tại ngay lập tức.
-- **Audit Trail (Manager US15):** Mọi thao tác (Method, Path, UserID, Payload) được NestJS Interceptor ghi lại và đẩy về **ELK Stack**. Nhật ký này được thiết lập ở chế độ **Read-only** để đảm bảo tính toàn vẹn cho công tác hậu kiểm.
-- **Hard-locking (QC US04):** Khi QC thực hiện lệnh cách ly (Quarantine), trạng thái được ghi vào DB và đồng bộ lên **Redis Cache**. Mọi API liên quan đến `Picking` hoặc `Transfer` sẽ kiểm tra trạng thái này đầu tiên để chặn giao dịch trong < 50ms.
-- **Data Integrity (IT Admin US04):** Các bản sao lưu được bảo vệ bằng mã **Checksum (SHA-256)**. Hệ thống Security kiểm tra mã này trước khi cho phép tiến hành quy trình Restore nhằm đảm bảo dữ liệu không bị thay đổi trái phép.
+#### 6.5.1 Session Termination (Manager US14)
+- **Khi nào:** Manager thực hiện khóa tài khoản người dùng
+- **Cơ chế:**
+  1. Backend gọi Keycloak Admin REST API: `DELETE /admin/realms/{realm}/users/{userId}/sessions`
+  2. Thu hồi toàn bộ Active Sessions của user
+  3. NestJS cập nhật Token Blacklist trong Redis với TTL = remaining token lifetime
+  4. Mọi API request với token bị blacklist sẽ nhận `401 Unauthorized`
+- **Response Time:** < 100ms (cached check)
+- **Logging:** Event được ghi vào Audit Log với severity HIGH
 
-### 6.5 Quản lý thông tin định danh
+#### 6.5.2 Audit Trail (Manager US15)
+- **Dữ liệu ghi nhận:** Method, Path, UserID, Username, Payload (sanitized), Response Status, IP, User Agent, Timestamp
+- **Implementation:** NestJS Interceptor (`AuditLogInterceptor`)
+- **Storage Pipeline:**
+  - Winston Logger → `logs/audit-{date}.log`
+  - Filebeat → Logstash → Elasticsearch Index `audit-logs-YYYY.MM`
+- **Read-only Protection:** Elasticsearch Index templates với `index.blocks.write: true` sau 24h
+- **Compliance:** 90 days retention (đáp ứng yêu cầu kiểm toán)
+- **Access Control:** Chỉ IT Administrator có quyền query Kibana Dashboard
 
-- **Mã hóa:** Thông tin mật khẩu được Keycloak quản lý và băm (hashing) bằng thuật toán **PBKDF2** hoặc **Bcrypt** (tương đương yêu cầu US12).
-- **Linh hoạt quyền hạn:** Manager có thể thay đổi Role của nhân sự trên giao diện quản trị (US13). Keycloak sẽ cập nhật Claims trong Token mới ngay khi người dùng Re-login.
+#### 6.5.3 Hard-locking cho Quarantine (QC US04)
+- **Khi nào:** QC thực hiện cách ly lô hàng (set status = Quarantine)
+- **Cơ chế:**
+  1. Update MongoDB: `lots.status = 'Quarantine'`
+  2. Sync to Redis: `SET quarantine:lot:{lotId} true EX 86400`
+  3. API Guards kiểm tra Redis trước khi cho phép Picking/Transfer/Usage
+  4. Nếu lot bị Quarantine → trả về `423 Locked` với thông báo rõ ràng
+- **Performance:** < 50ms (Redis in-memory check)
+- **Consistency:** Redis TTL 24h, background job sync lại từ MongoDB mỗi 30 phút
 
----
+#### 6.5.4 Data Integrity cho Backup/Restore (IT Admin US04)
+- **Backup Protection:**
+  - Mỗi backup file được tạo checksum SHA-256
+  - Lưu trữ: `backups/{timestamp}/dump.tar.gz` + `dump.tar.gz.sha256`
+  - Encryption at rest: AES-256 (optional cho production)
+- **Restore Validation:**
+  1. Verify checksum trước khi extract
+  2. Yêu cầu 2FA confirmation từ IT Admin
+  3. Tạo snapshot hiện tại trước khi restore
+  4. Restore + Validation queries
+  5. Rollback capability nếu validation fails
+- **Logging:** Mọi backup/restore operation ghi vào Security Event Log với full metadata
+
+### 6.6 Quản lý thông tin định danh
+
+#### 6.6.1 Password Security
+- **Hashing Algorithm:** 
+  - Keycloak default: PBKDF2-SHA256 (27,500 iterations)
+  - Alternative: Bcrypt (cost factor 10)
+- **Password Policy (Keycloak Realm Settings):**
+  - Minimum Length: 12 characters
+  - Must include: Uppercase, Lowercase, Digit, Special Character
+  - Not Recently Used: Last 5 passwords
+  - Expiration: 90 days (configurable)
+  - Max Failed Attempts: 5 → Account temporarily locked (15 minutes)
+
+#### 6.6.2 Role Management by Manager
+- **Capability:** Manager có thể thay đổi Role của nhân sự qua UI quản trị (US13)
+- **Backend Flow:**
+  1. Manager gọi API `PUT /api/users/{userId}/role`
+  2. Backend xác thực Manager role
+  3. Gọi Keycloak Admin API: Update User Role Mappings
+  4. Keycloak cập nhật User's Realm Roles
+  5. Claims trong Token mới sẽ phản ánh role updated
+- **Effect Timing:** Immediate cho tokens mới, existing tokens hết hạn sau 15 phút
+- **Audit:** Role change events được log với before/after values
+
+#### 6.6.3 User Provisioning
+- **Self-Registration:** Disabled (chỉ Manager/IT Admin có quyền tạo user)
+- **Creation Flow:**
+  1. Manager/IT Admin tạo user qua UI hoặc Keycloak Admin Console
+  2. Gửi email verification với temporary password
+  3. User đăng nhập lần đầu → bắt buộc đổi password
+  4. Setup 2FA (nếu role là IT Administrator)
+- **Deprovisioning:** 
+  - Soft delete: Set `enabled: false` trong Keycloak
+  - Hard delete: Sau 90 days retention period (compliance requirement)
+
+### 6.7 Network Security & Access Points
+
+#### 6.7.1 Network Topology
+```
+                    ┌─────────────────┐
+                    │   Internet      │
+                    └────────┬────────┘
+                             │ HTTPS (443)
+                    ┌────────▼────────┐
+                    │  Load Balancer  │
+                    │  (nginx/ALB)    │
+                    └────────┬────────┘
+                             │
+          ┌──────────────────┼──────────────────┐
+          │ HTTPS            │ HTTPS            │ HTTPS
+    ┌─────▼─────┐     ┌─────▼─────┐     ┌─────▼─────┐
+    │ Frontend  │     │  Backend  │     │ Keycloak  │
+    │ (React)   │────▶│  (NestJS) │────▶│   (IdP)   │
+    │ Port 5173 │     │ Port 3000 │     │ Port 8080 │
+    └───────────┘     └─────┬─────┘     └───────────┘
+                            │
+                    ┌───────┼───────┐
+                    │       │       │
+              ┌─────▼──┐ ┌─▼────┐ ┌▼─────────┐
+              │MongoDB │ │Redis │ │  ELK     │
+              │ 27017  │ │ 6379 │ │ Stack    │
+              └────────┘ └──────┘ └──────────┘
+```
+
+#### 6.7.2 External Access Points (Production)
+
+| Service           | URL/Endpoint                                           | Protocol | Port | Public Access | Authentication Required |
+|:------------------|:-------------------------------------------------------|:---------|:-----|:--------------|:------------------------|
+| **Frontend UI**   | `https://app.inventory.domain.com`                    | HTTPS    | 443  | ✅ Yes        | OAuth2/OIDC (Redirect) |
+| **Backend API**   | `https://api.inventory.domain.com/api/*`              | HTTPS    | 443  | ✅ Yes        | JWT Bearer Token       |
+| **API Docs**      | `https://api.inventory.domain.com/api/docs`           | HTTPS    | 443  | ⚠️ Restricted  | Authenticated users    |
+| **Health Check**  | `https://api.inventory.domain.com/health`             | HTTPS    | 443  | ✅ Yes        | ❌ No (Public)         |
+| **Keycloak Admin**| `https://auth.inventory.domain.com/admin`             | HTTPS    | 443  | ⚠️ Restricted  | Keycloak Admin account |
+| **Keycloak Realm**| `https://auth.inventory.domain.com/realms/inventory`  | HTTPS    | 443  | ✅ Yes        | OIDC Redirect          |
+
+#### 6.7.3 Internal Access Points (Development)
+
+| Service           | URL/Endpoint                                  | Protocol | Port  | Docker Network   | Notes                    |
+|:------------------|:----------------------------------------------|:---------|:------|:-----------------|:-------------------------|
+| Frontend          | `http://localhost:5173`                       | HTTP     | 5173  | host             | Vite Dev Server          |
+| Backend API       | `http://localhost:3000/api`                   | HTTP     | 3000  | inventory-net    | NestJS with hot-reload   |
+| Keycloak          | `http://localhost:8080`                       | HTTP     | 8080  | inventory-net    | Admin: admin/admin       |
+| MongoDB           | `mongodb://localhost:27017/inventory`         | MongoDB  | 27017 | inventory-net    | No auth in dev mode      |
+| Redis             | `redis://localhost:6379`                      | Redis    | 6379  | inventory-net    | No password in dev       |
+| Elasticsearch     | `http://localhost:9200`                       | HTTP     | 9200  | inventory-net    | ELK Stack                |
+| Kibana            | `http://localhost:5601`                       | HTTP     | 5601  | inventory-net    | Log visualization        |
+
+#### 6.7.4 Security Headers & CORS
+
+**CORS Configuration (Backend):**
+```typescript
+// main.ts - NestJS
+app.enableCors({
+  origin: [
+    'http://localhost:5173',           // Dev
+    'https://app.inventory.domain.com' // Prod
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Number'],
+  maxAge: 3600
+});
+```
+
+**Security Headers (nginx/Response):**
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+```
+
+#### 6.7.5 SSL/TLS Configuration
+
+- **Minimum TLS Version:** TLS 1.2 (khuyến nghị TLS 1.3)
+- **Cipher Suites:** ECDHE-RSA-AES256-GCM-SHA384, ECDHE-RSA-AES128-GCM-SHA256 (Forward Secrecy)
+- **Certificate Management:**
+  - Development: Self-signed certificates hoặc mkcert
+  - Production: Let's Encrypt (auto-renewal) hoặc Commercial CA
+  - Certificate storage: Kubernetes Secrets / Docker Secrets
+- **HSTS:** Enabled with 1-year max-age + includeSubDomains
+
+#### 6.7.6 Rate Limiting & DDoS Protection
+
+- **API Gateway Rate Limits:**
+  - Anonymous: 10 req/minute
+  - Authenticated: 100 req/minute
+  - Manager/QC: 200 req/minute
+  - IT Admin: 500 req/minute
+- **Implementation:** 
+  - NestJS: `@nestjs/throttler` package
+  - Redis backend for distributed rate limiting
+- **Keycloak Protection:**
+  - Login attempts: 5 failures → 15 minutes account lockout
+  - Brute force detection: Automatic IP blacklisting
+- **Infrastructure:**
+  - Production: CloudFlare / AWS WAF / Azure Front Door
+  - DDoS mitigation: Layer 7 protection enabled
+
+#### 6.7.7 Firewall Rules (Kubernetes NetworkPolicy)
+
+```yaml
+# Example: Backend can only be accessed from Frontend and Ingress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 3000
+```
 
 ## 7. Database Schema
 
