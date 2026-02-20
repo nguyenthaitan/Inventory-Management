@@ -151,16 +151,15 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 ### 3. Deployment View
 
-<img width="1089" height="995" alt="image" src="https://github.com/user-attachments/assets/59ae026e-99d7-45f1-993a-a2d7de45f13b" />
+#### Giao diện web cho Người dùng (User's Device)
 
-#### Giao diện Người dùng (User's Device)
+Tất cả các kết nối từ thiết bị người dùng đến hệ thống đều được thực hiện qua giao thức **HTTPS** để đảm bảo tính bảo mật và mã hóa dữ liệu. 
+Hosted URL: https://inventory-system.cloud/
 
-Hệ thống hỗ trợ đa nền tảng bao gồm **React Web** và **Mobile App**. Tất cả các kết nối từ thiết bị người dùng đến hệ thống đều được thực hiện qua giao thức **HTTPS** để đảm bảo tính bảo mật và mã hóa dữ liệu.
+#### Backend cho hệ thống
+Đây là trung tâm xử lý nghiệp vụ, đóng vai trò điều phối dữ liệu giữa giao diện người dùng và các hệ thống lưu trữ/xác thực. Hệ thống Backend được đóng gói và triển khai trên nền tảng đám mây để đảm bảo khả năng mở rộng và tính sẵn sàng cao.
 
-#### Kubernetes Cluster (K8s)
-
-- **Ingress Controller:** Đóng vai trò là điểm tiếp nhận duy nhất, thực hiện điều hướng (Routing) để phân biệt yêu cầu truy cập giao diện (Frontend) hay dữ liệu (Backend API).
-- **IMS Pod (Monolith):** Mã nguồn NestJS chạy tập trung trong các Pods. Có khả năng nhân bản (Scaling) linh hoạt trên K8s để xử lý tải khi cần thiết.
+Hosted URL: inventory-management-6411.onrender.com
 
 #### Bảo mật (Security - Keycloak)
 
@@ -171,6 +170,7 @@ Backend và Frontend thực hiện xác thực và định danh người dùng t
 Được triển khai trên các Nodes chuyên dụng nhằm tối ưu hiệu suất lưu trữ:
 
 - **MongoDB:** Lưu trữ dữ liệu chính của hệ thống.
+- Connection string: mongodb+srv://admin:123@inventorymanagement.kbyjdmp.mongodb.net/?appName=InventoryManagement
 - **Redis:** Xử lý Caching và cơ chế **Locking tồn kho** với tốc độ cực nhanh, tránh xung đột dữ liệu.
 
 #### Tầng Giám sát (Observability Tier)
