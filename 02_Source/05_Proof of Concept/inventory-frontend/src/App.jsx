@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { useKeycloak } from '@react-keycloak/web' 
+import { useKeycloak } from '@react-keycloak/web'
+import QCTestList from './components/QCTestList'
 
 function App() {
   const { keycloak, initialized } = useKeycloak()
@@ -168,6 +169,10 @@ function App() {
           )}
         </section>
 
+        {/* AI QC Analysis Section - No authentication required */}
+        <section className="qc-section">
+          <QCTestList />
+        </section>
 
       </main>
 

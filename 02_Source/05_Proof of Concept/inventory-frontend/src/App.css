@@ -75,6 +75,11 @@ h1 { font-size:1.15rem; margin:0; font-weight:700; }
 
 .app-footer { margin-top:auto; text-align:center; padding:1rem 0; font-size:.9rem; color:var(--muted); }
 
+/* QC Section Spacing */
+.qc-section {
+  margin-top: 2rem;
+}
+
 
 
 @media (max-width:600px) {
