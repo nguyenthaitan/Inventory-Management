@@ -159,8 +159,8 @@ Hosted URL: https://inventory-system.cloud/
 #### Backend cho hệ thống
 Đây là trung tâm xử lý nghiệp vụ, đóng vai trò điều phối dữ liệu giữa giao diện người dùng và các hệ thống lưu trữ/xác thực. Hệ thống Backend được đóng gói và triển khai trên nền tảng đám mây để đảm bảo khả năng mở rộng và tính sẵn sàng cao.
 
-Hosted URL: inventory-management-6411.onrender.com
-
+Hosted URL: [inventory-management-6411.onrender.com
+](https://inventory-management-6411.onrender.com/)
 #### Bảo mật (Security - Keycloak)
 
 Backend và Frontend thực hiện xác thực và định danh người dùng thông qua **Keycloak** (IdP) bên ngoài cụm K8s. Mọi truy cập đều đi qua **HTTPS**, sử dụng chuẩn **OIDC/OAuth2**, Access Token dạng **JWT** được Backend kiểm tra chữ ký trước khi cho phép truy cập tài nguyên.
