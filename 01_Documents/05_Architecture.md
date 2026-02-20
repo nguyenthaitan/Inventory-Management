@@ -180,35 +180,58 @@ Backend và Frontend thực hiện xác thực và định danh người dùng t
 
 ### 4. Process View
 
-<img width="1727" height="1025" alt="image" src="https://github.com/user-attachments/assets/5ef84afb-f075-44d6-aea1-5c4ca88a2a72" />
 
-#### Logic So sánh Tự động
+## 4. Process View (Luồng Xử lý Nghiệp vụ)
 
-Tại bước xử lý dữ liệu, **Business Logic của NestJS** thực hiện đối soát tự động:
+### Inbound Receipt & QC Evaluation Workflow
 
-- So sánh các giá trị thực tế nhập vào với ngưỡng thông số cho phép được cấu hình trong Database.
-- Hệ thống tự động phản hồi tín hiệu trực quan, thực hiện **bôi đỏ trên giao diện** nếu dữ liệu nằm ngoài ngưỡng an toàn, giúp nhân viên nhận diện sai sót tức thì.
+#### Thành phần tham gia:
+- **Frontend (React):** UI Components cho Operator và QC Personnel.
+- **Backend (NestJS):** API Controller, Business Logic, Auth (Keycloak/Okta).
+- **Persistence & Infra:** MongoDB, Redis (Lock), Kafka (Events), Prometheus (Metrics).
 
-#### Cập nhật Trạng thái Tức thời
+#### Các pha xử lý:
+**Phase 1: Receiving**
+1. Operator quét mã & tạo phiếu nhập tạm trên UI.
+2. Gửi yêu cầu POST /inbound-batches lên API Controller.
+3. Backend xác thực phiên làm việc (Session), kiểm tra Token hợp lệ.
+4. Lưu Batch với trạng thái PENDING vào MongoDB.
+5. Publish sự kiện "BatchCreated" lên Kafka.
+6. Trả về Batch ID cho Frontend, UI phản hồi thành công.
 
-Ngay khi quy trình QC hoàn thành đánh giá:
+**Phase 2: Quality Evaluation**
 
-- Trạng thái lô hàng được cập nhật đồng bộ ngay lập tức trên hệ thống.
-- Cho phép nhân viên vận hành (**Operator**) thực hiện lệnh cất hàng (**Put-away**) ngay khi đạt chuẩn, hoặc hệ thống sẽ tự động chặn hoàn toàn nếu hàng bị đánh giá lỗi.
+7. QC Personnel truy cập danh sách hàng chờ kiểm (GET /qc/pending).
+8. Backend trả về thông tin SKU, NCC, số lượng.
+9. QC nhập kết quả kiểm nghiệm (độ ẩm, nhiệt độ...) lên UI.
+10. Gửi PUT /qc/evaluate/{batchId} lên API Controller.
+11. Backend truy xuất Specification dựa trên SKU, tự động đối chiếu (auto-compare).
+12. Nếu đạt tiêu chuẩn:
+  - Cập nhật trạng thái Batch: ACCEPTED.
+  - Mở khóa Put-away (Lock: FALSE) trên Redis.
+  - UI cập nhật trạng thái, thông báo Operator.
+13. Nếu không đạt:
+  - Cập nhật trạng thái Batch: REJECTED.
+  - Kích hoạt Hard-locking (Lock: TRUE) trên Redis.
+  - Chặn mọi thao tác Picking/Transfer liên quan đến Batch.
+  - UI cảnh báo, bôi đỏ dữ liệu.
+14. Ghi nhận chỉ số hiệu suất QC Metrics.
 
-#### Cơ chế Khóa Cứng (Hard-locking)
+**Phase 3: Traceability & Logging**
 
-Để đảm bảo an toàn tuyệt đối cho chuỗi cung ứng, hệ thống sử dụng **Redis** để quản lý trạng thái khóa:
+15. Mọi thay đổi trạng thái đều được đẩy sự kiện vào Kafka.
+16. Lưu Audit Log và Traceability Log cho Batch.
+17. Prometheus thu thập metrics về hiệu suất, trạng thái hệ thống.
 
-- Khi một lô hàng bị trạng thái **Rejected**, cơ chế Hard-locking sẽ được kích hoạt.
-- Hệ thống sẽ chặn mọi lệnh lấy hàng (**Picking**) hoặc điều chuyển (**Transfer**) liên quan đến lô hàng đó, loại bỏ rủi ro xuất nhầm hàng lỗi.
+#### Giải thích bổ sung:
+- **Cơ chế Hard-locking:** Redis đảm bảo trạng thái khóa cứng cho các Batch bị REJECTED, loại bỏ rủi ro xuất nhầm hàng lỗi.
+- **Traceability:** Kafka lưu trữ toàn bộ lịch sử thay đổi, đảm bảo khả năng truy xuất nguồn gốc nhanh chóng (<3 giây).
+- **UI Feedback:** Frontend phản hồi tức thời, bôi đỏ dữ liệu khi có sai lệch, giúp nhân viên nhận diện và xử lý nhanh.
 
-#### Tính Minh bạch & Truy xuất (Traceability)
+#### Sơ đồ minh họa:
+![](https://github.com/user-attachments/assets/5ef84afb-f075-44d6-aea1-5c4ca88a2a72)
 
-Hệ thống đảm bảo khả năng giám sát toàn diện thông qua luồng dữ liệu thời gian thực:
-
-- Mọi sự kiện thay đổi chất lượng đều được đẩy qua **Kafka** để lưu trữ vào nhật ký truy xuất nguồn gốc.
-- Tính năng này giúp IT và Quản lý có thể truy xuất lại toàn bộ "vòng đời chất lượng" của một lô hàng bất kỳ trong thời gian **dưới 3 giây**.
+---
 
 ---
 
