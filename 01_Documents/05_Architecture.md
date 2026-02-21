@@ -628,114 +628,110 @@ spec:
 
 ## 7. Database Schema
 
-Hệ thống sử dụng **MongoDB**. Dữ liệu được tổ chức thành các **Collections**. Các quan hệ được quản lý thông qua **References** (tương tự Foreign Keys) để đảm bảo tính toàn vẹn cho hệ thống quản lý kho phức tạp.
+Hệ thống sử dụng **MongoDB** với mô hình **Collections + Document**. Các quan hệ 1:N được thể hiện qua **ObjectId Reference**, các phần dữ liệu gắn chặt (sub-steps, labels) có thể **embed** để giảm số lần join ứng dụng.
 
-### Users Collection
+### Users Collection (auth/keycloak sync)
 
-Lưu trữ thông tin người dùng và phân quyền.
-
-| Field        | Type          | Constraints      | Description                                                 |
-| :----------- | :------------ | :--------------- | :---------------------------------------------------------- |
-| `_id`        | String/UUID   | PK, NOT NULL     | ID duy nhất                                                 |
-| `username`   | String        | NOT NULL, UNIQUE | Tên đăng nhập                                               |
-| `email`      | String        | NOT NULL, UNIQUE | Email người dùng                                            |
-| `password`   | String        | NOT NULL         | Hash Bcrypt                                                 |
-| `role`       | String (Enum) | NOT NULL         | Admin, InventoryManager, QualityControl, Production, Viewer |
-| `is_active`  | Boolean       | Default: true    | Trạng thái tài khoản                                        |
-| `last_login` | Date          | Nullable         | Lần đăng nhập cuối                                          |
-| `created_at` | Date          | Default: NOW     | Ngày tạo                                                    |
+| Field | Type | Notes |
+| :---- | :--- | :---- |
+| `_id` | ObjectId | Tự sinh bởi MongoDB, index mặc định |
+| `username` | String | Unique index |
+| `email` | String | Unique index |
+| `role` | String (Enum: manager, operator, qc, it_admin) | Lưu role ánh xạ từ Keycloak |
+| `is_active` | Boolean | Default: true |
+| `last_login` | Date |  |
+| `created_at` | Date | Default: now() |
 
 ### Materials Collection
 
-Dữ liệu gốc về vật tư, nguyên liệu và sản phẩm.
-
-| Field                | Type          | Constraints      | Description                     |
-| :------------------- | :------------ | :--------------- | :------------------------------ |
-| `material_id`        | String        | PK, NOT NULL     | Mã vật tư nội bộ                |
-| `part_number`        | String        | NOT NULL, UNIQUE | Mã Part Number (VD: PART-12345) |
-| `material_name`      | String        | NOT NULL         | Tên hiển thị                    |
-| `material_type`      | String (Enum) | NOT NULL         | API, Excipient, Container, v.v. |
-| `storage_conditions` | String        | Nullable         | Điều kiện bảo quản              |
-| `spec_doc`           | String        | Nullable         | Tham chiếu tài liệu kỹ thuật    |
+| Field | Type | Notes                                                    |
+| :---- | :--- |:---------------------------------------------------------|
+| `_id` | ObjectId | Primary document id                                      |
+| `material_code` | String | Mã nội bộ, unique index (vd: MAT-001)                    |
+| `name` | String | Tên hiển thị                                             |
+| `type` | String (Enum) | API, Excipient, Container, FinishedProduct, Intermediate |
+| `storage_conditions` | String |                                                          |
+| `spec_doc` | String | URL/đường dẫn tài liệu kỹ thuật                          |
+| `created_at` / `updated_at` | Date | ISODate                                                  |
 
 ### InventoryLots Collection
 
-Chi tiết từng lô hàng nhập kho hoặc lô sản xuất.
-
-| Field             | Type          | Constraints        | Description                              |
-| :---------------- | :------------ | :----------------- | :--------------------------------------- |
-| `lot_id`          | String/UUID   | PK, NOT NULL       | ID lô hàng                               |
-| `material_id`     | String        | Ref: Materials     | Liên kết với vật tư                      |
-| `mfr_name`        | String        | NOT NULL           | Tên nhà sản xuất                         |
-| `mfr_lot`         | String        | NOT NULL           | Số lô của nhà sản xuất                   |
-| `status`          | String (Enum) | NOT NULL           | Quarantine, Accepted, Rejected, Depleted |
-| `quantity`        | Decimal128    | NOT NULL           | Số lượng hiện tại                        |
-| `uom`             | String        | NOT NULL           | Đơn vị tính (kg, L, each)                |
-| `expiration_date` | Date          | NOT NULL           | Ngày hết hạn                             |
-| `parent_lot_id`   | String        | Ref: InventoryLots | ID lô gốc (nếu là lô tách)               |
-| `is_sample`       | Boolean       | Default: false     | Đánh dấu hàng mẫu                        |
+| Field | Type | Notes |
+| :---- | :--- | :---- |
+| `_id` | ObjectId | lot id nội bộ |
+| `material_id` | ObjectId | Ref → `materials._id` |
+| `lot_code` | String | Mã lô đọc được (vd: LOT-2025-001), unique index |
+| `mfr_name` | String |  |
+| `mfr_lot` | String | Số lô của nhà SX |
+| `status` | String (Enum) | Quarantine, Accepted, Rejected, Depleted |
+| `quantity` | Decimal128 | Số lượng hiện tại |
+| `uom` | String | kg, g, L, pcs |
+| `expiration_date` | Date |  |
+| `parent_lot_id` | ObjectId | Ref → `inventorylots._id` (nếu là lô tách/mẫu) |
+| `is_sample` | Boolean | Default: false |
+| `created_at` / `updated_at` | Date |  |
+| `created_by` | String | Username/ID người tạo |
 
 ### InventoryTransactions Collection
 
-Lịch sử biến động của từng lô hàng.
-
-| Field              | Type          | Constraints        | Description                                 |
-| :----------------- | :------------ | :----------------- | :------------------------------------------ |
-| `transaction_id`   | String/UUID   | PK, NOT NULL       | ID giao dịch                                |
-| `lot_id`           | String        | Ref: InventoryLots | Lô hàng bị tác động                         |
-| `type`             | String (Enum) | NOT NULL           | Receipt, Usage, Split, Transfer, Adjustment |
-| `quantity`         | Decimal128    | NOT NULL           | Lượng thay đổi (+/-)                        |
-| `performed_by`     | String        | NOT NULL           | Người/Hệ thống thực hiện                    |
-| `transaction_date` | Date          | Default: NOW       | Thời điểm thực hiện                         |
-
-### ProductionBatches Collection
-
-Thông tin các mẻ sản xuất thành phẩm.
-
-| Field              | Type          | Constraints      | Description                              |
-| :----------------- | :------------ | :--------------- | :--------------------------------------- |
-| `batch_id`         | String/UUID   | PK, NOT NULL     | ID mẻ sản xuất                           |
-| `product_id`       | String        | Ref: Materials   | Sản phẩm đầu ra                          |
-| `batch_number`     | String        | UNIQUE, NOT NULL | Số hiệu mẻ (Human-readable)              |
-| `batch_size`       | Decimal128    | NOT NULL         | Quy mô mẻ                                |
-| `status`           | String (Enum) | NOT NULL         | Planned, In Progress, Complete, Rejected |
-| `manufacture_date` | Date          | NOT NULL         | Ngày sản xuất                            |
-
-### BatchComponents Collection
-
-Liên kết mẻ sản xuất với các lô nguyên liệu đầu vào.
-
-| Field          | Type        | Constraints            | Description              |
-| :------------- | :---------- | :--------------------- | :----------------------- |
-| `component_id` | String/UUID | PK, NOT NULL           | ID thành phần            |
-| `batch_id`     | String      | Ref: ProductionBatches | Thuộc mẻ sản xuất nào    |
-| `lot_id`       | String      | Ref: InventoryLots     | Lô nguyên liệu sử dụng   |
-| `planned_qty`  | Decimal128  | NOT NULL               | Số lượng dự định         |
-| `actual_qty`   | Decimal128  | Nullable               | Số lượng thực tế sử dụng |
+| Field | Type | Notes |
+| :---- | :--- | :---- |
+| `_id` | ObjectId |  |
+| `lot_id` | ObjectId | Ref → `inventorylots._id` |
+| `type` | String (Enum) | receipt, usage, split, transfer, adjustment |
+| `quantity` | Decimal128 | Dấu + nhập / - xuất |
+| `performed_by` | String | Username/ID |
+| `transaction_date` | Date | Default: now() |
+| `note` | String |  |
+| Index | `{ lot_id: 1, transaction_date: -1 }` | phục vụ truy vấn lịch sử |
 
 ### QCTests Collection
 
-Kết quả kiểm định chất lượng cho lô hàng.
+| Field | Type | Notes |
+| :---- | :--- | :---- |
+| `_id` | ObjectId |  |
+| `lot_id` | ObjectId | Ref → `inventorylots._id` |
+| `test_type` | String (Enum) | identity, potency, microbial, moisture... |
+| `result` | Object | `{ value, unit, method }` |
+| `status` | String (Enum) | pass, fail, pending |
+| `verified_by` | String | Username/ID |
+| `tested_at` | Date |  |
 
-| Field           | Type          | Constraints         | Description                        |
-| :-------------- | :------------ | :------------------ | :--------------------------------- |
-| `test_id`       | String/UUID   | PK, NOT NULL        | ID bài kiểm tra                    |
-| `lot_id`        | String        | Ref: InventoryLots  | Lô hàng được kiểm tra              |
-| `test_type`     | String (Enum) | NOT NULL            | Identity, Potency, Microbial, v.v. |
-| `test_result`   | String        | NOT NULL            | Kết quả thực tế                    |
-| `result_status` | String (Enum) | Pass, Fail, Pending | Trạng thái đánh giá                |
-| `verified_by`   | String        | Nullable            | Người phê duyệt kết quả            |
+### ProductionBatches Collection
+
+| Field | Type | Notes |
+| :---- | :--- | :---- |
+| `_id` | ObjectId |  |
+| `product_id` | ObjectId | Ref → `materials._id` (thành phẩm) |
+| `batch_number` | String | Unique index (vd: BATCH-2025-001) |
+| `batch_size` | Decimal128 |  |
+| `status` | String (Enum) | planned, in_progress, complete, rejected |
+| `manufacture_date` | Date |  |
+| `created_at` / `updated_at` | Date |  |
+
+### BatchComponents Collection (tùy chọn nếu không embed)
+
+Chỉ dùng khi muốn tách components thành collection riêng để truy vấn lớn.
+
+| Field | Type | Notes |
+| :---- | :--- | :---- |
+| `_id` | ObjectId |  |
+| `batch_id` | ObjectId | Ref → `productionbatches._id` |
+| `lot_id` | ObjectId | Ref → `inventorylots._id` |
+| `planned_qty` | Decimal128 |  |
+| `actual_qty` | Decimal128 | Nullable |
+| Index | `{ batch_id: 1 }` |  |
 
 ### LabelTemplates Collection
 
-Mẫu nhãn dùng để in ấn.
-
-| Field              | Type          | Constraints  | Description                                         |
-| :----------------- | :------------ | :----------- | :-------------------------------------------------- |
-| `template_id`      | String        | PK, NOT NULL | ID mẫu                                              |
-| `label_type`       | String (Enum) | NOT NULL     | Raw Material, Sample, Finished Product, API, Status |
-| `content`          | Text          | NOT NULL     | Markup cấu trúc nhãn (Placeholders)                 |
-| `width` / `height` | Decimal       | NOT NULL     | Kích thước nhãn (inches)                            |
+| Field | Type | Notes |
+| :---- | :--- | :---- |
+| `_id` | ObjectId |  |
+| `template_code` | String | Unique index (vd: TPL-RM-01) |
+| `label_type` | String (Enum) | raw_material, sample, finished_product, intermediate, status |
+| `content` | String (Text) | Markup chứa placeholders |
+| `width` / `height` | Number | inches/mm |
+| `created_at` | Date |  |
 
 ### Entity Relationship Overview
 
@@ -747,7 +743,7 @@ Mẫu nhãn dùng để in ấn.
 
 ### Example Data Flow
 
-1. **Tiếp nhận:** Material `MAT-001` được nhập -> Tạo `InventoryLot` (lot-uuid-001) -> Ghi `InventoryTransaction` (Receipt).
-2. **Dán nhãn:** Hệ thống lấy `LabelTemplate` (TPL-RM-01) -> Điền dữ liệu lô hàng -> In nhãn vật tư.
-3. **Kiểm định:** Tạo `QCTest` cho lô hàng -> Trạng thái lô chuyển từ `Quarantine` sang `Accepted`.
-4. **Sản xuất:** Tạo `ProductionBatch` -> `BatchComponent` liên kết lô nguyên liệu -> Trừ kho tự động thông qua `InventoryTransaction` (Usage).
+1. **Tiếp nhận:** Tạo document `materials` (MAT-001 Vitamin D3) → tạo `inventorylots` (lot-uuid-001) với `material_id` trỏ về `materials._id` → thêm `inventorytransactions` type `receipt` +25.5 kg.
+2. **Dán nhãn:** Chọn `labeltemplates` `TPL-RM-01` → embed record vào `inventorylots.labels[]` (template_id, printed_at, printed_by) → in nhãn.
+3. **Kiểm định:** Thêm `qctests` cho `lot-uuid-001` → cập nhật `inventorylots.status` từ `quarantine` → `accepted` khi tất cả `qctests.status = pass`.
+4. **Sản xuất:** Tạo `productionbatches` cho sản phẩm `product_id` trỏ `materials._id` → embed `components[]` với `lot_id` và định mức → ghi `inventorytransactions` type `usage` -2 kg cho `lot-uuid-001`.
