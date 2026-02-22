@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { useKeycloak } from '@react-keycloak/web'
 import QCTestList from './components/QCTestList'
+import BarcodeDemo from './components/BarcodeDemo'
 
 function App() {
   const { keycloak, initialized } = useKeycloak()
@@ -64,6 +65,7 @@ function App() {
   }, [initialized, keycloak])
 
   const [apiResult, setApiResult] = useState(null)
+  const [showBarcodeDemo, setShowBarcodeDemo] = useState(false)
 
   // Base URL for backend API (configurable via VITE_API_BASE)
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3000'
@@ -128,13 +130,31 @@ function App() {
     }
   }
 
+  if (showBarcodeDemo) {
+    return (
+      <div className="app">
+        <header className="app-header">
+          <div className="brand">
+            <h1>Inventory PoC</h1>
+          </div>
+          <button className="btn-primary" onClick={() => setShowBarcodeDemo(false)}>Quay lại màn chính</button>
+        </header>
+        <main className="main">
+          <section className="barcode-section">
+            <BarcodeDemo />
+          </section>
+        </main>
+        <footer className="app-footer muted">Built for demo</footer>
+      </div>
+    )
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <div className="brand">
           <h1>Inventory PoC</h1>
-        </div> 
-
+        </div>
         <nav className="user-actions">
           {initialized ? (
             keycloak?.authenticated ? (
@@ -150,16 +170,15 @@ function App() {
           )}
         </nav>
       </header>
-
       <main className="main">
         <section className="hero card">
           <h2>Welcome to Inventory PoC</h2>
           <p className="subtitle">Modernized UI — cleaner layout, better buttons, responsive by default.</p>
-
           <div className="controls">
             <div className="btn-group">
               <button className="btn btn-primary" onClick={callApiAll}>Call API for all users</button>
               <button className="btn btn-primary" onClick={callApiManager}>Call API for managers</button>
+              <button className="btn btn-primary" onClick={() => setShowBarcodeDemo(true)}>Barcode Demo</button>
             </div>
           </div>
           {apiResult && (
@@ -173,9 +192,7 @@ function App() {
         <section className="qc-section">
           <QCTestList />
         </section>
-
       </main>
-
       <footer className="app-footer muted">Built for demo</footer>
     </div>
   )
