@@ -106,7 +106,111 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 ### 2. Development View
 
-<img width="1117" height="812" alt="image" src="https://github.com/user-attachments/assets/3fe4a702-13ad-4d54-831c-d6f90e129d20" />
+<!-- <img width="1117" height="812" alt="image" src="https://github.com/user-attachments/assets/3fe4a702-13ad-4d54-831c-d6f90e129d20" /> -->
+.
+└── 01_Source Code/
+    ├── docker-compose.yml
+    ├── frontend/
+    │   ├── index.html
+    │   ├── package-lock.json
+    │   ├── package.json
+    │   └── src/
+    │       ├── components/
+    │       │   ├── Material/
+    │       │   │   ├── MaterialList.tsx
+    │       │   │   ├── MaterialDetail.tsx
+    │       │   │   ├── MaterialForm.tsx
+    │       │   │   ├── ...
+    │       │   │   └── index.ts
+    │       │   ├── User/
+    │       │   │   ├── UserList.tsx
+    │       │   │   ├── UserDetail.tsx
+    │       │   │   ├── UserForm.tsx
+    │       │   │   ├── ...
+    │       │   │   └── index.ts
+    │       │   ├── InventoryLot/
+    │       │   │   ├── InventoryLotList.tsx
+    │       │   │   ├── InventoryLotDetail.tsx
+    │       │   │   ├── InventoryLotForm.tsx
+    │       │   │   ├── ...
+    │       │   │   └── index.ts
+    │       │   └── ProductionBatch/
+    │       │       ├── ProductionBatchList.tsx
+    │       │       ├── ProductionBatchDetail.tsx
+    │       │       ├── ProductionBatchForm.tsx
+    │       │       ├── ...
+    │       │       └── index.ts
+    │       ├── pages/
+    │       │   ├── MaterialPage.tsx
+    │       │   ├── UserPage.tsx
+    │       │   ├── InventoryLotPage.tsx
+    │       │   └── ProductionBatchPage.tsx
+    │       ├── services/
+    │       │   ├── materialService.ts
+    │       │   ├── userService.ts
+    │       │   ├── inventoryLotService.ts
+    │       │   └── productionBatchService.ts
+    │       ├── types/
+    │       │   ├── material.ts
+    │       │   ├── user.ts
+    │       │   ├── inventoryLot.ts
+    │       │   └── productionBatch.ts
+    │       ├── assets/
+    │       ├── App.tsx
+    │       ├── main.tsx
+    │       ├── index.css
+    │       └── ...
+    ├── database/
+    │   └── mongo-init.js
+    ├── backend/
+    │   ├── src/
+    │   │   ├── material/
+    │   │   │   ├── material.controller.ts
+    │   │   │   ├── material.service.ts
+    │   │   │   ├── material.schema.ts
+    │   │   │   ├── material.repository.ts
+    │   │   │   ├── dto/
+    │   │   │   ├── interfaces/
+    │   │   │   └── material.module.ts
+    │   │   ├── inventory-lot/
+    │   │   │   ├── inventory-lot.controller.ts
+    │   │   │   ├── inventory-lot.service.ts
+    │   │   │   ├── inventory-lot.schema.ts
+    │   │   │   ├── inventory-lot.repository.ts
+    │   │   │   ├── dto/
+    │   │   │   ├── interfaces/  
+    │   │   │   └── inventory-lot.module.ts
+    │   │   ├── production-batch/
+    │   │   │   ├── production-batch.controller.ts
+    │   │   │   ├── production-batch.service.ts
+    │   │   │   ├── production-batch.schema.ts
+    │   │   │   ├── production-batch.repository.ts
+    │   │   │   ├── dto/
+    │   │   │   ├── interfaces/
+    │   │   │   └── production-batch.module.ts
+    │   │   ├── database/
+    │   │   │   ├── database.module.ts
+    │   │   │   └── mongoose.config.ts
+    │   │   ├── event-bus/
+    │   │   │   ├── kafka.module.ts
+    │   │   │   ├── kafka.service.ts
+    │   │   │   └── kafka.config.ts
+    │   │   ├── app.module.ts
+    │   │   ├── main.ts
+    │   │   └── ...
+    │   ├── test/
+    │   ├── package.json
+    │   ├── tsconfig.json
+    │   └── ...
+    └── infra/
+        ├── k8s/
+        │   ├── deployment.yaml
+        │   ├── ingress.yaml
+        │   ├── mongo-pv.yaml
+        │   └── redis-config.yaml
+        └── docker/
+            ├── backend.Dockerfile
+            └── frontend.Dockerfile
 
 #### 01_Source Code: Thư mục gốc chứa toàn bộ mã nguồn và cấu hình triển khai
 
