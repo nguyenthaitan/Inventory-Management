@@ -107,6 +107,7 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 ### 2. Development View
 
 <!-- <img width="1117" height="812" alt="image" src="https://github.com/user-attachments/assets/3fe4a702-13ad-4d54-831c-d6f90e129d20" /> -->
+```
 .
 └── 01_Source Code/
     ├── docker-compose.yml
@@ -211,6 +212,7 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
         └── docker/
             ├── backend.Dockerfile
             └── frontend.Dockerfile
+```
 
 #### 01_Source Code: Thư mục gốc chứa toàn bộ mã nguồn và cấu hình triển khai
 
