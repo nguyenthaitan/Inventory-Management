@@ -225,13 +225,13 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 - **package.json**: Liệt kê dependencies, scripts (start, build, test) và cấu hình dự án frontend.
 - **src/**: Thư mục mã nguồn chính của ứng dụng.
   - **components/**: Các thành phần React tái sử dụng theo domain (Material, InventoryLot, ProductionBatch...). Mỗi domain có thư mục riêng chứa các component con (List, Detail, Form) và một file index.ts để gom tất cả các component con lại và xuất ra cùng lúc.
-  - **pages/**: các trang (route-level components) tương ứng với URL ứng dụng.
-  - **services/**: lớp hoặc hàm giúp gọi API backend, xử lý logic giao tiếp HTTP.
-  - **types/**: định nghĩa TypeScript interfaces/aliases cho DTOs và props.
-  - **assets/**: chứa hình ảnh, biểu tượng và các tài nguyên tĩnh khác.
-  - **App.tsx**: component gốc chứa Router, Provider (Keycloak, Contexts) và cấu hình chung.
-  - **main.tsx**: điểm vào của Vite/React, render `<App />` vào DOM.
-  - **index.css**: các style toàn cục hoặc reset CSS áp dụng cho toàn bộ ứng dụng.
+  - **pages/**: Các trang (route-level components) tương ứng với URL ứng dụng.
+  - **services/**: Lớp hoặc hàm giúp gọi API backend, xử lý logic giao tiếp HTTP.
+  - **types/**: Định nghĩa interfaces/type aliases TypeScript cho DTOs và props.
+  - **assets/**: Chứa hình ảnh, biểu tượng và các tài nguyên tĩnh khác.
+  - **App.tsx**: Component gốc chứa Router, Provider (Keycloak, Contexts) và cấu hình chung.
+  - **main.tsx**: Điểm vào của Vite/React, render `<App />` vào DOM.
+  - **index.css**: Các style toàn cục hoặc reset CSS áp dụng cho toàn bộ ứng dụng.
 
 #### database/: Cấu hình dữ liệu
 
