@@ -220,10 +220,18 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 #### frontend/: Ứng dụng giao diện người dùng (React.js + TypeScript)
 
-- **package.json**: Quản lý các thư viện phụ thuộc như React, Keycloak-js, Axios và các scripts build/run.
-- **src/**: Chứa mã nguồn chính của giao diện.
-  - **App.tsx**: File thành phần gốc, nơi định nghĩa Route và bọc ứng dụng trong Keycloak Provider để quản lý bảo mật.
-  - **main.tsx**: Điểm đầu vào (Entry point) của ứng dụng để render React vào DOM.
+- **index.html**:
+- **package-lock.json**:
+- **package.json**:
+- **src/**:
+  - **components/**: 
+  - **pages/**:
+  - **services/**:
+  - **types/**:
+  - **assets/**: 
+  - **App.tsx**:
+  - **main.tsx**:
+  - **index.css**:
 
 #### database/: Cấu hình dữ liệu
 
