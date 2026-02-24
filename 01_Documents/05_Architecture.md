@@ -220,18 +220,18 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 #### frontend/: Ứng dụng giao diện người dùng (React.js + TypeScript)
 
-- **index.html**:
-- **package-lock.json**:
-- **package.json**:
-- **src/**:
-  - **components/**: 
-  - **pages/**:
-  - **services/**:
-  - **types/**:
-  - **assets/**: 
-  - **App.tsx**:
-  - **main.tsx**:
-  - **index.css**:
+- **index.html**: điểm vào của SPA chứa thẻ `<div id="root">` nơi React mount và các meta tags cơ bản.
+- **package-lock.json**: khóa phiên bản chính xác của các gói npm đã cài để đảm bảo build nhất quán.
+- **package.json**: liệt kê dependencies, scripts (start, build, test) và cấu hình dự án frontend.
+- **src/**: thư mục mã nguồn chính của ứng dụng.
+  - **components/**: các thành phần React tái sử dụng theo domain (Material, InventoryLot, ProductionBatch...).
+  - **pages/**: các trang (route-level components) tương ứng với URL ứng dụng.
+  - **services/**: lớp hoặc hàm giúp gọi API backend, xử lý logic giao tiếp HTTP.
+  - **types/**: định nghĩa TypeScript interfaces/aliases cho DTOs và props.
+  - **assets/**: chứa hình ảnh, biểu tượng và các tài nguyên tĩnh khác.
+  - **App.tsx**: component gốc chứa Router, Provider (Keycloak, Contexts) và cấu hình chung.
+  - **main.tsx**: điểm vào của Vite/React, render `<App />` vào DOM.
+  - **index.css**: các style toàn cục hoặc reset CSS áp dụng cho toàn bộ ứng dụng.
 
 #### database/: Cấu hình dữ liệu
 
