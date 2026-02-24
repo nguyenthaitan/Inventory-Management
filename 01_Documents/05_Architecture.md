@@ -221,10 +221,10 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 #### frontend/: Ứng dụng giao diện người dùng (React.js + TypeScript)
 
 - **index.html**: Điểm vào của SPA(Single-Page Application) - trang HTML tĩnh duy nhất mà trình duyệt tải lên đầu tiên, chứa thẻ `<div id="root">` nơi React mount và các meta tags cơ bản.
-- **package-lock.json**: khóa phiên bản chính xác của các gói npm đã cài để đảm bảo build nhất quán, tránh trường hợp máy khác cài đặt các phiên bản khác nhau gây lỗi.
-- **package.json**: liệt kê dependencies, scripts (start, build, test) và cấu hình dự án frontend.
-- **src/**: thư mục mã nguồn chính của ứng dụng.
-  - **components/**: các thành phần React tái sử dụng theo domain (Material, InventoryLot, ProductionBatch...).
+- **package-lock.json**: Khóa phiên bản chính xác của các gói npm đã cài để đảm bảo build nhất quán, tránh trường hợp máy khác cài đặt các phiên bản khác nhau gây lỗi.
+- **package.json**: Liệt kê dependencies, scripts (start, build, test) và cấu hình dự án frontend.
+- **src/**: Thư mục mã nguồn chính của ứng dụng.
+  - **components/**: Các thành phần React tái sử dụng theo domain (Material, InventoryLot, ProductionBatch...). Mỗi domain có thư mục riêng chứa các component con (List, Detail, Form) và một file index.ts để gom tất cả các component con lại và xuất ra cùng lúc.
   - **pages/**: các trang (route-level components) tương ứng với URL ứng dụng.
   - **services/**: lớp hoặc hàm giúp gọi API backend, xử lý logic giao tiếp HTTP.
   - **types/**: định nghĩa TypeScript interfaces/aliases cho DTOs và props.
