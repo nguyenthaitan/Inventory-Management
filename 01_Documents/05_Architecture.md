@@ -283,6 +283,32 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 #### Cách để chạy hệ thống
 
+- **Chạy thủ công (không dùng Docker):**
+  1. Backend: chuyển vào `02_Source/01_Source Code/backend`.
+     - Nếu chưa build, thực hiện `npm run build` như ở phần trước.
+     - Khởi động bằng `npm run start:prod` (hoặc `node dist/main.js`).
+     - Ứng dụng lắng nghe mặc định cổng `3000`.
+  2. Frontend: vào `02_Source/01_Source Code/frontend`.
+     - Sau khi đã `npm run build`, dùng một HTTP server tĩnh (ví dụ `npx serve dist` hoặc cấu hình Nginx) để phục vụ nội dung ở cổng bất kỳ (thường `5173` hoặc `80`).
+  3. MongoDB & Redis: chạy cục bộ (cài bản native hoặc dùng container riêng) với kết nối mặc định `mongodb://localhost:27017` và `redis://localhost:6379`.
+  4. Keycloak: cài và chạy trên `http://localhost:8080` (có thể dùng Docker theo hướng dẫn trong file deploy).
+  5. Đảm bảo biến môi trường (`.env`) đúng, sau đó truy cập URL frontend và thực hiện đăng nhập.
+
+- **Qua Docker/Docker Compose:**
+  1. Di chuyển về thư mục gốc workspace.
+  2. Sử dụng cấu hình `02_Source/01_Source Code/docker-compose.yml` (hoặc `docker-compose.override.yml` nếu cần ghi đè) để chạy toàn bộ stack:
+     ```bash
+     docker-compose -f "02_Source/01_Source Code/docker-compose.yml" up --build
+     ```
+  3. Lệnh trên sẽ khởi tạo các container backend, frontend, mongo, redis, keycloak… và tự động build lại image nếu cần.
+  4. Truy cập:
+     - Frontend: http://localhost:5173 (hoặc cổng cấu hình trong compose)
+     - Backend API: http://localhost:3000/api
+     - Keycloak admin: http://localhost:8080
+  5. Dừng các dịch vụ bằng `docker-compose down`.
+
+> Ghi chú: khi chạy bằng Docker Compose, mọi cấu hình (ENV vars) nằm trong `.env`/`docker-compose.override.yml`; backend và frontend đã được biên dịch sẵn trong image nên không cần làm lại thủ công.
+
 ### 3. Deployment View
 
 #### Giao diện web cho Người dùng (User's Device)
