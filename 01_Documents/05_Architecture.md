@@ -239,18 +239,15 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 #### backend/: Ứng dụng xử lý nghiệp vụ (NestJS Monolith)
 
-- **package.json**: Chứa cấu hình các thư viện backend (NestJS, Mongoose, Nest-keycloak-connect, Kafka).
-- **src/**: Thư mục chứa logic nghiệp vụ theo kiến trúc Module-based.
-  - **app.module.ts**: Module gốc kết nối tất cả các sub-modules lại với nhau.
-  - **user/**: Quản lý thông tin định danh và phân quyền nội bộ.
-  - **auth/**: Xử lý tích hợp Keycloak, xác thực JWT và bảo mật API.
-  - **catalog/**: Quản lý danh mục vật tư, nguyên liệu (Master Data).
-  - **inbound/ & outbound/**: Xử lý logic nhập kho và xuất kho vật lý.
-  - **inventory/**: Quản lý tồn kho thời gian thực và lịch sử giao dịch.
-  - **qc/**: Module kiểm định chất lượng, đối chiếu Specification (US01-QC).
-  - **production/**: Quản lý mẻ sản xuất (Batch) và định mức nguyên vật liệu (BOM).
-  - **audit/**: Ghi nhật ký hoạt động hệ thống (US15-Manager).
-  - **reporting/**: Xuất các báo cáo PDF/Excel (US01, US10-Manager).
+- **src/**: Thư mục mã nguồn chính của ứng dụng.
+  - **material/, inventory-lot/, production-batch/**: Các module nghiệp vụ chính, mỗi module chứa Controller (xử lý HTTP requests), Service (xử lý logic nghiệp vụ), Schema (định nghĩa cấu trúc dữ liệu MongoDB), Repository (truy cập dữ liệu) và các thư mục con cho DTOs và Interfaces.
+  - **database/**: 
+  - **event-bus/**:
+  - **app.module.ts**: Module gốc của NestJS, nơi import tất cả các module con và cấu hình chung.
+  - **main.ts**: 
+- **test/**: 
+- **package.json**: 
+- **tsconfig.json**: 
 
 #### infra/: Hạ tầng và cấu hình triển khai (DevOps)
 
