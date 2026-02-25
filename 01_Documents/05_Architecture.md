@@ -241,13 +241,14 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 - **src/**: Thư mục mã nguồn chính của ứng dụng.
   - **material/, inventory-lot/, production-batch/**: Các module nghiệp vụ chính, mỗi module chứa Controller (xử lý HTTP requests), Service (xử lý logic nghiệp vụ), Schema (định nghĩa cấu trúc dữ liệu MongoDB), Repository (truy cập dữ liệu) và các thư mục con cho DTOs và Interfaces.
-  - **database/**: 
-  - **event-bus/**:
+  - **database/**: Thư mục chứa các cấu hình kết nối cơ sở dữ liệu và helper liên quan.
+  - **event-bus/**: Mã tích hợp hệ thống message queue (Kafka) cho publish/subscribe event.
   - **app.module.ts**: Module gốc của NestJS, nơi import tất cả các module con và cấu hình chung.
-  - **main.ts**: 
-- **test/**: 
-- **package.json**: 
-- **tsconfig.json**: 
+  - **main.ts**: Entry point chịu trách nhiệm bootstrap ứng dụng NestJS và cấu hình middleware.
+- **test/**: Thư mục lưu trữ các file kiểm thử (unit và e2e) cho backend.
+- **package.json**: File cấu hình npm liệt kê các dependencies và scripts xây dựng/chạy dự án backend.
+- **tsconfig.json**: Cấu hình TypeScript dùng khi biên dịch mã nguồn backend.
+
 
 #### infra/: Hạ tầng và cấu hình triển khai (DevOps)
 
