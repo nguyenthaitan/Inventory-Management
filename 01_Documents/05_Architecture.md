@@ -242,6 +242,8 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 - **src/**: Thư mục mã nguồn chính của ứng dụng.
   - **material/, inventory-lot/, production-batch/**: Các module nghiệp vụ chính, mỗi module chứa Controller (xử lý HTTP requests), Service (xử lý logic nghiệp vụ), Schema (định nghĩa cấu trúc dữ liệu MongoDB), Repository (truy cập dữ liệu) và các thư mục con cho DTOs và Interfaces.
   - **database/**: Thư mục chứa các cấu hình kết nối cơ sở dữ liệu và helper liên quan.
+    - **database.module.ts**: Module NestJS để cung cấp kết nối MongoDB cho toàn bộ ứng dụng.
+    - **mongoose.config.ts**: Cấu hình chi tiết cho Mongoose, bao gồm URI kết nối, options và các hooks chung.
   - **event-bus/**: Mã tích hợp hệ thống message queue (Kafka) cho publish/subscribe event.
   - **app.module.ts**: Module gốc của NestJS, nơi import tất cả các module con và cấu hình chung.
   - **main.ts**: Entry point chịu trách nhiệm bootstrap ứng dụng NestJS và cấu hình middleware.
