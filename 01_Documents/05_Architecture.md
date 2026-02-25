@@ -266,17 +266,19 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 #### Cách để build hệ thống
 
 - **Chuẩn bị môi trường**: Cài Node.js (v16+), Docker & Docker Compose.
-- **Backend**:
+- **Backend** (thủ công – không dùng Docker):
   1. Di chuyển vào thư mục `02_Source/01_Source Code/backend`.
-  2. Chạy `npm install` để cài dependencies.
+  2. Chạy `npm install` nếu cần cài thêm package.
   3. Biên dịch TypeScript: `npm run build` (hoặc `tsc -p tsconfig.build.json`).
-  4. Kiểm tra bằng `npm run start:prod` hoặc dùng Dockerfile tạo image.
-- **Frontend**:
+  4. Kiểm tra bản build bằng `npm run start:prod`.
+  - *Ghi chú:* khi sử dụng Docker/Docker Compose, bước này sẽ được Dockerfile thực hiện tự động và bạn không cần làm lại thủ công.
+- **Frontend** (thủ công – không dùng Docker):
   1. Vào `02_Source/01_Source Code/frontend`.
-  2. Chạy `npm install`.
-  3. Build sản phẩm cho production với `npm run build` (sử dụng Vite).
-  4. Nội dung `dist/` sẽ được phục vụ bởi Nginx trong image Docker.
-- **Docker compose**: Từ gốc workspace chạy `docker-compose -f 02_Source/01_Source Code/docker-compose.yml build` để xây tất cả các container (backend, frontend, database, redis, keycloak …).
+  2. Chạy `npm install` khi muốn cài thủ công.
+  3. Build sản phẩm cho production với `npm run build` (Vite).
+  4. Thư mục `dist/` chứa bản build, dùng Nginx hoặc server khác để phục vụ.
+  - *Ghi chú:* Dockerfile frontend cũng thực hiện cài và build khi tạo image, do đó bước này chỉ cần khi không dùng Docker để đóng gói.
+- **Docker compose**: Từ gốc workspace chạy `docker-compose -f 02_Source/01_Source Code/docker-compose.yml build` để xây tất cả các container (backend, frontend, database, redis, keycloak …). Bởi vì Dockerfile đã tự quản lý bước compile, lệnh này đủ để cả backend/frontend được biên dịch trong quá trình tạo image.
 - **Lưu ý**: Sử dụng `--no-cache` khi cần cập nhật toàn bộ; thông số môi trường (ENV vars) được điều chỉnh trong file `.env` hoặc `docker-compose.override.yml`.
 
 #### Cách để chạy hệ thống
