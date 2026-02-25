@@ -263,6 +263,24 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
   - **mongo-pv.yaml**: Cấu hình Persistent Volume để đảm bảo dữ liệu MongoDB không bị mất khi Pod khởi động lại.
   - **redis-config.yaml**: Cấu hình cho bộ nhớ đệm Redis phục vụ Locking.
 
+#### Cách để build hệ thống
+
+- **Chuẩn bị môi trường**: Cài Node.js (v16+), Docker & Docker Compose.
+- **Backend**:
+  1. Di chuyển vào thư mục `02_Source/01_Source Code/backend`.
+  2. Chạy `npm install` để cài dependencies.
+  3. Biên dịch TypeScript: `npm run build` (hoặc `tsc -p tsconfig.build.json`).
+  4. Kiểm tra bằng `npm run start:prod` hoặc dùng Dockerfile tạo image.
+- **Frontend**:
+  1. Vào `02_Source/01_Source Code/frontend`.
+  2. Chạy `npm install`.
+  3. Build sản phẩm cho production với `npm run build` (sử dụng Vite).
+  4. Nội dung `dist/` sẽ được phục vụ bởi Nginx trong image Docker.
+- **Docker compose**: Từ gốc workspace chạy `docker-compose -f 02_Source/01_Source Code/docker-compose.yml build` để xây tất cả các container (backend, frontend, database, redis, keycloak …).
+- **Lưu ý**: Sử dụng `--no-cache` khi cần cập nhật toàn bộ; thông số môi trường (ENV vars) được điều chỉnh trong file `.env` hoặc `docker-compose.override.yml`.
+
+#### Cách để chạy hệ thống
+
 ### 3. Deployment View
 
 #### Giao diện web cho Người dùng (User's Device)
