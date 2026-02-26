@@ -243,7 +243,8 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 #### backend/: Ứng dụng xử lý nghiệp vụ (NestJS Monolith)
 
 - **src/**: Thư mục mã nguồn chính của ứng dụng.
-  - **material/, inventory-lot/, production-batch/**: Các module nghiệp vụ chính, mỗi module chứa Controller (xử lý HTTP requests), Service (xử lý logic nghiệp vụ), Schema (định nghĩa cấu trúc dữ liệu MongoDB), Repository (truy cập dữ liệu) và các thư mục con cho DTOs và Interfaces.
+  - **material/, inventory-lot/, production-batch/**: Các module nghiệp vụ chính, mỗi module chứa Controller (xử lý HTTP requests), Service (xử lý logic nghiệp vụ), Repository (truy cập dữ liệu) và các thư mục con cho DTOs và Interfaces.
+  - **schemas/**: Định nghĩa các Mongoose Schema tương ứng với các thực thể nghiệp vụ (Material, InventoryLot, ProductionBatch).
   - **database/**: Thư mục chứa các cấu hình kết nối cơ sở dữ liệu và helper liên quan.
     - **database.module.ts**: Module NestJS để cung cấp kết nối MongoDB cho toàn bộ ứng dụng.
     - **mongoose.config.ts**: Cấu hình chi tiết cho Mongoose, bao gồm URI kết nối, options và các hooks chung.
