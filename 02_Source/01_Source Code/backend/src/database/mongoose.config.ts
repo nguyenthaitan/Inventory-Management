@@ -9,9 +9,8 @@ import { ConfigService } from '@nestjs/config';
 // ra tùy chọn) khi thiết lập DatabaseModule.
 //
 // Khi ứng dụng khởi động, `DatabaseModule` (hoặc AppModule gốc) có thể gọi
-// `MongooseModule.forRootAsync({ useFactory: mongooseConfigFactory })`
-// hoặc trực tiếp import `mongooseOptions` nếu không cần provider bất đồng
-// bộ. Các biến môi trường được đọc bởi `ConfigService`; nếu không có giá trị
+// `MongooseModule.forRootAsync({ useFactory: mongooseConfigFactory })`. Các 
+// biến môi trường được đọc bởi `ConfigService`; nếu không có giá trị
 // nào được cung cấp thì sử dụng DEFAULT_MONGO_URI ở dưới.
 // -----------------------------------------------------------------------------
 
