@@ -1,4 +1,5 @@
 import { MongooseModuleOptions } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
 
 // -----------------------------------------------------------------------------
 // Trợ giúp cấu hình cho Mongoose
@@ -10,21 +11,17 @@ import { MongooseModuleOptions } from '@nestjs/mongoose';
 // Khi ứng dụng khởi động, `DatabaseModule` (hoặc AppModule gốc) có thể gọi
 // `MongooseModule.forRootAsync({ useFactory: mongooseConfigFactory })`
 // hoặc trực tiếp import `mongooseOptions` nếu không cần provider bất đồng
-// bộ. Các biến môi trường được đọc ở đây với giá trị mặc định hợp lý để
-// chương trình hoạt động ngay sau khi chạy cùng docker-compose.
+// bộ. Các biến môi trường được đọc bởi `ConfigService`; nếu không có giá trị
+// nào được cung cấp thì sử dụng DEFAULT_MONGO_URI ở dưới.
 // -----------------------------------------------------------------------------
 
 /**
- * Chuỗi kết nối mặc định dùng khi không có biến môi trường nào được định nghĩa.
- *
- * - `MONGODB_URI` là biến môi trường tiêu chuẩn trong dự án này.
- * - `MONGO_URI` cũng được hỗ trợ để tiện tương thích với một số container
- *   hoặc nền tảng xây dựng.
+ * Chuỗi kết nối mặc định được dùng khi ConfigService không trả về biến nào.
+ * Đây chỉ là một constant cứng – không đọc `process.env` trực tiếp.
  */
 export const DEFAULT_MONGO_URI: string =
-  process.env.MONGODB_URI ||
-  process.env.MONGO_URI ||
   'mongodb://admin:password123@localhost:27017/inventory_db?authSource=admin';
+
 
 /**
  * Các tuỳ chọn chung cho module mongoose. Những thiết lập này được giữ tối giản;
@@ -32,7 +29,6 @@ export const DEFAULT_MONGO_URI: string =
  * triển.
  */
 export const mongooseOptions: MongooseModuleOptions = {
-  uri: DEFAULT_MONGO_URI,
   autoCreate: true, // automatically create collections defined by schemas
   autoIndex: process.env.NODE_ENV !== 'production',
   // debug: process.env.NODE_ENV !== 'production',
@@ -41,9 +37,15 @@ export const mongooseOptions: MongooseModuleOptions = {
 /**
  * Hàm factory tương thích với `MongooseModule.forRootAsync()`.
  */
-export function mongooseConfigFactory(): MongooseModuleOptions {
-  return mongooseOptions;
+export function mongooseConfigFactory(config: ConfigService): MongooseModuleOptions {
+  const uri =
+    config.get<string>('MONGODB_URI') ||
+    config.get<string>('MONGO_URI') ||
+    DEFAULT_MONGO_URI;
+
+  return {
+    ...mongooseOptions,
+    uri,
+  } as MongooseModuleOptions;
 }
 
-// export the default as well in case someone prefers a default import
-export default mongooseOptions;
