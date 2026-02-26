@@ -197,6 +197,8 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
     │   │   │   ├── kafka.service.ts
     │   │   │   └── kafka.config.ts
     │   │   ├── app.module.ts
+    │   │   ├── app.controller.ts
+    │   │   ├── app.service.ts
     │   │   ├── main.ts
     │   │   └── ...
     │   ├── test/
@@ -246,6 +248,8 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
     - **mongoose.config.ts**: Cấu hình chi tiết cho Mongoose, bao gồm URI kết nối, options và các hooks chung.
   - **event-bus/**: Mã tích hợp hệ thống message queue (Kafka) cho publish/subscribe event.
   - **app.module.ts**: Module gốc của NestJS, nơi import tất cả các module con và cấu hình chung.
+  - **app.controller.ts**: Controller gốc, có thể dùng để xử lý các route chung hoặc health check.
+  - **app.service.ts**: Service gốc, có thể chứa các logic chung hoặc helper functions.
   - **main.ts**: Entry point chịu trách nhiệm bootstrap ứng dụng NestJS và cấu hình middleware.
 - **test/**: Thư mục lưu trữ các file kiểm thử (unit và e2e) cho backend.
 - **package.json**: File cấu hình npm liệt kê các dependencies và scripts xây dựng/chạy dự án backend.
