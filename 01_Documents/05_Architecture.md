@@ -168,7 +168,6 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
     │   │   ├── material/
     │   │   │   ├── material.controller.ts
     │   │   │   ├── material.service.ts
-    │   │   │   ├── material.schema.ts
     │   │   │   ├── material.repository.ts
     │   │   │   ├── dto/
     │   │   │   ├── interfaces/
@@ -176,7 +175,6 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
     │   │   ├── inventory-lot/
     │   │   │   ├── inventory-lot.controller.ts
     │   │   │   ├── inventory-lot.service.ts
-    │   │   │   ├── inventory-lot.schema.ts
     │   │   │   ├── inventory-lot.repository.ts
     │   │   │   ├── dto/
     │   │   │   ├── interfaces/  
@@ -184,7 +182,6 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
     │   │   ├── production-batch/
     │   │   │   ├── production-batch.controller.ts
     │   │   │   ├── production-batch.service.ts
-    │   │   │   ├── production-batch.schema.ts
     │   │   │   ├── production-batch.repository.ts
     │   │   │   ├── dto/
     │   │   │   ├── interfaces/
@@ -196,6 +193,10 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
     │   │   │   ├── kafka.module.ts
     │   │   │   ├── kafka.service.ts
     │   │   │   └── kafka.config.ts
+    │   │   ├── schemas/
+    │   │   │   ├── material.schema.ts
+    │   │   │   ├── inventory-lot.schema.ts
+    │   │   │   └── production-batch.schema.ts
     │   │   ├── app.module.ts
     │   │   ├── app.controller.ts
     │   │   ├── app.service.ts
