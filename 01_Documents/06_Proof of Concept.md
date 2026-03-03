@@ -1,5 +1,30 @@
 # 06. Proof of Concept (PoC)
 
+Tài liệu này ghi nhận các tính năng đã được kiểm chứng qua Proof of Concept trong hệ thống Inventory Management.
+
+---
+
+## Danh sách các PoC đã thực hiện
+
+### 1. PoC Authentication với Keycloak
+- **Mục tiêu:** Kiểm chứng khả năng xác thực người dùng với Keycloak, OAuth2/OIDC
+- **Trạng thái:** ✅ Hoàn thành
+- **Chi tiết:** Xem [Phần I - PoC Authentication](#phần-i---poc-authentication)
+
+### 2. PoC AI Analysis cho Quality Control
+- **Mục tiêu:** Kiểm chứng khả năng sử dụng AI (HuggingFace) để phân tích kết quả kiểm định chất lượng
+- **Trạng thái:** ✅ Hoàn thành
+- **Chi tiết:** Xem tài liệu riêng tại `02_Source/05_Proof of Concept/AI_ANALYSIS_GUIDE.md`
+
+### 3. PoC Barcode & QR Code
+- **Mục tiêu:** Kiểm chứng khả năng tạo, lưu trữ và tra cứu mã Barcode và QR Code
+- **Trạng thái:** ✅ Hoàn thành
+- **Chi tiết:** Xem [Phần II - PoC Barcode & QR Code](#phần-ii---poc-barcode--qr-code)
+
+---
+
+# Phần I - PoC Authentication
+
 ## 1. Mục tiêu của Proof of Concept
 Mục tiêu của Proof of Concept (PoC) này là kiểm chứng tính khả thi về mặt kỹ thuật của **tính năng authentication** trong hệ thống **Inventory Management**.
 
@@ -322,3 +347,300 @@ PoC **chỉ tập trung kiểm chứng khả năng hoạt động cốt lõi**, 
 
 ## 7. Đánh giá và kết luận
 Dựa trên kết quả PoC, nhóm nhận thấy: Tính năng có khả thi về mặt kỹ thuật. Tuy nhiên, giải pháp đề xuất cần điều chỉnh để áp dụng vào hệ thống chính thức.
+
+---
+
+# Phần II - PoC Barcode & QR Code
+
+## 1. Mục tiêu của Proof of Concept
+Mục tiêu của PoC này là kiểm chứng tính khả thi về mặt kỹ thuật của **tính năng tạo và quản lý mã Barcode và QR Code** trong hệ thống **Inventory Management**.
+
+Cụ thể, nhóm muốn trả lời các câu hỏi sau:
+- Hệ thống có thể tạo và lưu trữ mã Barcode và QR Code cho sản phẩm hay không?
+- Người dùng có thể tra cứu thông tin sản phẩm bằng cách quét hoặc nhập mã không?
+- Hiệu năng và độ chính xác của việc tạo và đọc mã có đáp ứng yêu cầu không?
+
+---
+
+## 2. Mô tả tính năng cần kiểm chứng
+
+### 2.1. Tên tính năng
+- **Barcode & QR Code Management**
+
+### 2.2. Mô tả ngắn gọn
+Tính năng cho phép:
+- **Tạo mã Barcode**: Tự động sinh mã Barcode dạng CODE128 cho sản phẩm với thông tin cơ bản (tên, mô tả)
+- **Tạo mã QR Code**: Tự động sinh mã QR Code chứa thông tin sản phẩm và URL truy cập
+- **Tra cứu**: Người dùng có thể nhập mã để tra cứu thông tin sản phẩm đã được mã hóa
+- **Hiển thị và sao chép**: Hiển thị mã dưới dạng hình ảnh và cho phép sao chép mã vào clipboard
+
+Người dùng: Operator, Manager, QC Technician (tất cả vai trò cần quản lý sản phẩm trong kho)
+
+Kết quả mong muốn: Tăng tốc độ và độ chính xác trong việc nhập/xuất kho, kiểm kê và truy xuất nguồn gốc sản phẩm.
+
+### 2.3. Lý do tính năng này quan trọng
+- **Giảm sai sót**: Quét mã thay vì nhập tay giúp giảm thiểu lỗi nhập liệu
+- **Tăng tốc độ**: Quét mã nhanh hơn nhiều so với tìm kiếm thủ công
+- **Truy xuất nguồn gốc**: QR Code có thể chứa nhiều thông tin hơn, hỗ trợ truy xuất nguồn gốc nhanh chóng
+- **Tiêu chuẩn ngành**: Barcode và QR Code là tiêu chuẩn trong quản lý kho hiện đại
+
+---
+
+## 3. Phạm vi Proof of Concept
+PoC **tập trung vào các chức năng cốt lõi**:
+- ✅ Tạo mã Barcode và QR Code tự động
+- ✅ Lưu trữ thông tin mã trong bộ nhớ (in-memory)
+- ✅ Tra cứu thông tin theo mã
+- ✅ Hiển thị mã dưới dạng hình ảnh
+- ✅ Phân trang danh sách mã
+
+PoC **không bao gồm**:
+- ❌ Quét mã qua camera (chỉ tra cứu bằng nhập tay)
+- ❌ Lưu trữ vào database (dùng in-memory để đơn giản)
+- ❌ In nhãn mã vạch vật lý
+- ❌ Xử lý ở quy mô lớn (hàng triệu mã)
+
+---
+
+## 4. Công nghệ và công cụ sử dụng
+
+### Backend (NestJS)
+- **Framework**: NestJS
+- **Ngôn ngữ**: TypeScript
+- **In-memory storage**: Map<string, Product>
+
+### Frontend (React)
+- **Framework**: React 18/19
+- **Thư viện Barcode**: `react-barcode` - Tạo và hiển thị Barcode dạng CODE128
+- **Thư viện QR Code**: `qrcode.react` - Tạo và hiển thị QR Code dạng SVG
+
+---
+
+## 5. Hiện thực PoC bằng mã nguồn
+
+### 5.1. Kiến trúc tổng quan
+```
+[React Frontend]
+      |
+      | HTTP REST API
+      |
+      ↓
+[NestJS Backend]
+      |
+      ├── /barcode (BarcodeModule)
+      |     ├── POST /barcode/generate
+      |     ├── GET /barcode/:code
+      |     └── GET /barcode
+      |
+      └── /qrcode (QRCodeModule)
+            ├── POST /qrcode/generate
+            ├── GET /qrcode/:code
+            └── GET /qrcode
+```
+
+### 5.2. Các bước thực hiện chi tiết
+
+#### Bước 1: Tạo Backend API cho Barcode
+
+**File: `barcode.service.ts`**
+```typescript
+import {Injectable} from '@nestjs/common';
+
+export interface BarcodeProduct {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+@Injectable()
+export class BarcodeService {
+  private barcodes: Map<string, BarcodeProduct> = new Map();
+
+  create(product: Omit<BarcodeProduct, 'code'>): BarcodeProduct {
+    const code = 'BC' + Date.now() + Math.floor(Math.random() * 1000);
+    const barcode: BarcodeProduct = {code, name: product.name, ...product};
+    this.barcodes.set(code, barcode);
+    return barcode;
+  }
+
+  get(code: string): BarcodeProduct | undefined {
+    return this.barcodes.get(code);
+  }
+
+  list(): BarcodeProduct[] {
+    return Array.from(this.barcodes.values());
+  }
+}
+```
+
+**File: `barcode.controller.ts`**
+```typescript
+import { Controller, Post, Body, Get, Param, NotFoundException } from '@nestjs/common';
+import { BarcodeService, BarcodeProduct } from './barcode.service';
+
+@Controller('barcode')
+export class BarcodeController {
+  constructor(private readonly barcodeService: BarcodeService) {}
+
+  @Post('generate')
+  createBarcode(@Body() body: Omit<BarcodeProduct, 'code'>) {
+    return this.barcodeService.create(body);
+  }
+
+  @Get(':code')
+  getBarcode(@Param('code') code: string) {
+    const barcode = this.barcodeService.get(code);
+    if (!barcode) throw new NotFoundException('Barcode not found');
+    return barcode;
+  }
+
+  @Get()
+  listBarcodes() {
+    return this.barcodeService.list();
+  }
+}
+```
+
+#### Bước 2: Tạo Backend API cho QR Code
+
+**File: `qrcode.service.ts`**
+```typescript
+import {Injectable} from '@nestjs/common';
+
+export interface QRCodeProduct {
+  code: string;
+  name: string;
+  description?: string;
+  url?: string;
+}
+
+@Injectable()
+export class QRCodeService {
+  private qrcodes: Map<string, QRCodeProduct> = new Map();
+
+  create(product: Omit<QRCodeProduct, 'code'>): QRCodeProduct {
+    const code = 'QR' + Date.now() + Math.floor(Math.random() * 10000);
+    const qrcode: QRCodeProduct = {
+      code, 
+      name: product.name, 
+      url: product.url || `https://inventory.example.com/product/${code}`,
+      ...product
+    };
+    this.qrcodes.set(code, qrcode);
+    return qrcode;
+  }
+
+  get(code: string): QRCodeProduct | undefined {
+    return this.qrcodes.get(code);
+  }
+
+  list(): QRCodeProduct[] {
+    return Array.from(this.qrcodes.values());
+  }
+}
+```
+
+#### Bước 3: Tạo Frontend Components
+
+**Frontend cho Barcode**: Sử dụng thư viện `react-barcode`
+- Component `BarcodeDemo.jsx` hiển thị danh sách barcode với phân trang
+- Hỗ trợ tạo mới và tra cứu barcode
+- Hiển thị barcode dưới dạng hình ảnh CODE128
+
+**Frontend cho QR Code**: Sử dụng thư viện `qrcode.react`
+- Component `QRCodeDemo.jsx` hiển thị danh sách QR code với phân trang
+- Hỗ trợ tạo mới và tra cứu QR code
+- Hiển thị QR code dưới dạng SVG, mã hóa URL hoặc text
+
+#### Bước 4: Tích hợp vào App
+
+**File: `App.jsx`**
+```jsx
+import BarcodeDemo from './components/BarcodeDemo'
+import QRCodeDemo from './components/QRCodeDemo'
+
+function App() {
+  const [currentView, setCurrentView] = useState('main')
+  
+  // Chuyển đổi giữa các view: 'main', 'barcode', 'qrcode'
+  
+  return (
+    <div className="app">
+      <button onClick={() => setCurrentView('barcode')}>Barcode Demo</button>
+      <button onClick={() => setCurrentView('qrcode')}>QR Code Demo</button>
+      {currentView === 'barcode' && <BarcodeDemo />}
+      {currentView === 'qrcode' && <QRCodeDemo />}
+    </div>
+  )
+}
+```
+
+---
+
+## 6. Kết quả thu được
+
+### 6.1. Kết quả đạt được
+
+✅ **Barcode**:
+- Tạo mã Barcode tự động với format `BC{timestamp}{random}`
+- Hiển thị Barcode dạng CODE128 với độ phân giải cao
+- Tra cứu thông tin sản phẩm theo mã Barcode thành công
+- Sao chép mã vào clipboard hoạt động tốt
+- Phân trang danh sách hiển thị 2 item/trang
+
+✅ **QR Code**:
+- Tạo mã QR Code tự động với format `QR{timestamp}{random}`
+- Hiển thị QR Code dạng SVG, có thể scan bằng điện thoại
+- QR Code có thể mã hóa URL tùy chỉnh hoặc dùng URL mặc định
+- Tra cứu và sao chép mã hoạt động tốt
+- Phân trang tương tự Barcode
+
+✅ **Giao diện**:
+- Responsive, hoạt động tốt trên desktop và mobile
+- Form tạo mới rõ ràng, dễ sử dụng
+- Tìm kiếm nhanh, kết quả hiển thị ngay lập tức
+
+### 6.2. Những vấn đề gặp phải
+
+⚠️ **Lưu trữ tạm thời**: 
+- Dữ liệu lưu trong memory, mất khi restart server
+- Giải pháp: Cần tích hợp database (MongoDB/PostgreSQL) cho production
+
+⚠️ **Không có tính năng quét**:
+- PoC chỉ hỗ trợ nhập mã bằng tay
+- Giải pháp: Cần tích hợp thư viện quét mã như `react-qr-scanner` hoặc `quagga2`
+
+⚠️ **Thiếu validation**:
+- Chưa kiểm tra trùng lặp mã
+- Chưa validate định dạng input
+- Giải pháp: Thêm validation ở cả frontend và backend
+
+⚠️ **Hiệu năng**:
+- Chưa test với số lượng lớn (>10,000 mã)
+- Phân trang client-side không phù hợp cho dữ liệu lớn
+- Giải pháp: Implement server-side pagination
+
+---
+
+## 7. Đánh giá và kết luận
+
+### 7.1. Tính khả thi kỹ thuật
+✅ **Khả thi cao** - Công nghệ đã chọn (NestJS + React + react-barcode + qrcode.react) hoàn toàn đáp ứng được yêu cầu cơ bản.
+
+### 7.2. Khuyến nghị cho phát triển tiếp
+
+**Ngắn hạn** (Áp dụng vào MVP):
+1. Tích hợp database để lưu trữ vĩnh viễn
+2. Thêm validation và kiểm tra trùng lặp
+3. Implement server-side pagination
+4. Thêm feature export/download mã dưới dạng hình ảnh
+
+**Dài hạn** (Sau MVP):
+1. Tích hợp camera để quét mã thực tế
+2. Hỗ trợ in nhãn mã vạch qua máy in nhiệt
+3. Tích hợp với các luồng nghiệp vụ (nhập kho, xuất kho, kiểm kê)
+4. Theo dõi lịch sử quét mã (audit log)
+5. Hỗ trợ nhiều định dạng Barcode khác (QR, EAN-13, Code39, v.v.)
+
+### 7.3. Kết luận
+PoC đã chứng minh được tính khả thi của việc tạo và quản lý Barcode & QR Code trong hệ thống Inventory Management. Giải pháp đơn giản, dễ triển khai và có thể mở rộng để đáp ứng yêu cầu thực tế của dự án.
