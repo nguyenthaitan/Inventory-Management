@@ -3,6 +3,7 @@ import './App.css'
 import { useKeycloak } from '@react-keycloak/web'
 import QCTestList from './components/QCTestList'
 import BarcodeDemo from './components/BarcodeDemo'
+import QRCodeDemo from './components/QRCodeDemo'
 
 function App() {
   const { keycloak, initialized } = useKeycloak()
@@ -65,7 +66,7 @@ function App() {
   }, [initialized, keycloak])
 
   const [apiResult, setApiResult] = useState(null)
-  const [showBarcodeDemo, setShowBarcodeDemo] = useState(false)
+  const [currentView, setCurrentView] = useState('main') // 'main', 'barcode', 'qrcode'
 
   // Base URL for backend API (configurable via VITE_API_BASE)
   const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:3000'
@@ -130,18 +131,37 @@ function App() {
     }
   }
 
-  if (showBarcodeDemo) {
+  if (currentView === 'barcode') {
     return (
       <div className="app">
         <header className="app-header">
           <div className="brand">
             <h1>Inventory PoC</h1>
           </div>
-          <button className="btn-primary" onClick={() => setShowBarcodeDemo(false)}>Quay lại màn chính</button>
+          <button className="btn-primary" onClick={() => setCurrentView('main')}>Quay lại màn chính</button>
         </header>
         <main className="main">
           <section className="barcode-section">
             <BarcodeDemo />
+          </section>
+        </main>
+        <footer className="app-footer muted">Built for demo</footer>
+      </div>
+    )
+  }
+
+  if (currentView === 'qrcode') {
+    return (
+      <div className="app">
+        <header className="app-header">
+          <div className="brand">
+            <h1>Inventory PoC</h1>
+          </div>
+          <button className="btn-primary" onClick={() => setCurrentView('main')}>Quay lại màn chính</button>
+        </header>
+        <main className="main">
+          <section className="qrcode-section">
+            <QRCodeDemo />
           </section>
         </main>
         <footer className="app-footer muted">Built for demo</footer>
@@ -159,7 +179,8 @@ function App() {
           {initialized ? (
             keycloak?.authenticated ? (
               <div className="user">
-                <span className="username">Signed in as: {keycloak?.tokenParsed?.preferred_username || keycloak.subject}</span>
+                <span className="username">Signed in as: {keycloak?.CurrentView('barcode')}>Barcode Demo</button>
+              <button className="btn btn-primary" onClick={() => setCurrentView('qrcode')}>QR Cname || keycloak.subject}</span>
                 <button className="btn btn-ghost" onClick={() => keycloak.logout()}>Logout</button>
               </div>
             ) : (
