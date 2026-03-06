@@ -34,7 +34,7 @@ export class MaterialService {
     if (dto.part_number) {
       const all = await this.repository.findAll();
       const conflict = all.find(
-        m => m.part_number === dto.part_number && m.material_id.toString() !== id,
+        m => m.part_number === dto.part_number && (m as any)._id?.toString() !== id,
       );
       if (conflict) {
         throw new ConflictException('part_number already exists');
