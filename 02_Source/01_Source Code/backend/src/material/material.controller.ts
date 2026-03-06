@@ -1,11 +1,22 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { MaterialService } from './material.service';
+import { CreateMaterialDto } from './dto/create-material.dto';
+import { UpdateMaterialDto } from './dto/update-material.dto';
 
 @Controller('materials')
 export class MaterialController {
   constructor(private readonly materialService: MaterialService) {}
 
-  // example CRUD endpoints (to be implemented)
   @Get()
   findAll() {
     return this.materialService.findAll();
@@ -17,13 +28,15 @@ export class MaterialController {
   }
 
   @Post()
-  create(@Body() createDto: any) {
-    return this.materialService.create(createDto);
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  create(@Body() dto: CreateMaterialDto) {
+    return this.materialService.create(dto);
   }
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updateDto: any) {
-    return this.materialService.update(id, updateDto);
+  @Patch(':id')
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  update(@Param('id') id: string, @Body() dto: UpdateMaterialDto) {
+    return this.materialService.update(id, dto);
   }
 
   @Delete(':id')
