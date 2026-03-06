@@ -6,6 +6,7 @@ import {AuthModule} from './auth/auth.module'
 import {TestModule} from './test/test.module'
 import {AiModule} from './ai/ai.module';
 import {BarcodeModule} from './barcode/barcode.module';
+import {QRCodeModule} from './qrcode/qrcode.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import {BarcodeModule} from './barcode/barcode.module';
     AuthModule,
     TestModule,
     AiModule,
-    BarcodeModule
+    BarcodeModule,
+    QRCodeModule
   ],
   controllers: [AppController],
   providers: [AppService],
