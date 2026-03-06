@@ -1,5 +1,13 @@
-import React from 'react';
+import React from 'react'
+import MaterialList from '../../components/materials/MaterialList'
 
-const Page = () => <div>Page</div>;
+const Page: React.FC = () => {
+	return (
+		<div>
+			<h1>Material Management (Operator)</h1>
+			<MaterialList />
+		</div>
+	)
+}
 
-export default Page;
+export default Page
