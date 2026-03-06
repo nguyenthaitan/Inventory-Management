@@ -28,7 +28,12 @@ export class User {
 
   @Prop({
     type: String,
-    enum: ['Manager', 'Operator', 'Quality Control Technician', 'IT Administrator'],
+    enum: [
+      'Manager',
+      'Operator',
+      'Quality Control Technician',
+      'IT Administrator',
+    ],
     default: 'Operator',
   })
   role: string;

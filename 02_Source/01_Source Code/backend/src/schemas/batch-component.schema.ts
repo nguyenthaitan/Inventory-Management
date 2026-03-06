@@ -35,4 +35,5 @@ export class BatchComponent {
   added_by?: string;
 }
 
-export const BatchComponentSchema = SchemaFactory.createForClass(BatchComponent);
+export const BatchComponentSchema =
+  SchemaFactory.createForClass(BatchComponent);

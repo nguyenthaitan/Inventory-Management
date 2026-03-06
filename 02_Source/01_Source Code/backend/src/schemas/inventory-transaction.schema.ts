@@ -1,5 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaOptions, Types, Schema as MongooseSchema } from 'mongoose';
+import {
+  Document,
+  SchemaOptions,
+  Types,
+  Schema as MongooseSchema,
+} from 'mongoose';
 import type { Decimal128 } from 'mongoose';
 
 export type InventoryTransactionDocument = InventoryTransaction & Document;
@@ -42,4 +47,5 @@ export class InventoryTransaction {
   notes?: string;
 }
 
-export const InventoryTransactionSchema = SchemaFactory.createForClass(InventoryTransaction);
+export const InventoryTransactionSchema =
+  SchemaFactory.createForClass(InventoryTransaction);

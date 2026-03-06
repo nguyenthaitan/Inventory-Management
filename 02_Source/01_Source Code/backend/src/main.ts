@@ -10,8 +10,8 @@ async function bootstrap() {
     origin: ['http://localhost:5173', 'http://localhost:3000'], // url frontend
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    credentials: true,                // cho phép cookie và header xác thực
-    preflightContinue: false,         // truyền phản hồi preflight cho bộ xử lý tiếp theo
+    credentials: true, // cho phép cookie và header xác thực
+    preflightContinue: false, // truyền phản hồi preflight cho bộ xử lý tiếp theo
     optionsSuccessStatus: 204,
   });
 

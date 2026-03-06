@@ -1,5 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaOptions, Types, Schema as MongooseSchema } from 'mongoose';
+import {
+  Document,
+  SchemaOptions,
+  Types,
+  Schema as MongooseSchema,
+} from 'mongoose';
 import type { Decimal128 } from 'mongoose';
 
 export type InventoryLotDocument = InventoryLot & Document;
