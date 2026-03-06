@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-
-interface Material {
-  material_id: string;
-  material_name: string;
-  part_number: string;
-  material_type: string;
-}
+import { type Material } from './types/Material'
+import { fetchMaterials } from './services/materialService'
 
 function App() {
   const [materials, setMaterials] = useState<Material[]>([]);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/materials`)
-      .then(response => response.json())
+    fetchMaterials()
       .then(data => setMaterials(data))
       .catch(error => console.error('Error fetching materials:', error));
   }, []);
