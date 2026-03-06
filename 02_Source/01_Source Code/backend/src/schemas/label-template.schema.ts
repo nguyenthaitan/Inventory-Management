@@ -1,5 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaOptions, Types, Schema as MongooseSchema } from 'mongoose';
+import {
+  Document,
+  SchemaOptions,
+  Types,
+  Schema as MongooseSchema,
+} from 'mongoose';
 import type { Decimal128 } from 'mongoose';
 
 export type LabelTemplateDocument = LabelTemplate & Document;
@@ -22,7 +27,14 @@ export class LabelTemplate {
 
   @Prop({
     type: String,
-    enum: ['Raw Material', 'Sample', 'Intermediate', 'Finished Product', 'API', 'Status'],
+    enum: [
+      'Raw Material',
+      'Sample',
+      'Intermediate',
+      'Finished Product',
+      'API',
+      'Status',
+    ],
     required: true,
   })
   label_type: string;

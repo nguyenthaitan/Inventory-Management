@@ -5,11 +5,11 @@ import { ConfigService } from '@nestjs/config';
 // Trợ giúp cấu hình cho Mongoose
 // -----------------------------------------------------------------------------
 // Tập tin này giữ các thiết lập kết nối MongoDB/Mongoose ở một nơi duy nhất
-// để toàn bộ ứng dụng có thể import các tuỳ chọn hoặc hàm factory(một hàm tạo 
+// để toàn bộ ứng dụng có thể import các tuỳ chọn hoặc hàm factory(một hàm tạo
 // ra tùy chọn) khi thiết lập DatabaseModule.
 //
 // Khi ứng dụng khởi động, `DatabaseModule` (hoặc AppModule gốc) có thể gọi
-// `MongooseModule.forRootAsync({ useFactory: mongooseConfigFactory })`. Các 
+// `MongooseModule.forRootAsync({ useFactory: mongooseConfigFactory })`. Các
 // biến môi trường được đọc bởi `ConfigService`; nếu không có giá trị
 // nào được cung cấp thì sử dụng DEFAULT_MONGO_URI ở dưới.
 // -----------------------------------------------------------------------------
@@ -20,7 +20,6 @@ import { ConfigService } from '@nestjs/config';
  */
 export const DEFAULT_MONGO_URI: string =
   'mongodb://admin:password123@localhost:27017/inventory_db?authSource=admin';
-
 
 /**
  * Các tuỳ chọn chung cho module mongoose. Những thiết lập này được giữ tối giản;
@@ -36,7 +35,9 @@ export const mongooseOptions: MongooseModuleOptions = {
 /**
  * Hàm factory tương thích với `MongooseModule.forRootAsync()`.
  */
-export function mongooseConfigFactory(config: ConfigService): MongooseModuleOptions {
+export function mongooseConfigFactory(
+  config: ConfigService,
+): MongooseModuleOptions {
   const uri =
     config.get<string>('MONGODB_URI') ||
     config.get<string>('MONGO_URI') ||
@@ -47,4 +48,3 @@ export function mongooseConfigFactory(config: ConfigService): MongooseModuleOpti
     uri,
   } as MongooseModuleOptions;
 }
-

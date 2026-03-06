@@ -1,0 +1,124 @@
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  MaxLength,
+  IsOptional,
+  MinLength,
+} from 'class-validator';
+
+export enum MaterialType {
+  API = 'API',
+  EXCIPIENT = 'Excipient',
+  DIETARY_SUPPLEMENT = 'Dietary Supplement',
+  CONTAINER = 'Container',
+  CLOSURE = 'Closure',
+  PROCESS_CHEMICAL = 'Process Chemical',
+  TESTING_MATERIAL = 'Testing Material',
+}
+
+/**
+ * DTO for creating a new material
+ * Used for POST /materials endpoint
+ */
+export class CreateMaterialDto {
+  @IsString({ message: 'material_id must be a string' })
+  @IsNotEmpty({ message: 'material_id is required' })
+  @MinLength(1, { message: 'material_id must not be empty' })
+  @MaxLength(20, { message: 'material_id must not exceed 20 characters' })
+  material_id: string;
+
+  @IsString({ message: 'part_number must be a string' })
+  @IsNotEmpty({ message: 'part_number is required' })
+  @MinLength(1, { message: 'part_number must not be empty' })
+  @MaxLength(20, { message: 'part_number must not exceed 20 characters' })
+  part_number: string;
+
+  @IsString({ message: 'material_name must be a string' })
+  @IsNotEmpty({ message: 'material_name is required' })
+  @MinLength(1, { message: 'material_name must not be empty' })
+  @MaxLength(100, { message: 'material_name must not exceed 100 characters' })
+  material_name: string;
+
+  @IsEnum(MaterialType, {
+    message: `material_type must be one of: ${Object.values(MaterialType).join(', ')}`,
+  })
+  @IsNotEmpty({ message: 'material_type is required' })
+  material_type: MaterialType | string;
+
+  @IsString({ message: 'storage_conditions must be a string' })
+  @IsOptional()
+  @MaxLength(100, {
+    message: 'storage_conditions must not exceed 100 characters',
+  })
+  storage_conditions?: string;
+
+  @IsString({ message: 'specification_document must be a string' })
+  @IsOptional()
+  @MaxLength(50, {
+    message: 'specification_document must not exceed 50 characters',
+  })
+  specification_document?: string;
+}
+
+/**
+ * DTO for updating an existing material
+ * Used for PUT /materials/:id endpoint
+ * All fields are optional for partial updates
+ */
+export class UpdateMaterialDto {
+  @IsString({ message: 'material_name must be a string' })
+  @IsOptional()
+  @MinLength(1, { message: 'material_name must not be empty if provided' })
+  @MaxLength(100, { message: 'material_name must not exceed 100 characters' })
+  material_name?: string;
+
+  @IsEnum(MaterialType, {
+    message: `material_type must be one of: ${Object.values(MaterialType).join(', ')}`,
+  })
+  @IsOptional()
+  material_type?: MaterialType | string;
+
+  @IsString({ message: 'storage_conditions must be a string' })
+  @IsOptional()
+  @MaxLength(100, {
+    message: 'storage_conditions must not exceed 100 characters',
+  })
+  storage_conditions?: string;
+
+  @IsString({ message: 'specification_document must be a string' })
+  @IsOptional()
+  @MaxLength(50, {
+    message: 'specification_document must not exceed 50 characters',
+  })
+  specification_document?: string;
+}
+
+/**
+ * DTO for API responses
+ * Used to define the shape of data returned to clients
+ */
+export class MaterialResponseDto {
+  _id: string;
+  material_id: string;
+  part_number: string;
+  material_name: string;
+  material_type: string;
+  storage_conditions?: string;
+  specification_document?: string;
+  created_date: Date;
+  modified_date: Date;
+}
+
+/**
+ * DTO for paginated API responses
+ */
+export class PaginatedMaterialResponseDto {
+  data: MaterialResponseDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}

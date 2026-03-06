@@ -1,0 +1,247 @@
+/**
+ * MaterialSearch Styles
+ */
+
+.material-search {
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.search-box {
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.search-input-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 40px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1em;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.btn-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.btn-clear:hover {
+  color: #333;
+}
+
+.type-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.type-btn {
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #666;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.type-btn:hover {
+  background: #e0e0e0;
+  border-color: #999;
+}
+
+.type-btn.active {
+  background: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+.search-error {
+  padding: 15px 20px;
+  background: #fee;
+  border-top: 1px solid #e0e0e0;
+  color: #c33;
+  font-size: 0.9em;
+}
+
+.search-loading {
+  padding: 30px 20px;
+  text-align: center;
+  color: #999;
+}
+
+.search-empty {
+  padding: 30px 20px;
+  text-align: center;
+  color: #999;
+}
+
+.search-results {
+  padding: 0 20px 20px 20px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.results-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.result-count {
+  font-size: 0.9em;
+  color: #999;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.result-item:hover {
+  background: #f0f7ff;
+  border-color: #1976d2;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15);
+}
+
+.result-main {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.result-id {
+  flex-shrink: 0;
+}
+
+.result-id code {
+  display: block;
+  background: #e8f4f8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 0.8em;
+  color: #d9534f;
+  white-space: nowrap;
+}
+
+.result-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-name {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-secondary {
+  margin: 4px 0 0 0;
+  font-size: 0.85em;
+  color: #999;
+}
+
+.result-side {
+  flex-shrink: 0;
+}
+
+.result-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.results-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.results-pagination button {
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.results-pagination button:hover:not(:disabled) {
+  background: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+.results-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result-page-info {
+  font-size: 0.85em;
+  color: #666;
+}

@@ -45,3 +45,26 @@ export class Material {
 }
 
 export const MaterialSchema = SchemaFactory.createForClass(Material);
+
+// ============================================
+// Database Indexes
+// ============================================
+// Create indexes for fast queries and unique constraints
+
+// Unique index on material_id (business key)
+MaterialSchema.index({ material_id: 1 }, { unique: true });
+
+// Unique index on part_number (business key)
+MaterialSchema.index({ part_number: 1 }, { unique: true });
+
+// Text index on material_name for text search
+MaterialSchema.index({ material_name: 'text' });
+
+// Index on material_type for filtering
+MaterialSchema.index({ material_type: 1 });
+
+// Index on created_date for sorting by newest first
+MaterialSchema.index({ created_date: -1 });
+
+// Compound index for common queries (type + created_date)
+MaterialSchema.index({ material_type: 1, created_date: -1 });

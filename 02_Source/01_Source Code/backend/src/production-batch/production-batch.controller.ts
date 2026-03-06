@@ -1,9 +1,19 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { ProductionBatchService } from './production-batch.service';
 
 @Controller('production-batches')
 export class ProductionBatchController {
-  constructor(private readonly productionBatchService: ProductionBatchService) {}
+  constructor(
+    private readonly productionBatchService: ProductionBatchService,
+  ) {}
 
   @Get()
   findAll() {

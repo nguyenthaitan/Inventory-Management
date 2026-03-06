@@ -38,4 +38,5 @@ export class ProductionBatch {
   batch_size: any; // Decimal128 will be cast by Mongoose
 }
 
-export const ProductionBatchSchema = SchemaFactory.createForClass(ProductionBatch);
+export const ProductionBatchSchema =
+  SchemaFactory.createForClass(ProductionBatch);
