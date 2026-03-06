@@ -28,7 +28,7 @@ const MaterialList: React.FC<Props> = ({ onSelect }) => {
           </tr>
         </thead>
         <tbody>
-          {materials.map(m => (
+          {materials.map((m: Material) => (
             <tr key={m._id} onClick={() => { setSelected(m); onSelect?.(m) }} style={{ cursor: 'pointer' }}>
               <td>{m.material_id}</td>
               <td>{m.part_number}</td>

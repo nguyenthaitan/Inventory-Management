@@ -13,6 +13,9 @@ import ReportTraceability from '../pages/qc/ReportTraceability';
 import DashboardManager from '../pages/manager/Dashboard';
 import InventoryManager from '../pages/manager/Inventory';
 import MaterialManagementManager from '../pages/manager/MaterialManagement';
+import ManagerMaterialList from '../pages/manager/materials/List';
+import ManagerMaterialDetail from '../pages/manager/materials/Detail';
+import ManagerMaterialForm from '../pages/manager/materials/FormPage';
 import ProductManagementManager from '../pages/manager/ProductManagement';
 import ReportsManager from '../pages/manager/Reports';
 import TransactionManagementManager from '../pages/manager/TransactionManagement';
@@ -20,6 +23,9 @@ import UserManagementManager from '../pages/manager/UserManagement';
 import DashboardOperator from '../pages/operator/DashboardOperator';
 import InventoryAuditOperator from '../pages/operator/InventoryAudit';
 import MaterialManagementOperator from '../pages/operator/MaterialManagement';
+import OperatorMaterialList from '../pages/operator/materials/List';
+import OperatorMaterialDetail from '../pages/operator/materials/Detail';
+import OperatorMaterialForm from '../pages/operator/materials/FormPage';
 import ProductCreationOperator from '../pages/operator/ProductCreation';
 import StockInOperator from '../pages/operator/StockIn';
 import StockOutOperator from '../pages/operator/StockOut';
@@ -50,6 +56,10 @@ export const router = createBrowserRouter([
       { path: 'manager/dashboard', element: <DashboardManager /> },
       { path: 'manager/inventory', element: <InventoryManager /> },
       { path: 'manager/material', element: <MaterialManagementManager /> },
+      { path: 'manager/materials', element: <ManagerMaterialList /> },
+      { path: 'manager/materials/create', element: <ManagerMaterialForm /> },
+      { path: 'manager/materials/:id', element: <ManagerMaterialDetail /> },
+      { path: 'manager/materials/:id/edit', element: <ManagerMaterialForm /> },
       { path: 'manager/product', element: <ProductManagementManager /> },
       { path: 'manager/reports', element: <ReportsManager /> },
       { path: 'manager/transaction', element: <TransactionManagementManager /> },
@@ -59,6 +69,10 @@ export const router = createBrowserRouter([
       { path: 'operator/dashboard', element: <DashboardOperator /> },
       { path: 'operator/audit', element: <InventoryAuditOperator /> },
       { path: 'operator/material', element: <MaterialManagementOperator /> },
+      { path: 'operator/materials', element: <OperatorMaterialList /> },
+      { path: 'operator/materials/create', element: <OperatorMaterialForm /> },
+      { path: 'operator/materials/:id', element: <OperatorMaterialDetail /> },
+      { path: 'operator/materials/:id/edit', element: <OperatorMaterialForm /> },
       { path: 'operator/product', element: <ProductCreationOperator /> },
       { path: 'operator/stock-in', element: <StockInOperator /> },
       { path: 'operator/stock-out', element: <StockOutOperator /> },
