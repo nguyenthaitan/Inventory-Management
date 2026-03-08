@@ -3,12 +3,11 @@
  * API calls để quản lý Inventory Lots từ backend
  */
 
-import { apiClient } from "./api";
+import { apiClient } from "./apiClient";
 
 export interface InventoryLot {
   lot_id: string;
   material_id: string;
-  material_name?: string;
   manufacturer_name: string;
   manufacturer_lot: string;
   supplier_name: string;
@@ -53,12 +52,12 @@ export class InventoryLotAPI {
         "[InventoryLotAPI] Failed to fetch inventory lots:",
         error.message,
       );
-      return { lots: [], total: 0, page, limit, error };
+      return { inventoryLots: [], total: 0, page, limit, error };
     }
 
     const lots = Array.isArray(data) ? data : [];
     return {
-      lots,
+      inventoryLots: lots,
       total: lots.length,
       page,
       limit,
@@ -101,10 +100,16 @@ export class InventoryLotAPI {
         `[InventoryLotAPI] Failed to fetch lots for material ${materialId}:`,
         error.message,
       );
-      return { lots: [], error };
+      return { inventoryLots: [], total: 0, page, limit, error };
     }
 
-    return { lots: Array.isArray(data) ? data : [], error: null };
+    return {
+      inventoryLots: Array.isArray(data) ? data : [],
+      total: 0,
+      page,
+      limit,
+      error: null,
+    };
   }
 
   /**
@@ -127,10 +132,16 @@ export class InventoryLotAPI {
         `[InventoryLotAPI] Failed to fetch lots with status ${status}:`,
         error.message,
       );
-      return { lots: [], error };
+      return { inventoryLots: [], total: 0, page, limit, error };
     }
 
-    return { lots: Array.isArray(data) ? data : [], error: null };
+    return {
+      inventoryLots: Array.isArray(data) ? data : [],
+      total: 0,
+      page,
+      limit,
+      error: null,
+    };
   }
 
   /**
@@ -163,10 +174,10 @@ export class InventoryLotAPI {
 
     if (error) {
       console.error("[InventoryLotAPI] Failed to create lot:", error.message);
-      return { lot: null, error };
+      return { inventoryLot: null, error };
     }
 
-    return { lot: data, error: null };
+    return { inventoryLot: data, error: null };
   }
 
   /**
@@ -183,10 +194,10 @@ export class InventoryLotAPI {
         `[InventoryLotAPI] Failed to update lot ${id}:`,
         error.message,
       );
-      return { lot: null, error };
+      return { inventoryLot: null, error };
     }
 
-    return { lot: data, error: null };
+    return { inventoryLot: data, error: null };
   }
 
   /**
@@ -206,10 +217,10 @@ export class InventoryLotAPI {
         `[InventoryLotAPI] Failed to update lot ${id} status:`,
         error.message,
       );
-      return { lot: null, error };
+      return { inventoryLot: null, error };
     }
 
-    return { lot: data, error: null };
+    return { inventoryLot: data, error: null };
   }
 
   /**
@@ -245,10 +256,10 @@ export class InventoryLotAPI {
         "[InventoryLotAPI] Failed to fetch expiring lots:",
         error.message,
       );
-      return { lots: [], error };
+      return { inventoryLots: [], error };
     }
 
-    return { lots: data || [], error: null };
+    return { inventoryLots: data || [], error: null };
   }
 
   /**
@@ -264,10 +275,10 @@ export class InventoryLotAPI {
         "[InventoryLotAPI] Failed to fetch expired lots:",
         error.message,
       );
-      return { lots: [], error };
+      return { inventoryLots: [], error };
     }
 
-    return { lots: data || [], error: null };
+    return { inventoryLots: data || [], error: null };
   }
 
   /**

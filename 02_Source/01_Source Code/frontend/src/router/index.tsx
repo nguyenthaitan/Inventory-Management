@@ -11,7 +11,7 @@ import InventoryQC from "../pages/qc/InventoryQC";
 import ProductInspection from "../pages/qc/ProductInspection";
 import ReportTraceability from "../pages/qc/ReportTraceability";
 import DashboardManager from "../pages/manager/Dashboard";
-import Inventory from "../pages/manager/Inventory";
+import InventoryLot from "../pages/manager/inventory-lot/InventoryLot";
 import MaterialManagementManager from "../pages/manager/MaterialManagement";
 import ProductManagementManager from "../pages/manager/ProductManagement";
 import ReportsManager from "../pages/manager/Reports";
@@ -48,7 +48,7 @@ export const router = createBrowserRouter([
 
       // Manager
       { path: "manager/dashboard", element: <DashboardManager /> },
-      { path: "manager/inventory", element: <Inventory /> },
+      { path: "manager/inventory", element: <InventoryLot /> },
       { path: "manager/material", element: <MaterialManagementManager /> },
       { path: "manager/product", element: <ProductManagementManager /> },
       { path: "manager/reports", element: <ReportsManager /> },
