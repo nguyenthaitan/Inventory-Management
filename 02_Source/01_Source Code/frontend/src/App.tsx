@@ -1,4 +1,4 @@
-import { MaterialManagement } from "./pages";
+import { MaterialManagement } from "./components/material/MaterialManagement";
 import "./App.css";
 
 function App() {
