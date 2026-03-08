@@ -1,0 +1,101 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { QCTestService } from './qc-test.service';
+import { CreateQCTestDto } from './dto/create-qc-test.dto';
+import { UpdateQCTestDto } from './dto/update-qc-test.dto';
+import { QCDecisionDto } from './dto/qc-decision.dto';
+
+@Controller('qc-tests')
+export class QCTestController {
+  constructor(private readonly qcTestService: QCTestService) {}
+
+  // Static routes first — must come before dynamic :test_id route
+
+  @Get('dashboard')
+  getDashboard() {
+    return this.qcTestService.getDashboardKPI();
+  }
+
+  @Get('supplier-performance')
+  getSupplierPerformance(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.qcTestService.getSupplierPerformance({ from, to });
+  }
+
+  @Get()
+  getAllTests(
+    @Query('result_status') result_status?: string,
+    @Query('test_type') test_type?: string,
+  ) {
+    return this.qcTestService.getAllTests({ result_status, test_type });
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  createTest(@Body() dto: CreateQCTestDto) {
+    return this.qcTestService.createTest(dto);
+  }
+
+  @Post('lot/:lot_id/decision')
+  @HttpCode(HttpStatus.OK)
+  submitDecision(
+    @Param('lot_id') lot_id: string,
+    @Body() dto: QCDecisionDto,
+  ) {
+    return this.qcTestService.submitDecision(lot_id, dto);
+  }
+
+  @Post('lot/:lot_id/retest')
+  @HttpCode(HttpStatus.OK)
+  submitRetestDecision(
+    @Param('lot_id') lot_id: string,
+    @Body()
+    dto: {
+      action: 'extend' | 'discard';
+      new_expiry_date?: string;
+      performed_by: string;
+    },
+  ) {
+    return this.qcTestService.submitRetestDecision(lot_id, dto.action, {
+      new_expiry_date: dto.new_expiry_date,
+      performed_by: dto.performed_by,
+    });
+  }
+
+  @Get('lot/:lot_id')
+  getTestsByLotId(@Param('lot_id') lot_id: string) {
+    return this.qcTestService.getTestsByLotId(lot_id);
+  }
+
+  // Dynamic :test_id routes — must come after all static routes
+
+  @Get(':test_id')
+  getTestById(@Param('test_id') test_id: string) {
+    return this.qcTestService.getTestById(test_id);
+  }
+
+  @Patch(':test_id')
+  updateTest(
+    @Param('test_id') test_id: string,
+    @Body() dto: UpdateQCTestDto,
+  ) {
+    return this.qcTestService.updateTest(test_id, dto);
+  }
+
+  @Delete(':test_id')
+  deleteTest(@Param('test_id') test_id: string) {
+    return this.qcTestService.deleteTest(test_id);
+  }
+}

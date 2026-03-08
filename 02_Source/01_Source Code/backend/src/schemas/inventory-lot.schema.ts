@@ -41,7 +41,7 @@ export class InventoryLot {
 
   @Prop({
     type: String,
-    enum: ['Quarantine', 'Accepted', 'Rejected', 'Depleted'],
+    enum: ['Quarantine', 'Accepted', 'Rejected', 'Depleted', 'Hold'],
     required: true,
   })
   status: string;

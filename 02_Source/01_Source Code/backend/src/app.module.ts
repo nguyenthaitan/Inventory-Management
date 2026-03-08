@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { MaterialModule } from './material/material.module';
 import { InventoryLotModule } from './inventory-lot/inventory-lot.module';
 import { ProductionBatchModule } from './production-batch/production-batch.module';
+import { QCTestModule } from './qc-test/qc-test.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProductionBatchModule } from './production-batch/production-batch.modul
     MaterialModule,
     InventoryLotModule,
     ProductionBatchModule,
+    QCTestModule,
   ],
   controllers: [AppController],
   providers: [AppService],

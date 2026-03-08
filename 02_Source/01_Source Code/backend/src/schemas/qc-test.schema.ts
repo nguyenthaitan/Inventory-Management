@@ -53,6 +53,17 @@ export class QCTest {
 
   @Prop({ type: String, maxlength: 50, required: false })
   verified_by?: string;
+
+  @Prop({ type: String, maxlength: 500, required: false })
+  reject_reason?: string;
+
+  @Prop({ type: String, maxlength: 20, required: false })
+  label_id?: string;
 }
 
 export const QCTestSchema = SchemaFactory.createForClass(QCTest);
+
+QCTestSchema.index({ test_id: 1 }, { unique: true });
+QCTestSchema.index({ lot_id: 1 });
+QCTestSchema.index({ result_status: 1 });
+QCTestSchema.index({ test_date: -1 });
