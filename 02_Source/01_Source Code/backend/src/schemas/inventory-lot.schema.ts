@@ -11,6 +11,14 @@ export type InventoryLotDocument = InventoryLot & Document;
 
 const options: SchemaOptions = {
   timestamps: { createdAt: 'created_date', updatedAt: 'modified_date' },
+  toJSON: {
+    transform: (_doc: unknown, ret: Record<string, unknown>) => {
+      if (ret['quantity'] != null) {
+        ret['quantity'] = parseFloat((ret['quantity'] as { toString(): string }).toString());
+      }
+      return ret;
+    },
+  },
 };
 
 @Schema(options)
