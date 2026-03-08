@@ -10,6 +10,7 @@ import type { Decimal128 } from 'mongoose';
 export type InventoryLotDocument = InventoryLot & Document;
 
 const options: SchemaOptions = {
+  collection: 'inventory_lots',
   timestamps: { createdAt: 'created_date', updatedAt: 'modified_date' },
 };
 
@@ -66,3 +67,12 @@ export class InventoryLot {
 }
 
 export const InventoryLotSchema = SchemaFactory.createForClass(InventoryLot);
+
+// Create indexes for performance
+InventoryLotSchema.index({ lot_id: 1 }, { unique: true });
+InventoryLotSchema.index({ material_id: 1 });
+InventoryLotSchema.index({ status: 1 });
+InventoryLotSchema.index({ expiration_date: 1 });
+InventoryLotSchema.index({ created_date: -1 });
+InventoryLotSchema.index({ material_id: 1, status: 1 });
+InventoryLotSchema.index({ is_sample: 1, parent_lot_id: 1 });

@@ -1,10 +1,13 @@
 // Import các module cần thiết cho việc test
 import { Test, TestingModule } from '@nestjs/testing';
-import { MaterialService } from './material.service';
-import { MaterialRepository } from './material.repository';
+import { MaterialService } from '../material/material.service';
+import { MaterialRepository } from '../material/material.repository';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { CreateMaterialDto, MaterialType } from './dto/create-material.dto';
-import { UpdateMaterialDto } from './dto/update-material.dto';
+import {
+  CreateMaterialDto,
+  MaterialType,
+} from '../material/dto/create-material.dto';
+import { UpdateMaterialDto } from '../material/dto/update-material.dto';
 
 // Một đối tượng mẫu dùng lại trong nhiều trường hợp kiểm thử
 const sample: any = {
@@ -102,7 +105,9 @@ describe('MaterialService', () => {
   it('should throw NotFoundException on update missing', async () => {
     repo.findAll.mockResolvedValue([]);
     repo.update.mockResolvedValue(null);
-    await expect(service.update('1', {} as any)).rejects.toThrow(NotFoundException);
+    await expect(service.update('1', {} as any)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   // xoá thành công khi có bản ghi
