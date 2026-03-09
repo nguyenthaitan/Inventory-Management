@@ -15,6 +15,7 @@ export enum InventoryLotStatus {
   ACCEPTED = 'Accepted',
   REJECTED = 'Rejected',
   DEPLETED = 'Depleted',
+  HOLD = 'Hold',
 }
 
 export class CreateInventoryLotDto {

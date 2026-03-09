@@ -12,15 +12,15 @@ import type {
   LotDecisionDto,
 } from '../../types/qc';
 
-type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'hold';
+type StatusFilter = 'all' | 'Quarantine' | 'Accepted' | 'Rejected' | 'Hold';
 type DecisionValue = 'approved' | 'rejected' | 'hold';
 
 const STATUS_MAP: Record<StatusFilter, string | undefined> = {
   all: undefined,
-  pending: 'Quarantine',
-  approved: 'Accepted',
-  rejected: 'Rejected',
-  hold: 'Hold',
+  Quarantine: 'Quarantine',
+  Accepted: 'Accepted',
+  Rejected: 'Rejected',
+  Hold: 'Hold',
 };
 
 const DECISION_MAP: Record<DecisionValue, LotDecisionDto['decision']> = {
@@ -62,7 +62,7 @@ const DEFAULT_FORM: InspectionForm = {
 export default function InboundControl() {
   const [lots, setLots] = useState<InventoryLot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<StatusFilter>('pending');
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('Quarantine');
   const [selectedLot, setSelectedLot] = useState<InventoryLot | null>(null);
   const [form, setForm] = useState<InspectionForm>(DEFAULT_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -74,6 +74,7 @@ export default function InboundControl() {
     try {
       const data = await getInventoryLots(STATUS_MAP[filterStatus]);
       setLots(data);
+      console.log('Fetched lots:', data);
     } catch {
       setToast({ message: 'Không thể tải danh sách lô hàng', type: 'error' });
     } finally {
@@ -160,18 +161,24 @@ export default function InboundControl() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex border-b border-gray-200">
-        {(['all', 'pending', 'approved', 'rejected', 'hold'] as StatusFilter[]).map((s) => (
+      <div className="flex gap-3 flex-wrap">
+        {([
+          { label: 'Tất cả', value: 'all' },
+          { label: 'Chờ kiểm định', value: 'Quarantine' },
+          { label: 'Đạt', value: 'Accepted' },
+          { label: 'Từ chối', value: 'Rejected' },
+          { label: 'Tạm giữ', value: 'Hold' },
+        ] as { label: string; value: StatusFilter }[]).map((s) => (
           <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
-            className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
-              filterStatus === s
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+            key={s.value}
+            onClick={() => setFilterStatus(s.value)}
+            className={`px-5 py-2 text-sm font-semibold rounded-full border transition ${
+              filterStatus === s.value
+                ? 'bg-blue-600 border-blue-600 text-blue-600'
+                : 'bg-white border-gray-300 text-gray-500 hover:border-blue-400 hover:bg-blue-50'
             }`}
           >
-            {s === 'all' ? 'Tất cả' : s === 'pending' ? 'Chờ kiểm định' : s === 'approved' ? 'Đạt' : s === 'rejected' ? 'Từ chối' : 'Tạm giữ'}
+            {s.label}
           </button>
         ))}
       </div>
@@ -206,7 +213,7 @@ export default function InboundControl() {
                     <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.product_name}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.quantity} {lot.unit ?? ''}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.quantity} {lot.unit_of_measure ?? ''}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-500">
                       {lot.expiration_date ? new Date(lot.expiration_date).toLocaleDateString('vi-VN') : '—'}
                     </td>
@@ -219,7 +226,7 @@ export default function InboundControl() {
                       {lot.status === 'Quarantine' && (
                         <button
                           onClick={() => openModal(lot)}
-                          className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
+                          className="px-3 py-1.5 bg-blue-600 text-blue-600 text-xs rounded-lg hover:bg-blue-700"
                         >
                           Tiến hành kiểm định
                         </button>

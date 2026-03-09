@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar';
 
 const MainLayout = () => {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
+    <div className="w-full min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
       <Sidebar />
       <div className="md:ml-64 min-h-screen flex flex-col relative transition-all duration-300">
         <header className="bg-white/70 backdrop-blur-xl sticky top-0 z-30 border-b border-gray-100">

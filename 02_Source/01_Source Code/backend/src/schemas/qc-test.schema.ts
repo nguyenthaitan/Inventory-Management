@@ -7,7 +7,7 @@ const options: SchemaOptions = {
   timestamps: { createdAt: 'created_date', updatedAt: 'modified_date' },
 };
 
-@Schema(options)
+@Schema({ collection: 'qc_tests' })
 export class QCTest {
   @Prop({ type: String, required: true, unique: true, maxlength: 36 })
   test_id: string;

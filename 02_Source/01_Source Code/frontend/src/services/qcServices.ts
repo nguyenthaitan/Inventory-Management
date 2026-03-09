@@ -12,14 +12,15 @@ const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http:/
 
 type RawDecimal = { $numberDecimal: string };
 
-function toNumber(val: number | RawDecimal | undefined | null): number {
+function toNumber(val: number | string | RawDecimal | undefined | null): number {
   if (val == null) return 0;
   if (typeof val === 'number') return val;
+  if (typeof val === 'string') return parseFloat(val);
   return parseFloat(val.$numberDecimal);
 }
 
 function normalizeLot(lot: InventoryLot): InventoryLot {
-  return { ...lot, quantity: toNumber(lot.quantity as number | RawDecimal) };
+  return { ...lot, quantity: toNumber(lot.quantity as number | string | RawDecimal) };
 }
 
 async function handleApiError(res: Response): Promise<void> {

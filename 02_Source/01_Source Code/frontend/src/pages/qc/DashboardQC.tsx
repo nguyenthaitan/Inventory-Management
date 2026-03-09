@@ -28,7 +28,6 @@ export default function DashboardQC() {
           getInventoryLots('Quarantine'),
         ]);
         setKpi(kpiData);
-        console.log('kpiData', kpiData);
         setPendingLots(lotsData.slice(0, 5));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
@@ -53,15 +52,9 @@ export default function DashboardQC() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">QC Dashboard</h1>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">Tổng quan chất lượng</h1>
           <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Tổng quan kiểm soát chất lượng</p>
         </div>
-        <button
-          onClick={() => void navigate('/qc/traceability')}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
-        >
-          VÀO MÀN HÌNH TRUY VẾT
-        </button>
       </div>
 
       {/* Error */}
@@ -94,7 +87,7 @@ export default function DashboardQC() {
           <h2 className="text-lg font-bold text-gray-900">Lô hàng chờ kiểm định</h2>
           <button
             onClick={() => void navigate('/qc/inbound')}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-green-600 hover:underline"
           >
             Xem tất cả →
           </button>
@@ -128,7 +121,7 @@ export default function DashboardQC() {
                       <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.product_name}</td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.quantity} {lot.unit ?? ''}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.quantity} {lot.unit_of_measure ?? ''}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                           priority === 'High' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
@@ -151,40 +144,6 @@ export default function DashboardQC() {
             </table>
           )}
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <button
-          onClick={() => void navigate('/qc/inbound')}
-          className="p-4 bg-white border border-gray-100 rounded-xl text-left hover:border-blue-200 hover:shadow-sm transition shadow-sm"
-        >
-          <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
-            <FlaskConical className="w-5 h-5 text-blue-600" />
-          </div>
-          <div className="font-bold text-gray-800 text-sm">Kiểm định lô đầu vào</div>
-          <div className="text-xs text-gray-400 mt-1">Kiểm tra lô từ nhà cung cấp</div>
-        </button>
-        <button
-          onClick={() => void navigate('/qc/inventory')}
-          className="p-4 bg-white border border-gray-100 rounded-xl text-left hover:border-blue-200 hover:shadow-sm transition shadow-sm"
-        >
-          <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center mb-3">
-            <Package className="w-5 h-5 text-green-600" />
-          </div>
-          <div className="font-bold text-gray-800 text-sm">Kiểm tra kho</div>
-          <div className="text-xs text-gray-400 mt-1">Re-test & cách ly hàng hóa</div>
-        </button>
-        <button
-          onClick={() => void navigate('/qc/traceability')}
-          className="p-4 bg-white border border-gray-100 rounded-xl text-left hover:border-blue-200 hover:shadow-sm transition shadow-sm"
-        >
-          <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center mb-3">
-            <ClipboardList className="w-5 h-5 text-purple-600" />
-          </div>
-          <div className="font-bold text-gray-800 text-sm">Truy vết & Báo cáo</div>
-          <div className="text-xs text-gray-400 mt-1">Lịch sử QC & hiệu suất NCC</div>
-        </button>
       </div>
     </div>
   );

@@ -130,7 +130,7 @@ export default function InventoryQC() {
       <div className="flex border-b border-gray-200">
         <button
           onClick={() => setActiveTab('alert')}
-          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+          className={`m-2 px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
             activeTab === 'alert' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -143,7 +143,7 @@ export default function InventoryQC() {
         </button>
         <button
           onClick={() => setActiveTab('quarantine')}
-          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+          className={`m-2 px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
             activeTab === 'quarantine' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >

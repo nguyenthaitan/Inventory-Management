@@ -95,7 +95,7 @@ export default function ReportTraceability() {
       <div className="flex border-b border-gray-200">
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+          className={`m-2 px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
             activeTab === 'history' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -103,7 +103,7 @@ export default function ReportTraceability() {
         </button>
         <button
           onClick={() => setActiveTab('supplier')}
-          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+          className={`m-2 px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
             activeTab === 'supplier' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >

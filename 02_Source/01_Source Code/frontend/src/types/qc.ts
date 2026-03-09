@@ -31,6 +31,7 @@ export interface InventoryLot {
   status: 'Quarantine' | 'Accepted' | 'Rejected' | 'Depleted' | 'Hold';
   created_date?: string;
   modified_date?: string;
+  unit_of_measure?: string;
 }
 
 // ── KPI / Reporting ──────────────────────────────────────────────────────────
