@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { RefreshCw, Lock, X } from 'lucide-react';
+import Toast from '../../components/Toast';
 import { getInventoryLots, submitRetest, bulkQuarantine } from '../../services/qcServices';
 import type { InventoryLot } from '../../types/qc';
 
@@ -12,28 +14,12 @@ function getDaysUntilExpiry(expirationDate?: string): number | null {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  Quarantine: 'bg-yellow-100 text-yellow-700',
+  Quarantine: 'bg-amber-100 text-amber-700',
   Accepted: 'bg-green-100 text-green-700',
   Rejected: 'bg-red-100 text-red-700',
-  Hold: 'bg-orange-100 text-orange-700',
+  Hold: 'bg-purple-100 text-purple-700',
   Depleted: 'bg-gray-100 text-gray-500',
 };
-
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 4000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-lg shadow-lg text-white text-sm flex items-center gap-3 ${
-      type === 'success' ? 'bg-green-600' : 'bg-red-600'
-    }`}>
-      <span>{type === 'success' ? '✓' : '✕'}</span>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">×</button>
-    </div>
-  );
-}
 
 export default function InventoryQC() {
   const [activeTab, setActiveTab] = useState<Tab>('alert');
@@ -136,19 +122,19 @@ export default function InventoryQC() {
   return (
     <div className="p-6 space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Kiểm soát kho QC</h1>
-        <p className="text-sm text-gray-500 mt-1">Re-test hàng sắp hết hạn & quản lý cách ly</p>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">Kiểm soát kho QC</h1>
+        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Re-test hàng sắp hết hạn & quản lý cách ly</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex border-b border-gray-200">
         <button
           onClick={() => setActiveTab('alert')}
-          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-            activeTab === 'alert' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
+          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+            activeTab === 'alert' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          ⚠️ Cảnh báo chất lượng
+          Cảnh báo chất lượng
           {alertLots.length > 0 && (
             <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">
               {alertLots.length}
@@ -157,17 +143,17 @@ export default function InventoryQC() {
         </button>
         <button
           onClick={() => setActiveTab('quarantine')}
-          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-            activeTab === 'quarantine' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
+          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+            activeTab === 'quarantine' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          🔒 Cách ly hàng hóa
+          Cách ly hàng hóa
         </button>
       </div>
 
       {/* Alert Tab */}
       {activeTab === 'alert' && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
           {loading ? (
             <div className="p-6 space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -181,13 +167,13 @@ export default function InventoryQC() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                   <tr>
-                    <th className="px-5 py-3 text-left">Mã lô</th>
-                    <th className="px-5 py-3 text-left">Tên sản phẩm</th>
-                    <th className="px-5 py-3 text-left">Vị trí</th>
-                    <th className="px-5 py-3 text-left">Hạn sử dụng</th>
-                    <th className="px-5 py-3 text-left">Cảnh báo</th>
-                    <th className="px-5 py-3 text-left">Trạng thái</th>
-                    <th className="px-5 py-3 text-left">Thao tác</th>
+                    <th className="px-6 py-4 text-left font-bold tracking-wider">Mã lô</th>
+                    <th className="px-6 py-4 text-left font-bold tracking-wider">Tên sản phẩm</th>
+                    <th className="px-6 py-4 text-left font-bold tracking-wider">Vị trí</th>
+                    <th className="px-6 py-4 text-left font-bold tracking-wider">Hạn sử dụng</th>
+                    <th className="px-6 py-4 text-left font-bold tracking-wider">Cảnh báo</th>
+                    <th className="px-6 py-4 text-left font-bold tracking-wider">Trạng thái</th>
+                    <th className="px-6 py-4 text-left font-bold tracking-wider">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -196,28 +182,28 @@ export default function InventoryQC() {
                     const isNearExpiry = days !== null && days <= 7;
                     return (
                       <tr key={lot.lot_id} className="hover:bg-gray-50">
-                        <td className="px-5 py-3 font-mono font-medium text-gray-800">{lot.lot_id}</td>
-                        <td className="px-5 py-3 text-gray-700">{lot.product_name}</td>
-                        <td className="px-5 py-3 text-gray-500">{lot.location ?? '—'}</td>
-                        <td className="px-5 py-3 text-gray-700">
+                        <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.product_name}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.location ?? '—'}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-700">
                           {lot.expiration_date ? new Date(lot.expiration_date).toLocaleDateString('vi-VN') : '—'}
                         </td>
-                        <td className="px-5 py-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                             isNearExpiry ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                           }`}>
                             {isNearExpiry ? `Near Expiry (${days ?? 0}d)` : `Retest Due (${days ?? 0}d)`}
                           </span>
                         </td>
-                        <td className="px-5 py-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
                             {lot.status}
                           </span>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-6 py-4">
                           <button
                             onClick={() => openRetestModal(lot)}
-                            className="px-3 py-1.5 bg-orange-500 text-white text-xs rounded-lg hover:bg-orange-600"
+                            className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                           >
                             Thực hiện Re-test
                           </button>
@@ -242,7 +228,7 @@ export default function InventoryQC() {
             <button
               onClick={() => void handleBulkQuarantine()}
               disabled={submitting || selectedItems.length === 0}
-              className="px-4 py-2 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2"
             >
               {submitting && (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -250,11 +236,12 @@ export default function InventoryQC() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
               )}
-              🔒 Cách ly hàng loạt ({selectedItems.length})
+              <Lock className="w-3.5 h-3.5" />
+              Cách ly hàng loạt ({selectedItems.length})
             </button>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
             {loading ? (
               <div className="p-6 space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -268,7 +255,7 @@ export default function InventoryQC() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                     <tr>
-                      <th className="px-5 py-3 text-left">
+                      <th className="px-6 py-4 text-left">
                         <input
                           type="checkbox"
                           checked={selectedItems.length === quarantinableLots.length && quarantinableLots.length > 0}
@@ -278,17 +265,17 @@ export default function InventoryQC() {
                           className="rounded"
                         />
                       </th>
-                      <th className="px-5 py-3 text-left">Mã lô</th>
-                      <th className="px-5 py-3 text-left">Tên sản phẩm</th>
-                      <th className="px-5 py-3 text-left">Nhà cung cấp</th>
-                      <th className="px-5 py-3 text-left">Vị trí</th>
-                      <th className="px-5 py-3 text-left">Trạng thái hiện tại</th>
+                      <th className="px-6 py-4 text-left font-bold tracking-wider">Mã lô</th>
+                      <th className="px-6 py-4 text-left font-bold tracking-wider">Tên sản phẩm</th>
+                      <th className="px-6 py-4 text-left font-bold tracking-wider">Nhà cung cấp</th>
+                      <th className="px-6 py-4 text-left font-bold tracking-wider">Vị trí</th>
+                      <th className="px-6 py-4 text-left font-bold tracking-wider">Trạng thái hiện tại</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {quarantinableLots.map((lot) => (
-                      <tr key={lot.lot_id} className={`hover:bg-gray-50 ${selectedItems.includes(lot.lot_id) ? 'bg-yellow-50' : ''}`}>
-                        <td className="px-5 py-3">
+                      <tr key={lot.lot_id} className={`hover:bg-gray-50 ${selectedItems.includes(lot.lot_id) ? 'bg-red-50/30' : ''}`}>
+                        <td className="px-6 py-4">
                           <input
                             type="checkbox"
                             checked={selectedItems.includes(lot.lot_id)}
@@ -296,12 +283,12 @@ export default function InventoryQC() {
                             className="rounded"
                           />
                         </td>
-                        <td className="px-5 py-3 font-mono font-medium text-gray-800">{lot.lot_id}</td>
-                        <td className="px-5 py-3 text-gray-700">{lot.product_name}</td>
-                        <td className="px-5 py-3 text-gray-500">{lot.supplier_name}</td>
-                        <td className="px-5 py-3 text-gray-500">{lot.location ?? '—'}</td>
-                        <td className="px-5 py-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                        <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.product_name}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.location ?? '—'}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
                             {lot.status}
                           </span>
                         </td>
@@ -317,14 +304,19 @@ export default function InventoryQC() {
 
       {/* Re-test Modal */}
       {retestLot && (
-        <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">Re-test lô hàng</h2>
-                <p className="text-sm text-gray-500">{retestLot.lot_id} — {retestLot.product_name}</p>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md animate-in zoom-in-95 duration-200">
+            <div className="p-5 bg-blue-600 rounded-t-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <RefreshCw className="w-5 h-5 text-white" />
+                <div>
+                  <h2 className="text-base font-bold text-white">Re-test lô hàng</h2>
+                  <p className="text-xs text-blue-200">{retestLot.lot_id} — {retestLot.product_name}</p>
+                </div>
               </div>
-              <button onClick={closeRetestModal} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+              <button onClick={closeRetestModal} className="text-blue-200 hover:text-white transition p-1">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="p-5 space-y-4">
@@ -391,7 +383,7 @@ export default function InventoryQC() {
               <button
                 onClick={() => void handleRetest()}
                 disabled={submitting || !retestAction || (retestAction === 'extend' && !newExpiryDate)}
-                className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting && (
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

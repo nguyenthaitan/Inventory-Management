@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { ShieldCheck, X } from 'lucide-react';
+import Toast from '../../components/Toast';
 import { createQCTest, submitLotDecision } from '../../services/qcServices';
 import type { CreateQCTestDto, LotDecisionDto } from '../../types/qc';
 
@@ -40,22 +42,6 @@ const DEFAULT_FORM: InspectionForm = {
   rejectReason: '',
   productLabel: '',
 };
-
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 4000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-lg shadow-lg text-white text-sm flex items-center gap-3 ${
-      type === 'success' ? 'bg-green-600' : 'bg-red-600'
-    }`}>
-      <span>{type === 'success' ? '✓' : '✕'}</span>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">×</button>
-    </div>
-  );
-}
 
 export default function ProductInspection() {
   const [batches, setBatches] = useState<ProductBatch[]>(MOCK_BATCHES);
@@ -127,11 +113,11 @@ export default function ProductInspection() {
   return (
     <div className="p-6 space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Kiểm định lô thành phẩm</h1>
-        <p className="text-sm text-gray-500 mt-1">Kiểm tra chất lượng lô sản phẩm từ dây chuyền sản xuất</p>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">Kiểm định lô thành phẩm</h1>
+        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Kiểm tra chất lượng lô sản phẩm từ dây chuyền sản xuất</p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
         {batches.length === 0 ? (
           <p className="p-10 text-center text-gray-400">Không có lô thành phẩm nào cần kiểm định.</p>
         ) : (
@@ -139,26 +125,26 @@ export default function ProductInspection() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                 <tr>
-                  <th className="px-5 py-3 text-left">Số lô</th>
-                  <th className="px-5 py-3 text-left">Tên sản phẩm</th>
-                  <th className="px-5 py-3 text-left">Ngày sx</th>
-                  <th className="px-5 py-3 text-left">Số lượng</th>
-                  <th className="px-5 py-3 text-left">Dây chuyền</th>
-                  <th className="px-5 py-3 text-left">Thao tác</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Số lô</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Tên sản phẩm</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Ngày sx</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Số lượng</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Dây chuyền</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {batches.map((batch) => (
                   <tr key={batch.batch_number} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 font-mono font-medium text-gray-800">{batch.batch_number}</td>
-                    <td className="px-5 py-3 text-gray-700">{batch.product_name}</td>
-                    <td className="px-5 py-3 text-gray-500">{new Date(batch.production_date).toLocaleDateString('vi-VN')}</td>
-                    <td className="px-5 py-3 text-gray-700">{batch.quantity.toLocaleString()} {batch.unit}</td>
-                    <td className="px-5 py-3 text-gray-500">{batch.line}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-6 py-4 font-mono font-medium text-gray-800">{batch.batch_number}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.product_name}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">{new Date(batch.production_date).toLocaleDateString('vi-VN')}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.quantity.toLocaleString()} {batch.unit}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">{batch.line}</td>
+                    <td className="px-6 py-4">
                       <button
                         onClick={() => openModal(batch)}
-                        className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
+                        className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                       >
                         Tiến hành kiểm định
                       </button>
@@ -173,14 +159,19 @@ export default function ProductInspection() {
 
       {/* Inspection Modal */}
       {selectedBatch && (
-        <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">Kiểm định thành phẩm</h2>
-                <p className="text-sm text-gray-500">{selectedBatch.batch_number} — {selectedBatch.product_name}</p>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <div className="p-5 bg-blue-600 rounded-t-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-white" />
+                <div>
+                  <h2 className="text-base font-bold text-white">Kiểm định thành phẩm</h2>
+                  <p className="text-xs text-blue-200">{selectedBatch.batch_number} — {selectedBatch.product_name}</p>
+                </div>
               </div>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+              <button onClick={closeModal} className="text-blue-200 hover:text-white transition p-1">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="p-5 space-y-4">
@@ -322,7 +313,7 @@ export default function ProductInspection() {
               <button
                 onClick={() => void handleSubmit()}
                 disabled={submitting}
-                className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting && (
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Search } from 'lucide-react';
+import Toast from '../../components/Toast';
 import { getQCTestsByLot, getSupplierPerformance } from '../../services/qcServices';
 import type { QCTest, SupplierPerformance } from '../../types/qc';
 
@@ -7,24 +9,8 @@ type Tab = 'history' | 'supplier';
 const RESULT_BADGE: Record<string, string> = {
   Pass: 'bg-green-100 text-green-700',
   Fail: 'bg-red-100 text-red-700',
-  Pending: 'bg-yellow-100 text-yellow-700',
+  Pending: 'bg-amber-100 text-amber-700',
 };
-
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 4000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-lg shadow-lg text-white text-sm flex items-center gap-3 ${
-      type === 'success' ? 'bg-green-600' : 'bg-red-600'
-    }`}>
-      <span>{type === 'success' ? '✓' : '✕'}</span>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">×</button>
-    </div>
-  );
-}
 
 export default function ReportTraceability() {
   const [activeTab, setActiveTab] = useState<Tab>('history');
@@ -101,27 +87,27 @@ export default function ReportTraceability() {
   return (
     <div className="p-6 space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Truy vết & Báo cáo</h1>
-        <p className="text-sm text-gray-500 mt-1">Lịch sử QC theo lô và hiệu suất nhà cung cấp</p>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">Truy vết & Báo cáo</h1>
+        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Lịch sử QC theo lô và hiệu suất nhà cung cấp</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex border-b border-gray-200">
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-            activeTab === 'history' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
+          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+            activeTab === 'history' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          📋 Lịch sử QC
+          Lịch sử QC
         </button>
         <button
           onClick={() => setActiveTab('supplier')}
-          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-            activeTab === 'supplier' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
+          className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+            activeTab === 'supplier' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          📊 Hiệu suất Nhà CC
+          Hiệu suất Nhà CC
         </button>
       </div>
 
@@ -130,18 +116,21 @@ export default function ReportTraceability() {
         <div className="space-y-5">
           {/* Search bar */}
           <div className="flex gap-3">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') void handleSearch(); }}
-              placeholder="Nhập mã lô hàng (VD: LOT-001)..."
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400"
-            />
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') void handleSearch(); }}
+                placeholder="Nhập mã lô hàng (VD: LOT-001)..."
+                className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-400"
+              />
+            </div>
             <button
               onClick={() => void handleSearch()}
               disabled={searching || !searchInput.trim()}
-              className="px-6 py-2.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
             >
               {searching && (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -155,10 +144,10 @@ export default function ReportTraceability() {
 
           {/* Results */}
           {selectedLotId && (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div>
-                  <h2 className="font-semibold text-gray-700">Lịch sử QC — Lô: <span className="font-mono text-indigo-600">{selectedLotId}</span></h2>
+                  <h2 className="font-bold text-gray-900">Lịch sử QC — Lô: <span className="font-mono text-blue-600">{selectedLotId}</span></h2>
                   <p className="text-xs text-gray-400 mt-0.5">{qcHistory.length} bản ghi kiểm nghiệm</p>
                 </div>
                 <button
@@ -192,7 +181,7 @@ export default function ReportTraceability() {
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium text-gray-800 text-sm">{test.test_type}</span>
-                              <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${RESULT_BADGE[test.result_status] ?? 'bg-gray-100 text-gray-600'}`}>
+                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${RESULT_BADGE[test.result_status] ?? 'bg-gray-100 text-gray-600'}`}>
                                 {test.result_status}
                               </span>
                             </div>
@@ -256,7 +245,7 @@ export default function ReportTraceability() {
             <button
               onClick={() => void loadSuppliers()}
               disabled={loadingSuppliers}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
             >
               {loadingSuppliers && (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -301,7 +290,7 @@ export default function ReportTraceability() {
           )}
 
           {/* Supplier table */}
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
             {loadingSuppliers ? (
               <div className="p-6 space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -315,20 +304,20 @@ export default function ReportTraceability() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                     <tr>
-                      <th className="px-5 py-3 text-left">Nhà cung cấp</th>
-                      <th className="px-5 py-3 text-right">Tổng lô</th>
-                      <th className="px-5 py-3 text-right">Đạt</th>
-                      <th className="px-5 py-3 text-right">Từ chối</th>
-                      <th className="px-5 py-3 text-left">Chỉ số chất lượng</th>
+                      <th className="px-6 py-4 text-left font-bold tracking-wider">Nhà cung cấp</th>
+                      <th className="px-6 py-4 text-right font-bold tracking-wider">Tổng lô</th>
+                      <th className="px-6 py-4 text-right font-bold tracking-wider">Đạt</th>
+                      <th className="px-6 py-4 text-right font-bold tracking-wider">Từ chối</th>
+                      <th className="px-6 py-4 text-left font-bold tracking-wider">Chỉ số chất lượng</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {suppliers.map((s) => (
                       <tr key={s.supplier_name} className="hover:bg-gray-50">
-                        <td className="px-5 py-3 font-medium text-gray-800">{s.supplier_name}</td>
-                        <td className="px-5 py-3 text-right text-gray-700">{s.total_batches}</td>
-                        <td className="px-5 py-3 text-right text-green-600 font-medium">{s.approved}</td>
-                        <td className="px-5 py-3 text-right text-red-600 font-medium">{s.rejected}</td>
+                        <td className="px-6 py-4 font-semibold text-gray-800">{s.supplier_name}</td>
+                        <td className="px-6 py-4 text-right text-gray-700">{s.total_batches}</td>
+                        <td className="px-6 py-4 text-right text-green-600 font-medium">{s.approved}</td>
+                        <td className="px-6 py-4 text-right text-red-600 font-medium">{s.rejected}</td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
                             <div className="flex-1 max-w-32 bg-gray-100 rounded-full h-2">

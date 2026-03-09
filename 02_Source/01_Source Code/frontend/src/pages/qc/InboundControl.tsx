@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { ClipboardCheck, X } from 'lucide-react';
+import Toast from '../../components/Toast';
 import {
   getInventoryLots,
   createQCTest,
@@ -28,10 +30,10 @@ const DECISION_MAP: Record<DecisionValue, LotDecisionDto['decision']> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  Quarantine: 'bg-yellow-100 text-yellow-700',
+  Quarantine: 'bg-amber-100 text-amber-700',
   Accepted: 'bg-green-100 text-green-700',
   Rejected: 'bg-red-100 text-red-700',
-  Hold: 'bg-orange-100 text-orange-700',
+  Hold: 'bg-purple-100 text-purple-700',
   Depleted: 'bg-gray-100 text-gray-500',
 };
 
@@ -56,22 +58,6 @@ const DEFAULT_FORM: InspectionForm = {
   rejectReason: '',
   label: '',
 };
-
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 4000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-lg shadow-lg text-white text-sm flex items-center gap-3 ${
-      type === 'success' ? 'bg-green-600' : 'bg-red-600'
-    }`}>
-      <span>{type === 'success' ? '✓' : '✕'}</span>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">×</button>
-    </div>
-  );
-}
 
 export default function InboundControl() {
   const [lots, setLots] = useState<InventoryLot[]>([]);
@@ -169,20 +155,20 @@ export default function InboundControl() {
     <div className="p-6 space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Kiểm định lô đầu vào</h1>
-        <p className="text-sm text-gray-500 mt-1">Kiểm định chất lượng nguyên liệu nhập từ nhà cung cấp</p>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">Kiểm định lô đầu vào</h1>
+        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Kiểm định chất lượng nguyên liệu nhập từ nhà cung cấp</p>
       </div>
 
       {/* Filter bar */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex border-b border-gray-200">
         {(['all', 'pending', 'approved', 'rejected', 'hold'] as StatusFilter[]).map((s) => (
           <button
             key={s}
             onClick={() => setFilterStatus(s)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+            className={`px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
               filterStatus === s
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             {s === 'all' ? 'Tất cả' : s === 'pending' ? 'Chờ kiểm định' : s === 'approved' ? 'Đạt' : s === 'rejected' ? 'Từ chối' : 'Tạm giữ'}
@@ -191,7 +177,7 @@ export default function InboundControl() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-6 space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -205,35 +191,35 @@ export default function InboundControl() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                 <tr>
-                  <th className="px-5 py-3 text-left">Mã lô</th>
-                  <th className="px-5 py-3 text-left">Tên sản phẩm</th>
-                  <th className="px-5 py-3 text-left">Nhà cung cấp</th>
-                  <th className="px-5 py-3 text-left">Số lượng</th>
-                  <th className="px-5 py-3 text-left">Hạn sử dụng</th>
-                  <th className="px-5 py-3 text-left">Trạng thái</th>
-                  <th className="px-5 py-3 text-left">Thao tác</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Mã lô</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Tên sản phẩm</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Nhà cung cấp</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Số lượng</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Hạn sử dụng</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Trạng thái</th>
+                  <th className="px-6 py-4 text-left font-bold tracking-wider">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {lots.map((lot) => (
                   <tr key={lot.lot_id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 font-mono font-medium text-gray-800">{lot.lot_id}</td>
-                    <td className="px-5 py-3 text-gray-700">{lot.product_name}</td>
-                    <td className="px-5 py-3 text-gray-500">{lot.supplier_name}</td>
-                    <td className="px-5 py-3 text-gray-700">{lot.quantity} {lot.unit ?? ''}</td>
-                    <td className="px-5 py-3 text-gray-500">
+                    <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.product_name}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.quantity} {lot.unit ?? ''}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">
                       {lot.expiration_date ? new Date(lot.expiration_date).toLocaleDateString('vi-VN') : '—'}
                     </td>
-                    <td className="px-5 py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
                         {lot.status}
                       </span>
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-6 py-4">
                       {lot.status === 'Quarantine' && (
                         <button
                           onClick={() => openModal(lot)}
-                          className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
+                          className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                         >
                           Tiến hành kiểm định
                         </button>
@@ -249,14 +235,19 @@ export default function InboundControl() {
 
       {/* Inspection Modal */}
       {selectedLot && (
-        <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">Kiểm định lô hàng</h2>
-                <p className="text-sm text-gray-500">{selectedLot.lot_id} — {selectedLot.product_name}</p>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <div className="p-5 bg-blue-600 rounded-t-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ClipboardCheck className="w-5 h-5 text-white" />
+                <div>
+                  <h2 className="text-base font-bold text-white">Kiểm định lô hàng</h2>
+                  <p className="text-xs text-blue-200">{selectedLot.lot_id} — {selectedLot.product_name}</p>
+                </div>
               </div>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+              <button onClick={closeModal} className="text-blue-200 hover:text-white transition p-1">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="p-5 space-y-4">
@@ -408,7 +399,7 @@ export default function InboundControl() {
               <button
                 onClick={() => void handleSubmit()}
                 disabled={submitting}
-                className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting && (
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

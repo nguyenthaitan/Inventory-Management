@@ -44,12 +44,14 @@ export async function getDashboardKPI(): Promise<DashboardKPI> {
 }
 
 export async function getInventoryLots(status?: string): Promise<InventoryLot[]> {
+  // Backend now returns paginated { data, total } — use /status/:status for filtered queries
   const url = status
-    ? `${BASE_URL}/inventory-lots?status=${encodeURIComponent(status)}`
-    : `${BASE_URL}/inventory-lots`;
+    ? `${BASE_URL}/inventory-lots/status/${encodeURIComponent(status)}?limit=9999`
+    : `${BASE_URL}/inventory-lots?limit=9999`;
   const res = await fetch(url);
   await handleApiError(res);
-  const lots = await (res.json() as Promise<InventoryLot[]>);
+  const body = await (res.json() as Promise<{ data: InventoryLot[] } | InventoryLot[]>);
+  const lots = Array.isArray(body) ? body : body.data;
   return lots.map(normalizeLot);
 }
 
