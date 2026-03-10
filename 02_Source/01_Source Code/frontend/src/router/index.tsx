@@ -24,6 +24,7 @@ import ProductCreationOperator from '../pages/operator/ProductCreation';
 import StockInOperator from '../pages/operator/StockIn';
 import StockOutOperator from '../pages/operator/StockOut';
 import TransactionHistoryOperator from '../pages/operator/TransactionHistory';
+import MaterialPage from '../pages/MaterialPage';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 
@@ -63,6 +64,9 @@ export const router = createBrowserRouter([
       { path: 'operator/stock-in', element: <StockInOperator /> },
       { path: 'operator/stock-out', element: <StockOutOperator /> },
       { path: 'operator/history', element: <TransactionHistoryOperator /> },
+
+      // Material Module (accessible to all authenticated users)
+      { path: 'materials/*', element: <MaterialPage /> },
     ],
   },
   {
