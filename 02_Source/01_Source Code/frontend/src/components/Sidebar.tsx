@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Package, BarChart3, ClipboardCheck, ShieldCheck, FileText, FileSearch, User, LogOut } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 const navItems = [
   { to: '/qc/dashboard', label: 'Tổng quan chất lượng', icon: BarChart3 },
@@ -39,7 +40,7 @@ const Sidebar: React.FC = () => {
               to={to}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? 'bg-blue-100 shadow-lg text-white shadow-blue-200 translate-x-1'
+                  ? 'bg-blue-600 shadow-lg text-white shadow-blue-200 translate-x-1'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:translate-x-1'
               }`}
             >

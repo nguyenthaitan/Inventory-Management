@@ -123,7 +123,7 @@ export default function InventoryQC() {
     <div className="p-6 space-y-5">
       <div>
         <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">Kiểm soát kho QC</h1>
-        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Re-test hàng sắp hết hạn & quản lý cách ly</p>
+        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Kiểm định lại hàng sắp hết hạn & quản lý cách ly</p>
       </div>
 
       {/* Tabs */}
@@ -192,20 +192,20 @@ export default function InventoryQC() {
                           <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                             isNearExpiry ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                           }`}>
-                            {isNearExpiry ? `Near Expiry (${days ?? 0}d)` : `Retest Due (${days ?? 0}d)`}
+                            {isNearExpiry ? `Hết hạn sau (${days ?? 0} ngày)` : `Cần kiểm tra (${days ?? 0} ngày)`}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                            {lot.status}
-                          </span>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                            {lot.status === 'Quarantine' ? 'Cách ly' : lot.status === 'Accepted' ? 'Chấp nhận' : lot.status === 'Rejected' ? 'Từ chối' : lot.status === 'Hold' ? 'Tạm giữ' : lot.status === 'Depleted' ? 'Đã hết' : lot.status}
+                            </span>
                         </td>
                         <td className="px-6 py-4">
                           <button
                             onClick={() => openRetestModal(lot)}
                             className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                           >
-                            Thực hiện Re-test
+                            Kiểm tra lại
                           </button>
                         </td>
                       </tr>
@@ -223,12 +223,12 @@ export default function InventoryQC() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              Chọn lô hàng cần chuyển sang trạng thái <span className="font-medium text-yellow-700">Quarantine</span>
+              Chọn lô hàng cần chuyển sang trạng thái <span className="font-medium text-yellow-700">Chờ Kiểm Định</span>
             </p>
             <button
               onClick={() => void handleBulkQuarantine()}
               disabled={submitting || selectedItems.length === 0}
-              className="px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 flex items-center gap-2"
             >
               {submitting && (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -288,9 +288,9 @@ export default function InventoryQC() {
                         <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.location ?? '—'}</td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                            {lot.status}
-                          </span>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                            {lot.status === 'Quarantine' ? 'Chờ kiểm định' : lot.status === 'Accepted' ? 'Chấp nhận' : lot.status === 'Rejected' ? 'Từ chối' : lot.status === 'Hold' ? 'Tạm giữ' : lot.status === 'Depleted' ? 'Đã hết' : lot.status}
+                            </span>
                         </td>
                       </tr>
                     ))}
@@ -383,7 +383,7 @@ export default function InventoryQC() {
               <button
                 onClick={() => void handleRetest()}
                 disabled={submitting || !retestAction || (retestAction === 'extend' && !newExpiryDate)}
-                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2"
               >
                 {submitting && (
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

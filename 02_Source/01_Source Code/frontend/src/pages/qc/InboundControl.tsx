@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ClipboardCheck, X } from 'lucide-react';
+import { ClipboardCheck, X, Search } from 'lucide-react';
 import Toast from '../../components/Toast';
 import {
   getInventoryLots,
@@ -63,6 +63,7 @@ export default function InboundControl() {
   const [lots, setLots] = useState<InventoryLot[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('Quarantine');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedLot, setSelectedLot] = useState<InventoryLot | null>(null);
   const [form, setForm] = useState<InspectionForm>(DEFAULT_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -74,7 +75,6 @@ export default function InboundControl() {
     try {
       const data = await getInventoryLots(STATUS_MAP[filterStatus]);
       setLots(data);
-      console.log('Fetched lots:', data);
     } catch {
       setToast({ message: 'Không thể tải danh sách lô hàng', type: 'error' });
     } finally {
@@ -85,6 +85,12 @@ export default function InboundControl() {
   useEffect(() => {
     void loadLots();
   }, [loadLots]);
+
+  const displayedLots = searchQuery.trim()
+    ? lots.filter((lot) =>
+        lot.material_name?.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : lots;
 
   function openModal(lot: InventoryLot) {
     setSelectedLot(lot);
@@ -160,27 +166,32 @@ export default function InboundControl() {
         <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Kiểm định chất lượng nguyên liệu nhập từ nhà cung cấp</p>
       </div>
 
-      {/* Filter bar */}
-      <div className="flex gap-3 flex-wrap">
-        {([
-          { label: 'Tất cả', value: 'all' },
-          { label: 'Chờ kiểm định', value: 'Quarantine' },
-          { label: 'Đạt', value: 'Accepted' },
-          { label: 'Từ chối', value: 'Rejected' },
-          { label: 'Tạm giữ', value: 'Hold' },
-        ] as { label: string; value: StatusFilter }[]).map((s) => (
-          <button
-            key={s.value}
-            onClick={() => setFilterStatus(s.value)}
-            className={`px-5 py-2 text-sm font-semibold rounded-full border transition ${
-              filterStatus === s.value
-                ? 'bg-blue-600 border-blue-600 text-blue-600'
-                : 'bg-white border-gray-300 text-gray-500 hover:border-blue-400 hover:bg-blue-50'
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
+      {/* Toolbar: Search + Filter */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-50 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm theo tên sản phẩm..."
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value as StatusFilter);
+            setSearchQuery('');
+          }}
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">Tất cả</option>
+          <option value="Quarantine">Chờ kiểm định</option>
+          <option value="Accepted">Chấp nhận</option>
+          <option value="Rejected">Từ chối</option>
+          <option value="Hold">Tạm giữ</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -191,8 +202,10 @@ export default function InboundControl() {
               <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
             ))}
           </div>
-        ) : lots.length === 0 ? (
-          <p className="p-10 text-center text-gray-400">Không có lô hàng nào</p>
+        ) : displayedLots.length === 0 ? (
+          <p className="p-10 text-center text-gray-400">
+            {searchQuery ? `Không tìm thấy sản phẩm "${searchQuery}"` : 'Không có lô hàng nào'}
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -208,7 +221,7 @@ export default function InboundControl() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {lots.map((lot) => (
+                {displayedLots.map((lot) => (
                   <tr key={lot.lot_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.material_name}</td>
@@ -218,15 +231,15 @@ export default function InboundControl() {
                       {lot.expiration_date ? new Date(lot.expiration_date).toLocaleDateString('vi-VN') : '—'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                        {lot.status}
-                      </span>
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                        {lot.status === 'Quarantine' ? 'Chờ kiểm định' : lot.status === 'Accepted' ? 'Chấp nhận' : lot.status === 'Rejected' ? 'Từ chối' : lot.status === 'Hold' ? 'Tạm giữ' : lot.status === 'Depleted' ? 'Đã hết' : lot.status}
+                        </span>
                     </td>
                     <td className="px-6 py-4">
                       {lot.status === 'Quarantine' && (
                         <button
                           onClick={() => openModal(lot)}
-                          className="px-3 py-1.5 bg-blue-600 text-blue-600 text-xs rounded-lg hover:bg-blue-700"
+                          className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                         >
                           Tiến hành kiểm định
                         </button>

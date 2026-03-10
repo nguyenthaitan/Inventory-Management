@@ -11,7 +11,7 @@ const MainLayout = () => {
             <div />
           </div>
         </header>
-        <main className="p-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+        <main className="px-8 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
           <Outlet />
         </main>
         <footer className="px-8 py-5 border-t border-gray-50 text-[10px] text-gray-400 font-bold uppercase tracking-[2px] flex justify-between">

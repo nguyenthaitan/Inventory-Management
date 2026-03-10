@@ -170,7 +170,7 @@ export default function ReportTraceability() {
             <button
               onClick={() => void handleSearch()}
               disabled={searching || !searchInput.trim()}
-              className="px-6 py-2.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 flex items-center gap-2"
             >
               {searching && (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -298,9 +298,9 @@ export default function ReportTraceability() {
             <button
               onClick={exportCSV}
               disabled={suppliers.length === 0}
-              className="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              className="px-4 py-2 border bg-green-500 border-gray-300 text-white text-sm rounded-lg hover:bg-green-600 disabled:opacity-50"
             >
-              ⬇ Xuất CSV
+              Xuất CSV
             </button>
           </div>
 

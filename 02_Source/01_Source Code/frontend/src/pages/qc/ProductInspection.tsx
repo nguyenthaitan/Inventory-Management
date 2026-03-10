@@ -144,7 +144,7 @@ export default function ProductInspection() {
                     <td className="px-6 py-4">
                       <button
                         onClick={() => openModal(batch)}
-                        className="px-3 py-1.5 bg-blue-600 text-gray-600 text-xs rounded-lg hover:bg-blue-700"
+                        className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                       >
                         Tiến hành kiểm định
                       </button>

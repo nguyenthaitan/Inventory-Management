@@ -126,7 +126,7 @@ export default function DashboardQC() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                           priority === 'High' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
                         }`}>
-                          {priority}
+                          {priority === 'High' ? 'Cao' : 'Bình thường'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
