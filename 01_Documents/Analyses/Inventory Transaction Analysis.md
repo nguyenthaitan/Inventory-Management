@@ -7,24 +7,40 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
 ## Các bước thực hiện
 
 1. **Thiết kế schema và DTO**
-   - Tạo Mongoose schema `inventory-transaction.schema.ts` dưới `backend/src/schemas` hoặc `backend/src/inventory-transaction/schemas`.
-   - Định nghĩa các trường chính:
-     - `transaction_id` (string, PK, TTL/UUID hoặc mã theo chuẩn, ví dụ 24)
-     - `transaction_type` (enum: `INBOUND`, `OUTBOUND`, `ADJUSTMENT`, `TRANSFER`)
-     - `material_id` (ObjectId/Ref -> `Material`)
-     - `lot_id` (ObjectId/Ref -> `InventoryLot`, nullable)
-     - `quantity` (number, >0)
-     - `unit` (string, ví dụ `pcs`, `kg`)
-     - `source_location` (string, nullable)
-     - `destination_location` (string, nullable)
-     - `related_document` (string, reference to PO/WO/GRN, nullable)
-     - `performed_by` (string / ObjectId -> `User`)
-     - `performed_date` (Date, default now)
-     - `reason` (string, nullable, cho `ADJUSTMENT`)
-     - `metadata` (mixed, optional)
-     - `created_date` / `modified_date` (Date, default now)
-   - Tạo DTOs: `create-inventory-transaction.dto.ts`, `update-inventory-transaction.dto.ts` trong `backend/src/inventory-transaction/dto`.
-   - Dùng `class-validator` để validate `transaction_type`, `quantity` > 0, `material_id` required cho hầu hết loại giao dịch.
+   - Vị trí: tạo Mongoose schema `inventory-transaction.schema.ts` dưới `backend/src/inventory-transaction/schemas` (follow module folder pattern).
+   - Thiết kế hướng theo Domain Model (lot-centric): mỗi transaction liên kết tới một `InventoryLot` (lot_id) và có `transaction_type` rõ ràng.
+   - Trường chính (gợi ý tên/kiểu):
+     - `transaction_id` (string, UUID v4)
+     - `lot_id` (string, UUID)
+     - `transaction_type` (enum: `Receipt`, `Usage`, `Split`, `Adjustment`, `Transfer`, `Disposal`)
+     - `quantity` (decimal)
+     - `unit_of_measure` (string)
+     - `transaction_date` (Date)
+     - `reference_number` (string, nullable)
+     - `performed_by` (string)
+     - `notes` (string, nullable)
+     - `created_date` / `modified_date` (Date)
+
+   - Indexes đề xuất:
+     - `lot_id` (compound with `transaction_date`) — tối ưu lịch sử theo lot.
+     - `transaction_date` — truy vấn theo khoảng thời gian.
+     - `transaction_type` — lọc theo loại giao dịch.
+
+   - DTOs (ở `backend/src/inventory-transaction/dto`):
+     - `create-inventory-transaction.dto.ts`:
+       - properties: `lot_id`, `transaction_type`, `quantity`, `unit_of_measure`, `transaction_date` (optional), `reference_number` (optional), `performed_by`, `notes` (optional).
+     - `update-inventory-transaction.dto.ts`:
+       - properties allowed: `notes` và `modified_date` (không cho phép đổi `lot_id`, `quantity`, `transaction_type` trừ khi có flow undo/audit).
+     - `bulk-create-inventory-transaction.dto.ts`:
+       - wrapper { transactions: CreateInventoryTransactionDto[] } cho endpoint import/bulk.
+
+   - Validation (dùng `class-validator`):
+     - `@IsUUID()` cho `transaction_id`, `lot_id`, `performed_by` nếu dùng UUIDs.
+     - `@IsEnum(TransactionType)` cho `transaction_type`.
+     - `@IsNumber()` cho `quantity` (Domain Model cho phép signed values — cho phép âm cho `Usage`/`Disposal`).
+     - `@IsNotEmpty()` cho `lot_id`, `transaction_type`, `quantity`, `unit_of_measure`, `performed_by`.
+     - `@IsOptional()` cho `reference_number`, `notes`.
+     - Dùng `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })` ở controller để enforce DTO shapes.
 
 2. **Repository**
    - Tạo `inventory-transaction.repository.ts` với các phương thức chính: `findAll`, `findOne`, `findByMaterial`, `findByDateRange`, `create`, `update`, `remove`, `createMany`.
