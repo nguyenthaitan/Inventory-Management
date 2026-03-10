@@ -26,7 +26,7 @@ export interface InventoryLot {
   supplier_name: string;
   quantity: number;
   unit?: string;
-  location?: string;
+  storage_location?: string;
   expiration_date?: string;
   status: 'Quarantine' | 'Accepted' | 'Rejected' | 'Depleted' | 'Hold';
   created_date?: string;

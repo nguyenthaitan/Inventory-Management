@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Lock, X } from 'lucide-react';
+import { RefreshCw, Lock, X, MapPin } from 'lucide-react';
 import Toast from '../../components/Toast';
 import { getInventoryLots, submitRetest, bulkQuarantine } from '../../services/qcServices';
 import type { InventoryLot } from '../../types/qc';
@@ -30,12 +30,14 @@ export default function InventoryQC() {
   const [newExpiryDate, setNewExpiryDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [searchLocation, setSearchLocation] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const loadLots = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getInventoryLots();
+      console.log('Loaded inventory lots:', data);
       setLots(data);
     } catch {
       setToast({ message: 'Không thể tải dữ liệu kho', type: 'error' });
@@ -56,6 +58,18 @@ export default function InventoryQC() {
 
   // All non-quarantine lots available for bulk quarantine (Accepted, Hold, etc.)
   const quarantinableLots = lots.filter((l) => l.status !== 'Quarantine' && l.status !== 'Depleted');
+
+  const filteredAlertLots = searchLocation.trim()
+    ? alertLots.filter((lot) =>
+        lot.storage_location?.toLowerCase().includes(searchLocation.trim().toLowerCase())
+      )
+    : alertLots;
+
+  const filteredQuarantinableLots = searchLocation.trim()
+    ? quarantinableLots.filter((lot) =>
+        lot.storage_location?.toLowerCase().includes(searchLocation.trim().toLowerCase())
+      )
+    : quarantinableLots;
 
   function openRetestModal(lot: InventoryLot) {
     setRetestLot(lot);
@@ -126,10 +140,24 @@ export default function InventoryQC() {
         <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">Kiểm định lại hàng sắp hết hạn & quản lý cách ly</p>
       </div>
 
+      {/* Toolbar */}
+      <div className="flex items-center gap-3">
+        <div className="relative w-64">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchLocation}
+            onChange={(e) => setSearchLocation(e.target.value)}
+            placeholder="Tìm theo vị trí kho..."
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="flex border-b border-gray-200">
         <button
-          onClick={() => setActiveTab('alert')}
+          onClick={() => { setActiveTab('alert'); setSearchLocation(''); }}
           className={`m-2 px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
             activeTab === 'alert' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
@@ -142,7 +170,7 @@ export default function InventoryQC() {
           )}
         </button>
         <button
-          onClick={() => setActiveTab('quarantine')}
+          onClick={() => { setActiveTab('quarantine'); setSearchLocation(''); }}
           className={`m-2 px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
             activeTab === 'quarantine' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
@@ -160,8 +188,12 @@ export default function InventoryQC() {
                 <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
               ))}
             </div>
-          ) : alertLots.length === 0 ? (
-            <p className="p-10 text-center text-gray-400">Không có lô hàng nào sắp hết hạn trong 30 ngày tới.</p>
+          ) : filteredAlertLots.length === 0 ? (
+            <p className="p-10 text-center text-gray-400">
+              {searchLocation
+                ? `Không có lô nào tại vị trí "${searchLocation}" sắp hết hạn`
+                : 'Không có lô hàng nào sắp hết hạn trong 30 ngày tới.'}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -177,14 +209,14 @@ export default function InventoryQC() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {alertLots.map((lot) => {
+                  {filteredAlertLots.map((lot) => {
                     const days = getDaysUntilExpiry(lot.expiration_date);
                     const isNearExpiry = days !== null && days <= 7;
                     return (
                       <tr key={lot.lot_id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.material_name}</td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.location ?? '—'}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.storage_location ?? '—'}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-700">
                           {lot.expiration_date ? new Date(lot.expiration_date).toLocaleDateString('vi-VN') : '—'}
                         </td>
@@ -248,8 +280,12 @@ export default function InventoryQC() {
                   <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
                 ))}
               </div>
-            ) : quarantinableLots.length === 0 ? (
-              <p className="p-10 text-center text-gray-400">Không có lô hàng nào có thể cách ly.</p>
+            ) : filteredQuarantinableLots.length === 0 ? (
+              <p className="p-10 text-center text-gray-400">
+                {searchLocation
+                  ? `Không tìm thấy lô nào tại vị trí "${searchLocation}"`
+                  : 'Không có lô hàng nào có thể cách ly.'}
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -258,9 +294,9 @@ export default function InventoryQC() {
                       <th className="px-6 py-4 text-left">
                         <input
                           type="checkbox"
-                          checked={selectedItems.length === quarantinableLots.length && quarantinableLots.length > 0}
+                          checked={selectedItems.length === filteredQuarantinableLots.length && filteredQuarantinableLots.length > 0}
                           onChange={(e) =>
-                            setSelectedItems(e.target.checked ? quarantinableLots.map((l) => l.lot_id) : [])
+                            setSelectedItems(e.target.checked ? filteredQuarantinableLots.map((l) => l.lot_id) : [])
                           }
                           className="rounded"
                         />
@@ -273,7 +309,7 @@ export default function InventoryQC() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {quarantinableLots.map((lot) => (
+                    {filteredQuarantinableLots.map((lot) => (
                       <tr key={lot.lot_id} className={`hover:bg-gray-50 ${selectedItems.includes(lot.lot_id) ? 'bg-red-50/30' : ''}`}>
                         <td className="px-6 py-4">
                           <input
@@ -286,7 +322,7 @@ export default function InventoryQC() {
                         <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.material_name}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.location ?? '—'}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.storage_location ?? '—'}</td>
                         <td className="px-6 py-4">
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status] ?? 'bg-gray-100 text-gray-600'}`}>
                             {lot.status === 'Quarantine' ? 'Chờ kiểm định' : lot.status === 'Accepted' ? 'Chấp nhận' : lot.status === 'Rejected' ? 'Từ chối' : lot.status === 'Hold' ? 'Tạm giữ' : lot.status === 'Depleted' ? 'Đã hết' : lot.status}
