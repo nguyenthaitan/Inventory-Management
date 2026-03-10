@@ -9,6 +9,7 @@ import {
   InventoryLotTable,
   DetailModal,
   EditModal,
+  AddModal,
   LoadingAndError,
 } from "./components";
 import { type EditFormValues } from "./utils/types";
@@ -27,6 +28,7 @@ export default function InventoryLot() {
     useState<InventoryLot | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [inventoryLots, setInventoryLots] = useState<InventoryLot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,17 +94,32 @@ export default function InventoryLot() {
     setShowEditModal(true);
   };
 
-  const handleSubmit = async (values: EditFormValues) => {
+  const handleAddClick = () => {
+    setSubmitError(null);
+    setShowAddModal(true);
+  };
+
+  const handleEditSubmit = async (values: EditFormValues) => {
     setSubmitError(null);
     const updated: InventoryLot = {
-      ...values,
+      lot_id: values.lot_id,
+      material_id: values.material_id,
+      manufacturer_name: values.manufacturer_name,
+      manufacturer_lot: values.manufacturer_lot,
+      supplier_name: values.supplier_name,
+      received_date: values.received_date,
+      expiration_date: values.expiration_date,
+      in_use_expiration_date: values.in_use_expiration_date,
+      status: values.status,
       quantity: values.quantity,
-      in_use_expiration_date: values.in_use_expiration_date || undefined,
-      parent_lot_id: values.parent_lot_id || undefined,
-      notes: values.notes || undefined,
+      unit_of_measure: values.unit_of_measure,
+      storage_location: values.storage_location,
+      is_sample: values.is_sample,
+      parent_lot_id: values.parent_lot_id,
+      notes: values.notes,
     };
     const { error: apiErr } = await InventoryLotAPI.update(
-      values.lot_id,
+      updated.lot_id,
       updated,
     );
     if (apiErr) {
@@ -113,6 +130,34 @@ export default function InventoryLot() {
       prev.map((lot) => (lot.lot_id === updated.lot_id ? updated : lot)),
     );
     setShowEditModal(false);
+  };
+
+  const handleAddSubmit = async (values: EditFormValues) => {
+    setSubmitError(null);
+    const newLot: InventoryLot = {
+      lot_id: values.lot_id,
+      material_id: values.material_id,
+      manufacturer_name: values.manufacturer_name,
+      manufacturer_lot: values.manufacturer_lot,
+      supplier_name: values.supplier_name,
+      received_date: values.received_date,
+      expiration_date: values.expiration_date,
+      in_use_expiration_date: values.in_use_expiration_date,
+      status: values.status,
+      quantity: values.quantity,
+      unit_of_measure: values.unit_of_measure,
+      storage_location: values.storage_location,
+      is_sample: values.is_sample,
+      parent_lot_id: values.parent_lot_id,
+      notes: values.notes,
+    };
+    const { error: apiErr } = await InventoryLotAPI.create(newLot);
+    if (apiErr) {
+      setSubmitError("Thêm mới thất bại. Vui lòng thử lại.");
+      return;
+    }
+    setInventoryLots((prev) => [newLot, ...prev]);
+    setShowAddModal(false);
   };
 
   return (
@@ -129,6 +174,7 @@ export default function InventoryLot() {
         <SearchAndFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          onAdd={handleAddClick}
         />
       )}
 
@@ -147,11 +193,18 @@ export default function InventoryLot() {
         onEdit={handleEditClick}
       />
 
+      <AddModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={handleAddSubmit}
+        submitError={submitError}
+      />
+
       <EditModal
         isOpen={showEditModal}
         selectedLot={selectedInventoryLot}
         onClose={() => setShowEditModal(false)}
-        onSubmit={handleSubmit}
+        onSubmit={handleEditSubmit}
         submitError={submitError}
       />
     </div>

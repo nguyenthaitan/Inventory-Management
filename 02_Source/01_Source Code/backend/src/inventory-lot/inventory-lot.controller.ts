@@ -14,9 +14,10 @@ import {
   CreateInventoryLotDto,
   UpdateInventoryLotDto,
   InventoryLotSearchParams,
+  InventoryLotStatus,
 } from './inventory-lot.dto';
 
-@Controller('inventory-lots')
+@Controller('api/inventory-lots')
 export class InventoryLotController {
   constructor(private readonly inventoryLotService: InventoryLotService) {}
 
@@ -91,7 +92,7 @@ export class InventoryLotController {
   ) {
     const filter: InventoryLotSearchParams = {};
     if (material_id) filter.material_id = material_id;
-    if (status) filter.status = status as any;
+    if (status) filter.status = status as InventoryLotStatus;
     if (is_sample) filter.is_sample = is_sample === 'true';
     if (manufacturer_name) filter.manufacturer_name = manufacturer_name;
 
@@ -122,7 +123,7 @@ export class InventoryLotController {
     @Query('limit') limit: string = '10',
   ) {
     return await this.inventoryLotService.findByStatus(
-      status,
+      status as InventoryLotStatus,
       parseInt(page, 10),
       parseInt(limit, 10),
     );

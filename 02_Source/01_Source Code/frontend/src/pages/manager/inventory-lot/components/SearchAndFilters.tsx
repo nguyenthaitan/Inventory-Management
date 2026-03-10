@@ -3,11 +3,13 @@ import { Search, Filter, Download, Edit } from "lucide-react";
 interface SearchAndFiltersProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
+  onAdd?: () => void;
 }
 
 export function SearchAndFilters({
   searchTerm,
   onSearchChange,
+  onAdd,
 }: SearchAndFiltersProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -33,7 +35,11 @@ export function SearchAndFilters({
           <Download size={20} />
           <span>Xuất Excel</span>
         </button>
-        <button className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg flex items-center space-x-2 transition">
+        <button
+          type="button"
+          onClick={onAdd}
+          className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg flex items-center space-x-2 transition"
+        >
           <Edit size={20} />
           <span>Thêm mới</span>
         </button>

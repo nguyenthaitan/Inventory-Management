@@ -10,62 +10,52 @@ import {
   Calendar,
   FlaskConical,
 } from "lucide-react";
-import { type InventoryLot } from "../../../../services/inventory-lot.service";
-import {
-  type EditFormValues,
-  toDateInputValue,
-  INPUT_CLS,
-  INPUT_ERR_CLS,
-} from "../utils";
+import { type EditFormValues, INPUT_CLS, INPUT_ERR_CLS } from "../utils";
 import { FormField } from "./FormField";
 
-interface EditModalProps {
+interface AddModalProps {
   isOpen: boolean;
-  selectedLot: InventoryLot | null;
   onClose: () => void;
   onSubmit: (values: EditFormValues) => Promise<void>;
   submitError?: string | null;
 }
 
-export function EditModal({
+export function AddModal({
   isOpen,
-  selectedLot,
   onClose,
   onSubmit,
   submitError,
-}: EditModalProps) {
+}: AddModalProps) {
   const {
     register,
     handleSubmit: checkOnSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<EditFormValues>({
-    values: selectedLot
-      ? {
-          lot_id: selectedLot.lot_id,
-          material_id: selectedLot.material_id,
-          manufacturer_name: selectedLot.manufacturer_name,
-          manufacturer_lot: selectedLot.manufacturer_lot,
-          supplier_name: selectedLot.supplier_name,
-          received_date: toDateInputValue(selectedLot.received_date),
-          expiration_date: toDateInputValue(selectedLot.expiration_date),
-          in_use_expiration_date: toDateInputValue(
-            selectedLot.in_use_expiration_date,
-          ),
-          quantity: Number(selectedLot.quantity),
-          unit_of_measure: selectedLot.unit_of_measure,
-          storage_location: selectedLot.storage_location,
-          status: selectedLot.status,
-          is_sample: selectedLot.is_sample,
-          parent_lot_id: selectedLot.parent_lot_id ?? "",
-          notes: selectedLot.notes ?? "",
-        }
-      : undefined,
+    defaultValues: {
+      lot_id: "",
+      material_id: "",
+      manufacturer_name: "",
+      manufacturer_lot: "",
+      supplier_name: "",
+      received_date: new Date().toISOString().split("T")[0],
+      expiration_date: "",
+      in_use_expiration_date: "",
+      quantity: 0,
+      unit_of_measure: "",
+      storage_location: "",
+      status: "Accepted",
+      is_sample: false,
+      parent_lot_id: "",
+      notes: "",
+    },
   });
 
-  if (!isOpen || !selectedLot) return null;
+  if (!isOpen) return null;
 
   const handleFormSubmit = async (values: EditFormValues) => {
     await onSubmit(values);
+    reset();
   };
 
   return (
@@ -84,7 +74,7 @@ export function EditModal({
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between shrink-0">
           <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            Chỉnh sửa lô hàng
+            Thêm mới lô hàng
           </h2>
           <button
             type="button"
@@ -109,9 +99,8 @@ export function EditModal({
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Mã lô *" error={errors.lot_id?.message}>
                   <input
-                    disabled
                     {...register("lot_id", { required: "Bắt buộc nhập" })}
-                    className={`bg-gray-200 ${errors.lot_id ? INPUT_ERR_CLS : INPUT_CLS}`}
+                    className={errors.lot_id ? INPUT_ERR_CLS : INPUT_CLS}
                     placeholder="lot-001-d3-2025"
                   />
                 </FormField>
@@ -367,7 +356,7 @@ export function EditModal({
               ) : (
                 <Save size={16} />
               )}
-              {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+              {isSubmitting ? "Đang lưu..." : "Thêm mới"}
             </button>
           </div>
         </form>

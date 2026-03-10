@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import {
   InventoryLot,
   InventoryLotDocument,
@@ -21,13 +21,8 @@ export class InventoryLotRepository {
     createDto: CreateInventoryLotDto,
   ): Promise<InventoryLotDocument> {
     // Dynamic import to avoid Jest issues with uuid ESM module
-    const { v4: uuidv4 } = await import('uuid');
-    const lot_id = uuidv4();
     const newLot = new this.inventoryLotModel({
-      lot_id,
       ...createDto,
-      status: 'Quarantine', // All new lots start in Quarantine
-      is_sample: createDto.is_sample || false,
     });
     return newLot.save();
   }

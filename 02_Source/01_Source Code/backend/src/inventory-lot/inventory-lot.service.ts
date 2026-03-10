@@ -13,6 +13,7 @@ import type {
   InventoryLotSearchParams,
 } from './inventory-lot.dto';
 import { InventoryLotStatus } from './inventory-lot.dto';
+import { InventoryLot } from 'src/schemas/inventory-lot.schema';
 
 @Injectable()
 export class InventoryLotService {
@@ -33,7 +34,7 @@ export class InventoryLotService {
     }
 
     // Validate quantity
-    const quantity = parseFloat(createDto.quantity);
+    const quantity = createDto.quantity;
     if (quantity <= 0) {
       throw new BadRequestException('Quantity must be greater than 0');
     }
@@ -176,9 +177,7 @@ export class InventoryLotService {
     // Validate status if provided
     if (
       filter.status &&
-      !Object.values(InventoryLotStatus).includes(
-        filter.status as InventoryLotStatus,
-      )
+      !Object.values(InventoryLotStatus).includes(filter.status)
     ) {
       throw new BadRequestException(`Invalid status: ${filter.status}`);
     }
@@ -219,13 +218,16 @@ export class InventoryLotService {
 
     // Validate quantity if provided
     if (updateDto.quantity) {
-      const quantity = parseFloat(updateDto.quantity);
+      const quantity = updateDto.quantity;
       if (quantity < 0) {
         throw new BadRequestException('Quantity cannot be negative');
       }
 
       // Check if lot would become Depleted
-      if (quantity === 0 && existingLot.status !== 'Depleted') {
+      if (
+        quantity === 0 &&
+        existingLot.status !== InventoryLotStatus.DEPLETED
+      ) {
         updateDto.status = InventoryLotStatus.DEPLETED;
       }
     }
@@ -239,6 +241,9 @@ export class InventoryLotService {
       lot_id,
       updateDto,
     );
+    if (!updatedLot) {
+      throw new NotFoundException(`Inventory lot ${lot_id} not found`);
+    }
     return this.convertToResponse(updatedLot);
   }
 
@@ -259,6 +264,9 @@ export class InventoryLotService {
       lot_id,
       newStatus,
     );
+    if (!updatedLot) {
+      throw new NotFoundException(`Inventory lot ${lot_id} not found`);
+    }
     return this.convertToResponse(updatedLot);
   }
 
@@ -366,7 +374,7 @@ export class InventoryLotService {
     }
   }
 
-  private convertToResponse(lot: any): InventoryLotResponseDto {
+  private convertToResponse(lot: InventoryLot): InventoryLotResponseDto {
     return {
       lot_id: lot.lot_id,
       material_id: lot.material_id,
@@ -377,7 +385,7 @@ export class InventoryLotService {
       expiration_date: lot.expiration_date,
       in_use_expiration_date: lot.in_use_expiration_date,
       status: lot.status,
-      quantity: lot.quantity.toString(),
+      quantity: lot.quantity,
       unit_of_measure: lot.unit_of_measure,
       storage_location: lot.storage_location,
       is_sample: lot.is_sample,
