@@ -13,6 +13,13 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
      - `transaction_id` (string, UUID v4)
      - `lot_id` (string, UUID)
      - `transaction_type` (enum: `Receipt`, `Usage`, `Split`, `Adjustment`, `Transfer`, `Disposal`)
+       - Giải thích các enum:
+         - `Receipt`: nhập hàng vào kho(tăng số lượng)
+         - `Usage`: sử dụng vật tư(giảm số lượng)
+         - `Split`: chia lot thành nhiều lot nhỏ hơn.
+         - `Adjustment`: điều chỉnh tồn kho (vd. do kiểm kê, hư hỏng).
+         - `Transfer`: chuyển kho giữa locations.
+         - `Disposal`: loại bỏ hàng (hư hỏng, hết hạn).
      - `quantity` (decimal)
      - `unit_of_measure` (string)
      - `transaction_date` (Date)
@@ -31,6 +38,7 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
        - properties: `lot_id`, `transaction_type`, `quantity`, `unit_of_measure`, `transaction_date` (optional), `reference_number` (optional), `performed_by`, `notes` (optional).
      - `update-inventory-transaction.dto.ts`:
      - properties allowed: tất cả các trường của transaction ngoại trừ `transaction_id`, `created_date`, `modified_date` (những trường không nên thay đổi qua patch). Đây là cấu hình ban đầu để đơn giản; service có thể tiếp tục hạn chế thêm theo nhu cầu audit.
+   - Validation decorators:
      - `@IsUUID()` cho `transaction_id`, `lot_id`, `performed_by` nếu dùng UUIDs.
      - `@IsEnum(TransactionType)` cho `transaction_type`.
      - `@IsNumber()` cho `quantity` (Domain Model cho phép signed values — cho phép âm cho `Usage`/`Disposal`).
