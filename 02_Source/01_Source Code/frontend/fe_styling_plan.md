@@ -427,7 +427,7 @@ import {
             {/* Left */}
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <span className="font-bold text-gray-900">{lot.product_name}</span>
+                <span className="font-bold text-gray-900">{lot.material_name}</span>
                 {/* Expiry badge */}
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                   days !== null && days <= 7
@@ -531,7 +531,7 @@ import {
               <input type="checkbox" checked={selectedItems.includes(lot.lot_id)} readOnly />
             </td>
             <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.lot_id}</td>
-            <td className="px-6 py-4 font-bold text-gray-900">{lot.product_name}</td>
+            <td className="px-6 py-4 font-bold text-gray-900">{lot.material_name}</td>
             <td className="px-6 py-4 text-sm text-gray-500 font-medium">{lot.supplier_name}</td>
             <td className="px-6 py-4">
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_BADGE[lot.status]}`}>
@@ -568,7 +568,7 @@ import {
       {/* Lot info */}
       <div>
         <p className="text-xs text-blue-500 font-bold uppercase mb-1">Sản phẩm</p>
-        <p className="text-lg font-bold text-gray-900">{retestLot?.product_name}</p>
+        <p className="text-lg font-bold text-gray-900">{retestLot?.material_name}</p>
       </div>
 
       {/* Decision buttons */}

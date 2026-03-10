@@ -22,7 +22,7 @@ export interface QCTest {
 // ── InventoryLot ─────────────────────────────────────────────────────────────
 export interface InventoryLot {
   lot_id: string;
-  product_name: string;
+  material_name: string;
   supplier_name: string;
   quantity: number;
   unit?: string;
@@ -76,4 +76,13 @@ export interface RetestDto {
   action: 'extend' | 'discard';
   performed_by: string;
   new_expiry_date?: string;
+}
+
+// ── AI Supplier Analysis ──────────────────────────────────────────────────────
+export interface SupplierAnalysisResponse {
+  success: boolean;
+  analysis: string;
+  suppliers_analyzed: number;
+  timestamp: string;
+  model_used: string;
 }

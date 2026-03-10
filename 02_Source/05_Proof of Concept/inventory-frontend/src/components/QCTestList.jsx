@@ -34,7 +34,7 @@ const QCTestList = () => {
           acceptance_criteria: '< 100 CFU/g',
           status: 'Failed',
           tested_date: '2026-02-18',
-          product_name: 'Thực phẩm chức năng ABC',
+          material_name: 'Thực phẩm chức năng ABC',
           batch_number: 'BATCH-20260218-01',
         },
         {
@@ -45,7 +45,7 @@ const QCTestList = () => {
           acceptance_criteria: '95-105%',
           status: 'Passed',
           tested_date: '2026-02-19',
-          product_name: 'Vitamin D3 1000 IU',
+          material_name: 'Vitamin D3 1000 IU',
           batch_number: 'BATCH-20260219-01',
         },
       ]);
@@ -68,7 +68,7 @@ const QCTestList = () => {
           test_name: test.test_name,
           test_result: test.test_result,
           acceptance_criteria: test.acceptance_criteria,
-          product_name: test.product_name,
+          material_name: test.material_name,
           batch_number: test.batch_number,
         }),
       });
@@ -155,7 +155,7 @@ const QCTestList = () => {
                   <td className="qc-id">{test.id}</td>
                   <td>
                     <div className="qc-product">
-                      <strong>{test.product_name}</strong>
+                      <strong>{test.material_name}</strong>
                       <small>{test.batch_number}</small>
                     </div>
                   </td>

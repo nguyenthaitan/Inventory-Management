@@ -8,7 +8,7 @@ export const QC_MOCK_DATA = [
     acceptance_criteria: '< 100 CFU/g',
     status: 'Failed',
     tested_date: '2026-02-18',
-    product_name: 'Thực phẩm chức năng ABC',
+    material_name: 'Thực phẩm chức năng ABC',
     batch_number: 'BATCH-20260218-01',
   },
   {
@@ -19,7 +19,7 @@ export const QC_MOCK_DATA = [
     acceptance_criteria: '95-105%',
     status: 'Passed',
     tested_date: '2026-02-19',
-    product_name: 'Vitamin D3 1000 IU',
+    material_name: 'Vitamin D3 1000 IU',
     batch_number: 'BATCH-20260219-01',
   },
   {
@@ -30,7 +30,7 @@ export const QC_MOCK_DATA = [
     acceptance_criteria: '< 1.0 ppm',
     status: 'Passed',
     tested_date: '2026-02-19',
-    product_name: 'Protein Powder',
+    material_name: 'Protein Powder',
     batch_number: 'BATCH-20260219-02',
   },
   {
@@ -41,7 +41,7 @@ export const QC_MOCK_DATA = [
     acceptance_criteria: '< 6.0%',
     status: 'Borderline',
     tested_date: '2026-02-20',
-    product_name: 'Bột nghệ hữu cơ',
+    material_name: 'Bột nghệ hữu cơ',
     batch_number: 'BATCH-20260220-01',
   },
   {
@@ -52,7 +52,7 @@ export const QC_MOCK_DATA = [
     acceptance_criteria: '3.5-4.5',
     status: 'Failed',
     tested_date: '2026-02-20',
-    product_name: 'Nước trái cây ép',
+    material_name: 'Nước trái cây ép',
     batch_number: 'BATCH-20260220-02',
   },
 ];
@@ -65,6 +65,6 @@ export interface QCTestRecord {
   acceptance_criteria: string;
   status: string;
   tested_date: string;
-  product_name: string;
+  material_name: string;
   batch_number: string;
 }

@@ -6,7 +6,7 @@ import type { CreateQCTestDto, LotDecisionDto } from '../../types/qc';
 
 interface ProductBatch {
   batch_number: string;
-  product_name: string;
+  material_name: string;
   production_date: string;
   quantity: number;
   unit: string;
@@ -14,9 +14,9 @@ interface ProductBatch {
 }
 
 const MOCK_BATCHES: ProductBatch[] = [
-  { batch_number: 'PB-2026-0301', product_name: 'Amoxicillin 500mg Capsules', production_date: '2026-03-01', quantity: 50000, unit: 'viên', line: 'Line A' },
-  { batch_number: 'PB-2026-0302', product_name: 'Paracetamol 500mg Tablets', production_date: '2026-03-02', quantity: 100000, unit: 'viên', line: 'Line B' },
-  { batch_number: 'PB-2026-0303', product_name: 'Vitamin C 1000mg', production_date: '2026-03-03', quantity: 30000, unit: 'viên', line: 'Line A' },
+  { batch_number: 'PB-2026-0301', material_name: 'Amoxicillin 500mg Capsules', production_date: '2026-03-01', quantity: 50000, unit: 'viên', line: 'Line A' },
+  { batch_number: 'PB-2026-0302', material_name: 'Paracetamol 500mg Tablets', production_date: '2026-03-02', quantity: 100000, unit: 'viên', line: 'Line B' },
+  { batch_number: 'PB-2026-0303', material_name: 'Vitamin C 1000mg', production_date: '2026-03-03', quantity: 30000, unit: 'viên', line: 'Line A' },
 ];
 
 type DecisionValue = 'approved' | 'rejected' | 'hold';
@@ -137,7 +137,7 @@ export default function ProductInspection() {
                 {batches.map((batch) => (
                   <tr key={batch.batch_number} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-mono font-medium text-gray-800">{batch.batch_number}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.product_name}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.material_name}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-500">{new Date(batch.production_date).toLocaleDateString('vi-VN')}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.quantity.toLocaleString()} {batch.unit}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-500">{batch.line}</td>
@@ -166,7 +166,7 @@ export default function ProductInspection() {
                 <ShieldCheck className="w-5 h-5 text-white" />
                 <div>
                   <h2 className="text-base font-bold text-white">Kiểm định thành phẩm</h2>
-                  <p className="text-xs text-blue-200">{selectedBatch.batch_number} — {selectedBatch.product_name}</p>
+                  <p className="text-xs text-blue-200">{selectedBatch.batch_number} — {selectedBatch.material_name}</p>
                 </div>
               </div>
               <button onClick={closeModal} className="text-blue-200 hover:text-white transition p-1">

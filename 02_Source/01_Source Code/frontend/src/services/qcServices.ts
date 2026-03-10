@@ -3,6 +3,7 @@ import type {
   InventoryLot,
   QCTest,
   SupplierPerformance,
+  SupplierAnalysisResponse,
   CreateQCTestDto,
   LotDecisionDto,
   RetestDto,
@@ -152,4 +153,33 @@ export async function getSupplierPerformance(
   const res = await fetch(`${BASE_URL}/qc-tests/supplier-performance${query}`);
   await handleApiError(res);
   return res.json() as Promise<SupplierPerformance[]>;
+}
+
+export async function analyzeAllSuppliers(
+  from?: string,
+  to?: string,
+): Promise<SupplierAnalysisResponse> {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(`${BASE_URL}/ai/supplier-analysis${query}`);
+  await handleApiError(res);
+  return res.json() as Promise<SupplierAnalysisResponse>;
+}
+
+export async function analyzeOneSupplier(
+  supplierName: string,
+  from?: string,
+  to?: string,
+): Promise<SupplierAnalysisResponse> {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(
+    `${BASE_URL}/ai/supplier-analysis/${encodeURIComponent(supplierName)}${query}`,
+  );
+  await handleApiError(res);
+  return res.json() as Promise<SupplierAnalysisResponse>;
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Search } from 'lucide-react';
 import Toast from '../../components/Toast';
-import { getQCTestsByLot, getSupplierPerformance } from '../../services/qcServices';
-import type { QCTest, SupplierPerformance } from '../../types/qc';
+import { getQCTestsByLot, getSupplierPerformance, analyzeAllSuppliers, analyzeOneSupplier } from '../../services/qcServices';
+import type { QCTest, SupplierPerformance, SupplierAnalysisResponse } from '../../types/qc';
 
-type Tab = 'history' | 'supplier';
+type Tab = 'history' | 'supplier' | 'AI-analysis';
 
 const RESULT_BADGE: Record<string, string> = {
   Pass: 'bg-green-100 text-green-700',
@@ -28,6 +29,13 @@ export default function ReportTraceability() {
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // AI Analysis tab state
+  type AiMode = 'all' | 'single';
+  const [aiMode, setAiMode] = useState<AiMode>('all');
+  const [aiSupplierInput, setAiSupplierInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<SupplierAnalysisResponse | null>(null);
 
   const loadSuppliers = useCallback(async () => {
     setLoadingSuppliers(true);
@@ -67,6 +75,30 @@ export default function ReportTraceability() {
   const bestSupplier = [...suppliers].sort((a, b) => b.quality_rate - a.quality_rate)[0];
   const worstSupplier = [...suppliers].sort((a, b) => a.quality_rate - b.quality_rate)[0];
   const totalBatches = suppliers.reduce((sum, s) => sum + s.total_batches, 0);
+
+  async function handleAiAnalyze() {
+    if (aiMode === 'single' && !aiSupplierInput.trim()) {
+      setToast({ message: 'Vui lòng nhập tên nhà cung cấp', type: 'error' });
+      return;
+    }
+    setAiLoading(true);
+    setAiResult(null);
+    try {
+      const result =
+        aiMode === 'all'
+          ? await analyzeAllSuppliers(dateFrom || undefined, dateTo || undefined)
+          : await analyzeOneSupplier(aiSupplierInput.trim(), dateFrom || undefined, dateTo || undefined);
+      setAiResult(result);
+      if (!result.success) {
+        setToast({ message: 'AI phân tích không thành công. Xem chi tiết trong kết quả.', type: 'error' });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Lỗi không xác định';
+      setToast({ message, type: 'error' });
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   function exportCSV() {
     if (suppliers.length === 0) return;
@@ -108,6 +140,14 @@ export default function ReportTraceability() {
           }`}
         >
           Hiệu suất Nhà CC
+        </button>
+        <button
+          onClick={() => setActiveTab('AI-analysis')}
+          className={`m-2 px-5 py-3 text-sm font-semibold transition border-b-2 -mb-px ${
+            activeTab === 'AI-analysis' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Phân tích từ AI
         </button>
       </div>
 
@@ -344,6 +384,141 @@ export default function ReportTraceability() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* AI Analysis Tab */}
+      {activeTab === 'AI-analysis' && (
+        <div className="space-y-5">
+          {/* Mode card */}
+          <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🤖</span>
+              <div>
+                <h3 className="font-bold text-gray-900">Phân tích nhà cung cấp bằng AI</h3>
+                <p className="text-xs text-gray-400">Sử dụng dữ liệu QC test thực tế để đánh giá rủi ro</p>
+              </div>
+            </div>
+
+            {/* Mode selector */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setAiMode('all')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm font-semibold transition ${
+                  aiMode === 'all'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                📊 Tất cả nhà cung cấp
+              </button>
+              <button
+                onClick={() => setAiMode('single')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm font-semibold transition ${
+                  aiMode === 'single'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                🔍 Theo tên nhà cung cấp
+              </button>
+            </div>
+
+            {/* Single supplier input */}
+            {aiMode === 'single' && (
+              <input
+                type="text"
+                value={aiSupplierInput}
+                onChange={(e) => setAiSupplierInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') void handleAiAnalyze(); }}
+                placeholder="Nhập tên nhà cung cấp (VD: Công ty ABC)..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400"
+              />
+            )}
+
+            {/* Date range filter */}
+            <div className="flex gap-3 items-end flex-wrap">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Từ ngày</label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Đến ngày</label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <p className="text-xs text-gray-400 pb-2">Bỏ trống để phân tích toàn bộ dữ liệu</p>
+            </div>
+
+            {/* Analyze button */}
+            <button
+              onClick={() => void handleAiAnalyze()}
+              disabled={aiLoading}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition"
+            >
+              {aiLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Đang phân tích...
+                </>
+              ) : (
+                <>🤖 Phân tích với AI</>
+              )}
+            </button>
+          </div>
+
+          {/* Result card */}
+          {aiResult && (
+            <div className={`bg-white border rounded-xl shadow-sm overflow-hidden ${
+              aiResult.success ? 'border-gray-100' : 'border-red-200'
+            }`}>
+              {/* Result header */}
+              <div className={`px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2 ${
+                aiResult.success ? 'border-gray-100 bg-gray-50' : 'border-red-100 bg-red-50'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    aiResult.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                    {aiResult.success ? '✓ Thành công' : '✕ Lỗi'}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Đã phân tích: <strong>{aiResult.suppliers_analyzed}</strong> nhà cung cấp
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-gray-400">
+                  <span>Model: <span className="font-mono">{aiResult.model_used.split('/').pop()}</span></span>
+                  <span>{new Date(aiResult.timestamp).toLocaleString('vi-VN')}</span>
+                </div>
+              </div>
+
+              {/* Analysis content */}
+              <div className="px-5 py-4 prose prose-sm max-w-none text-gray-700">
+                <ReactMarkdown>{aiResult.analysis}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!aiResult && !aiLoading && (
+            <div className="p-12 bg-white border border-dashed border-gray-200 rounded-xl text-center text-gray-400">
+              <div className="text-4xl mb-3">🤖</div>
+              <p className="text-sm font-medium">Chưa có kết quả phân tích</p>
+              <p className="text-xs mt-1">Chọn chế độ và nhấn "Phân tích với AI" để bắt đầu</p>
+            </div>
+          )}
         </div>
       )}
 

@@ -77,7 +77,7 @@ export interface QCTest {
 ```ts
 export interface InventoryLot {
   lot_id: string;
-  product_name: string;
+  material_name: string;
   supplier_name: string;
   quantity: number;
   unit?: string;
@@ -261,7 +261,7 @@ Thay thế `stats` tĩnh bằng computed array từ `kpi`:
 
 Thay các field hard-code:
 - `batch.id` → `lot.lot_id`
-- `batch.name` → `lot.product_name`
+- `batch.name` → `lot.material_name`
 - `batch.supplier` → `lot.supplier_name`
 - `batch.quantity` → `lot.quantity`
 - `batch.priority` → tính theo logic: nếu `lot.expiration_date` gần (< 7 ngày) → "High", còn lại → "Normal"
@@ -330,7 +330,7 @@ useEffect(() => {
 #### 4.2 Map `InventoryLot` vào bảng
 
 - `lot.lot_id` → cột "Mã lô"
-- `lot.product_name` → cột "Tên nguyên liệu"
+- `lot.material_name` → cột "Tên nguyên liệu"
 - `lot.supplier_name` → cột "Nhà cung cấp"
 - `lot.status` → badge (map: `Quarantine → pending`, `Accepted → approved`, `Rejected → rejected`, `Hold → hold`)
 - Nút "Tiến hành kiểm định" chỉ hiển thị nếu `lot.status === 'Quarantine'`
@@ -486,7 +486,7 @@ Import `InventoryLot` từ `qc.types.ts`. Cập nhật tất cả tham chiếu:
 | Cũ | Mới |
 |---|---|
 | `item.id` | `lot.lot_id` |
-| `item.name` | `lot.product_name` |
+| `item.name` | `lot.material_name` |
 | `item.batchNo` | `lot.lot_id` |
 | `item.location` | `lot.location` |
 | `item.expiryDate` | `lot.expiration_date` |

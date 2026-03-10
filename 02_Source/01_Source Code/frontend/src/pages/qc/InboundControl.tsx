@@ -211,7 +211,7 @@ export default function InboundControl() {
                 {lots.map((lot) => (
                   <tr key={lot.lot_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.product_name}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.material_name}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.quantity} {lot.unit_of_measure ?? ''}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-500">
@@ -249,7 +249,7 @@ export default function InboundControl() {
                 <ClipboardCheck className="w-5 h-5 text-white" />
                 <div>
                   <h2 className="text-base font-bold text-white">Kiểm định lô hàng</h2>
-                  <p className="text-xs text-blue-200">{selectedLot.lot_id} — {selectedLot.product_name}</p>
+                  <p className="text-xs text-blue-200">{selectedLot.lot_id} — {selectedLot.material_name}</p>
                 </div>
               </div>
               <button onClick={closeModal} className="text-blue-200 hover:text-white transition p-1">

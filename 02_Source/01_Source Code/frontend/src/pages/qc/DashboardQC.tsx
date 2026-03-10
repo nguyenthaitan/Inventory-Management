@@ -119,7 +119,7 @@ export default function DashboardQC() {
                   return (
                     <tr key={lot.lot_id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 font-mono font-medium text-gray-800">{lot.lot_id}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.product_name}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.material_name}</td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-500">{lot.supplier_name}</td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-700">{lot.quantity} {lot.unit_of_measure ?? ''}</td>
                       <td className="px-6 py-4">
