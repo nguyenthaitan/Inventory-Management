@@ -20,6 +20,7 @@ import ProductManagementManager from '../pages/manager/ProductManagement';
 import ReportsManager from '../pages/manager/Reports';
 import TransactionManagementManager from '../pages/manager/TransactionManagement';
 import UserManagementManager from '../pages/manager/UserManagement';
+import LabelManagement from '../pages/manager/LabelManagement';
 import DashboardOperator from '../pages/operator/DashboardOperator';
 import InventoryAuditOperator from '../pages/operator/InventoryAudit';
 import MaterialManagementOperator from '../pages/operator/MaterialManagement';
@@ -30,6 +31,7 @@ import ProductCreationOperator from '../pages/operator/ProductCreation';
 import StockInOperator from '../pages/operator/StockIn';
 import StockOutOperator from '../pages/operator/StockOut';
 import TransactionHistoryOperator from '../pages/operator/TransactionHistory';
+import LabelPrintOperator from '../pages/operator/LabelPrint';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 
@@ -64,6 +66,7 @@ export const router = createBrowserRouter([
       { path: 'manager/reports', element: <ReportsManager /> },
       { path: 'manager/transaction', element: <TransactionManagementManager /> },
       { path: 'manager/user', element: <UserManagementManager /> },
+      { path: 'manager/labels', element: <LabelManagement /> },
 
       // Operator
       { path: 'operator/dashboard', element: <DashboardOperator /> },
@@ -77,6 +80,7 @@ export const router = createBrowserRouter([
       { path: 'operator/stock-in', element: <StockInOperator /> },
       { path: 'operator/stock-out', element: <StockOutOperator /> },
       { path: 'operator/history', element: <TransactionHistoryOperator /> },
+      { path: 'operator/labels', element: <LabelPrintOperator /> },
     ],
   },
   {
@@ -86,5 +90,5 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <Register />,
-  }
+  },
 ]);

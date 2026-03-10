@@ -21,6 +21,7 @@ import {
   User as UserIcon,
   FileSearch,
   ChevronRight,
+  Tag,
 } from "lucide-react";
 
 interface NavItem {
@@ -143,6 +144,11 @@ export default function Layout() {
             icon: <FileText size={20} />,
             label: "Quản lý Users",
           },
+          {
+            to: "/manager/labels",
+            icon: <Tag size={20} />,
+            label: "Quản lý nhãn",
+          },
         ];
       case "quality-control":
         return [
@@ -198,6 +204,11 @@ export default function Layout() {
             to: "/operator/history",
             icon: <History size={20} />,
             label: "Lịch sử",
+          },
+          {
+            to: "/operator/labels",
+            icon: <Tag size={20} />,
+            label: "In nhãn",
           },
         ];
       case "it-admin":
