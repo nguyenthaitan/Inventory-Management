@@ -51,11 +51,21 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
    - Hỗ trợ truy vấn phân trang, filter theo `material_id`, `transaction_type`, `performed_date` range.
 
 3. **Service**
-   - Tạo `inventory-transaction.service.ts` xử lý logic:
-     - Kiểm tra và áp dụng business rules trước khi ghi transaction (vd. kiểm tra tồn kho đủ cho `OUTBOUND`).
-     - Khi `OUTBOUND`: xác định lot(s) để giảm theo policy (FIFO / FEFO), hoặc sử dụng `lot_id` nếu chỉ định.
-     - Với `TRANSFER`: tạo hai transaction (one OUTBOUND from source, one INBOUND to destination) hoặc xử lý atomic transaction.
-     - Với `ADJUSTMENT`: ghi audit reason, không sửa đổi bên ngoài.
+   - Tạo `inventory-transaction.service.ts` với các phương thức chính:
+     - `create(transactionDto)` – entry point xử lý biến đổi dữ liệu chung rồi gọi hàm riêng theo loại.
+     - `getAll(filters, paging)` / `getOne(id)` / `update(id, dto)` / `remove(id)` (xóa cứng).
+     - Các helper private/`protected` để xử lý mỗi loại transaction:
+       - `handleReceipt(dto)` – tăng quantity lot được chỉ định.
+       - `handleUsage(dto)` – kiểm tra tồn kho đủ (theo policy FIFO/FEFO) và giảm số lượng;
+         nếu `lot_id` không có, chọn lot(s) tự động.
+       - `handleSplit(dto)` – trừ `quantity` từ lot gốc, khởi tạo lot mới(s) với số lượng tương ứng, trả về cả transaction `Split` và record lot mới.
+       - `handleAdjustment(dto)` – áp dụng +/- quantity, lưu `reason` vào audit, không thay đổi logic khác.
+       - `handleTransfer(dto)` – có thể gọi `handleUsage` cho nguồn và `handleReceipt` cho đích hoặc tạo transaction `Transfer` duy nhất và để listener cập nhật cả hai lot.
+       - `handleDisposal(dto)` – tương tự `Usage` nhưng gắn thêm flag disposal và logic báo cáo hủy.
+     - Kiểm tra và áp dụng business rules trước khi commit:
+       - không cho stock âm sau `Usage`/`Disposal`;
+       - với `Receipt` và `Transfer` in-bound: update lot tồn theo đơn vị;
+       - với `Split` phải tạo lot con và giữ quan hệ parent/child (được lưu trên `InventoryLot.parent_lot_id` theo domain model).
      - Publish sự kiện (event-bus) sau khi transaction thành công để cập nhật `InventoryLot`/Material stock, logs, search index.
    - Nhúng repository và các repository liên quan (`InventoryLotRepository`, `MaterialRepository`) bằng DI.
 
@@ -66,7 +76,7 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
      - `POST /transactions` — tạo transaction đơn
      - `POST /transactions/bulk` — tạo nhiều transaction (import/scan)
      - `PATCH /transactions/:id` — cập nhật (chỉ cho sửa metadata/reason, không thay đổi lịch sử quan trọng trừ khi có audit)
-     - `DELETE /transactions/:id` — xóa mềm (mark deleted) hoặc cấm xóa nếu đã affect stock; prefer soft-delete
+     - `DELETE /transactions/:id` — xóa bản ghi (hard delete); cẩn trọng nếu đã ảnh hưởng stock.
    - Áp dụng `ValidationPipe`, `AuthGuard`, và `RolesGuard` nếu cần.
 
 5. **Module**
