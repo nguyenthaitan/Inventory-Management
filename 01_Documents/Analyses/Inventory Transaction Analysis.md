@@ -111,21 +111,5 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
 10. **Observability & Auditing**
 
 - Ghi audit trail cho mọi thay đổi quan trọng (performed_by, reason, related_document).
-- Publish events to `event-bus` (Rabbit/Kafka/Redis) để các service khác (search index, analytics) cập nhật.
+- Publish events to `event-bus` (Kafka) để các service khác (search index, analytics) cập nhật.
 - Thêm structured logging khi transaction fail/rollback.
-
-## Timeline tóm tắt
-
-1. Ngày 1: Thiết kế schema, DTOs, repository và module.
-2. Ngày 2: Service + controller + validation + business rules (stock checks, transfer logic).
-3. Ngày 3: Tests (unit + e2e), seed scripts.
-4. Ngày 4: Frontend integration + docs + review.
-
-## Ghi chú
-
-- Tuân theo chuẩn coding trong `07_Coding Standards.md`.
-- Tham khảo `material` và `inventory-lot` module để đồng bộ schema, DTO và event patterns.
-- Tránh xóa cứng transaction đã affect stock; ưu tiên soft-delete và audit.
-- Cân nhắc performance khi query lịch sử nhiều bản ghi: add index cho `material_id`, `performed_date`, `transaction_type`.
-
-> File này lưu trữ kế hoạch và phân tích chi tiết cho module Inventory Transaction.
