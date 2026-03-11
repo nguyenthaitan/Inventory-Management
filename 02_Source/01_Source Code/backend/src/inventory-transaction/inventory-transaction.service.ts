@@ -26,40 +26,8 @@ export class InventoryTransactionService {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     transactionDto.transaction_id = require('uuid').v4();
 
-    // sign rule per type: receipt>0, usage<0, disposal>0;
-    // split/adjustment/transfer !=0 (sign indicates direction)
-    switch (transactionDto.transaction_type) {
-      case TransactionType.Receipt:
-        if (transactionDto.quantity <= 0) {
-          throw new BadRequestException('receipt quantity must be positive');
-        }
-        break;
-      case TransactionType.Usage:
-        if (transactionDto.quantity >= 0) {
-          throw new BadRequestException('usage quantity must be negative');
-        }
-        break;
-      case TransactionType.Split:
-        if (transactionDto.quantity === 0) {
-          throw new BadRequestException('split quantity cannot be zero');
-        }
-        break;
-      case TransactionType.Disposal:
-        if (transactionDto.quantity <= 0) {
-          throw new BadRequestException('disposal quantity must be positive');
-        }
-        break;
-      case TransactionType.Adjustment:
-        if (transactionDto.quantity === 0) {
-          throw new BadRequestException('adjustment quantity cannot be zero');
-        }
-        break;
-      case TransactionType.Transfer:
-        if (transactionDto.quantity === 0) {
-          throw new BadRequestException('transfer quantity cannot be zero');
-        }
-        break;
-    }
+    // các kiểm tra validation được thực hiện bên trong mỗi hàm xử lý; quy tắc dấu theo loại đã ghi chú ở đó
+    // (receipt>0, usage<0, disposal<0; split/adjustment/transfer !=0)
 
     switch (transactionDto.transaction_type) {
       case TransactionType.Receipt:
@@ -95,6 +63,10 @@ export class InventoryTransactionService {
 
   // các hàm hỗ trợ theo loại
   protected async handleReceipt(dto: CreateInventoryTransactionDto) {
+    // số lượng (receipt) phải dương
+    if (dto.quantity <= 0) {
+      throw new BadRequestException('receipt quantity must be positive');
+    }
     // tăng số lượng của lô được chỉ định
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
@@ -102,6 +74,10 @@ export class InventoryTransactionService {
   }
 
   protected async handleUsage(dto: CreateInventoryTransactionDto) {
+    // số lượng (usage) phải âm
+    if (dto.quantity >= 0) {
+      throw new BadRequestException('usage quantity must be negative');
+    }
     // kiểm tra tồn kho và giảm, áp dụng FIFO/FEFO
     // nếu thiếu lot_id thì chọn lô tự động
     // đảm bảo không âm tồn
@@ -112,6 +88,10 @@ export class InventoryTransactionService {
   }
 
   protected async handleSplit(dto: CreateInventoryTransactionDto) {
+    // số lượng (split) không được bằng 0; dấu chỉ hướng chuyển
+    if (dto.quantity === 0) {
+      throw new BadRequestException('split quantity cannot be zero');
+    }
     // tạo giao dịch split và lô con mới
     const created = await this.repo.create(dto);
     // bỏ qua phần tạo lô bổ sung
@@ -120,6 +100,10 @@ export class InventoryTransactionService {
   }
 
   protected async handleAdjustment(dto: CreateInventoryTransactionDto) {
+    // số lượng (adjustment) không được bằng 0; dấu chỉ hướng điều chỉnh
+    if (dto.quantity === 0) {
+      throw new BadRequestException('adjustment quantity cannot be zero');
+    }
     // điều chỉnh +/- số lượng kèm lý do
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
@@ -127,6 +111,10 @@ export class InventoryTransactionService {
   }
 
   protected async handleTransfer(dto: CreateInventoryTransactionDto) {
+    // số lượng (transfer) không được bằng 0; dấu chỉ hướng chuyển
+    if (dto.quantity === 0) {
+      throw new BadRequestException('transfer quantity cannot be zero');
+    }
     // có thể gọi handleUsage + handleReceipt hoặc dùng một bản ghi transfer
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
@@ -135,6 +123,10 @@ export class InventoryTransactionService {
 
   protected async handleDisposal(dto: CreateInventoryTransactionDto) {
     // giống usage nhưng đánh dấu là hủy
+    // số lượng (disposal) phải âm
+    if (dto.quantity >= 0) {
+      throw new BadRequestException('disposal quantity must be negative');
+    }
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
     return created;
