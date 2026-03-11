@@ -68,7 +68,7 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
      - với `Receipt` và `Transfer` in-bound: update lot tồn theo đơn vị;
      - với `Split` phải tạo lot con và giữ quan hệ parent/child (được lưu trên `InventoryLot.parent_lot_id` theo domain model).
    - Publish sự kiện (event-bus) sau khi transaction thành công để cập nhật `InventoryLot`/Material stock, logs, search index.
-   - Consume sự kiện: Cập nhật transaction khi có thay đổi từ `InventoryLot`. Trước đó cần tạo các Handler để lắng nghe sự kiện từ `InventoryLot` (vd. `LotUpdated`) để đồng bộ thông tin nếu cần thiết. Sau đó đăng ký handler này trong `Dispatcher`.
+   - Consume sự kiện: Cập nhật transaction khi có thay đổi từ `InventoryLot`. Trước đó cần tạo các Handler để lắng nghe sự kiện từ `InventoryLot` (vd. `LotUpdated`) để đồng bộ thông tin nếu cần thiết. Sau đó đăng ký handler này trong `Dispatcher`. Trước mắt tạo handler cho loại event Adjustment trước.
    - Nhúng repository và các repository liên quan (`InventoryLotRepository`, `MaterialRepository`) bằng DI.
 
 4. **Controller**
