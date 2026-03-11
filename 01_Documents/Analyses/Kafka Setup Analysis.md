@@ -12,18 +12,18 @@ Kết nối với NestJS backend qua thư viện `kafkajs` hoặc `@nestjs/micro
 
 ## Các bước thiết lập
 
-1. **Chuẩn bị môi trường**
+1. **Chuẩn bị môi trường** (Đã xong)
    - Quyết định dùng Docker Compose (development) và Kubernetes (production).
    - Tạo folder `infra/kafka` trong repo để chứa cấu hình.
    - Chọn phiên bản Kafka (ví dụ `3.5.0` hoặc latest compatible với kRaft).
 
-2. **Docker Compose file**
+2. **Docker Compose file** (Đã xong)
    - Tạo `infra/kafka/docker-compose.yml` với dịch vụ:
      - `kafka-broker`: image `confluentinc/cp-kafka`, exposes 9092. # cấu hình kRaft, không cần dịch vụ ZooKeeper.
    - Cấu hình lưu trữ dữ liệu (volumes) và environment variables: `KAFKA_BROKER_ID`, `KAFKA_LISTENERS`, `KAFKA_ADVERTISED_LISTENERS`, `KAFKA_KRAFT_BROKER_ID`, `KAFKA_CONTROLLER_QUORUM_VOTERS` (kRaft), `KAFKA_AUTO_CREATE_TOPICS_ENABLE=false`.
    - Tạo topic mặc định `inventory-transactions` và `audit-logs` bằng lệnh `kafka-topics` trong compose entrypoint.
 
-3. **Kubernetes manifests** (nếu có)
+3. **Kubernetes manifests** (Chưa làm, đợi đến khi deploy mới làm)
    - Tạo `infra/kafka/k8s/` chứa `statefulset.yaml`, `service.yaml`, `configmap.yaml`.
    - Sử dụng PersistentVolumeClaims cho mỗi broker.
    - Thiết lập readiness/liveness probes và anti-affinity để tránh single point of failure.
