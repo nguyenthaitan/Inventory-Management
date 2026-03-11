@@ -30,7 +30,7 @@ Kết nối với NestJS backend qua thư viện `kafkajs` hoặc `@nestjs/micro
    - Thêm CronJob để tạo topic nếu chưa tồn tại.
 
 4. **Client integration (NestJS)**
-   - Cài đặt `npm install kafkajs` (hoặc `@nestjs/microservices` nếu dùng transport).
+   - Cài đặt **`npm install kafkajs`** và sử dụng thư viện này trong module/ service (không cần `@nestjs/microservices`).
    - Tạo `shared/kafka/kafka.module.ts` cung cấp producer-global singleton và helper service.
    - Định nghĩa `KafkaConfigService` trong `config/` để đọc từ `process.env`.
    - Implement `KafkaProducerService` với phương thức `publish(topic, message)` bao gồm retry/backoff.
