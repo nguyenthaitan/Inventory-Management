@@ -59,6 +59,21 @@ export class InventoryTransactionService {
     return this.repo.remove(id);
   }
 
+  /**
+   * Tạo hàng loạt transactions. Các DTO sẽ được xử lý theo cùng quy trình
+   * như `create()` để đảm bảo validation & publication.
+   */
+  async createMany(dtos: CreateInventoryTransactionDto[]) {
+    // mảng kết quả cần kiểu rõ ràng vì TypeScript không thể suy ra từ []
+    const results: any[] = [];
+    for (const dto of dtos) {
+      // tái sử dụng hàm create chứa toàn bộ logic nghiệp vụ
+      const created = await this.create(dto);
+      results.push(created);
+    }
+    return results;
+  }
+
   // các hàm hỗ trợ theo loại
   protected async handleReceipt(dto: CreateInventoryTransactionDto) {
     // số lượng (receipt) phải dương
