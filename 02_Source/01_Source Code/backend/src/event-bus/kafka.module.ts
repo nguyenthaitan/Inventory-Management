@@ -2,6 +2,8 @@ import { Global, Module } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
 import { KafkaConfigService } from './kafka.config';
 import { KafkaService } from './kafka.service';
+import { Dispatcher } from './dispatcher';
+import { KafkaConsumerService } from './kafka.consumer.service';
 
 // Module toàn cục chứa các provider liên quan đến Kafka.
 // Bất kỳ module nào import AppModule sẽ có thể inject các
@@ -43,10 +45,14 @@ import { KafkaService } from './kafka.service';
       },
       inject: ['KAFKA_CLIENT'],
     },
-    // service tiện ích bọc producer để dùng tại các service khác
+    // dịch vụ tiện ích bọc producer để dùng tại các service khác
     KafkaService,
+    // bộ điều phối nội bộ, đăng ký handler bởi các module khác
+    Dispatcher,
+    // consumer chạy background để lắng nghe các topic
+    KafkaConsumerService,
   ],
-  // xuất producer và service ra toàn bộ ứng dụng
-  exports: ['KAFKA_PRODUCER', KafkaService],
+  // xuất producer, dispatcher và service ra toàn bộ ứng dụng
+  exports: ['KAFKA_PRODUCER', KafkaService, Dispatcher],
 })
 export class KafkaModule {}
