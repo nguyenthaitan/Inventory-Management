@@ -6,11 +6,13 @@ import { DatabaseModule } from './database/database.module';
 import { MaterialModule } from './material/material.module';
 import { InventoryLotModule } from './inventory-lot/inventory-lot.module';
 import { ProductionBatchModule } from './production-batch/production-batch.module';
+import { KafkaModule } from './event-bus/kafka.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
+    KafkaModule,
     MaterialModule,
     InventoryLotModule,
     ProductionBatchModule,
