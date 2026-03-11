@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  kafka-broker:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka-broker
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    environment:
+      # kRaft-specific
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      # storage/config
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    command:
+      - sh
+      - -c
+      - |
+        # wait for broker to start then create topics if missing
+        /etc/confluent/docker/run &
+        until kafka-topics --bootstrap-server localhost:9092 --list; do sleep 1; done
+        kafka-topics --bootstrap-server localhost:9092 --create --topic inventory-transactions --partitions 3 --replication-factor 1 || true
+        kafka-topics --bootstrap-server localhost:9092 --create --topic audit-logs --partitions 3 --replication-factor 1 || true
+
+volumes:
+  kafka-data:
+    driver: local
