@@ -5,6 +5,7 @@ import type { Decimal128 } from 'mongoose';
 export type BatchComponentDocument = BatchComponent & Document;
 
 const options: SchemaOptions = {
+  collection: 'batch_components',
   timestamps: { createdAt: 'created_date', updatedAt: 'modified_date' },
 };
 

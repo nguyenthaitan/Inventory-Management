@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -21,6 +21,7 @@ import {
   User as UserIcon,
   FileSearch,
   ChevronRight,
+  FlaskConical,
 } from "lucide-react";
 
 interface NavItem {
@@ -67,30 +68,23 @@ export default function Layout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const user = {
-    username: "John123",
-    role: "manager",
-  };
+  const stored = localStorage.getItem('currentUser');
+  const user: { username: string; role: string; label?: string } | null = stored
+    ? JSON.parse(stored)
+    : null;
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleLogout = () => {
-    // logout();
-    navigate("/");
+    localStorage.removeItem('currentUser');
+    navigate('/login');
   };
 
   // Hàm hiển thị tên vai trò trên giao diện
-  const getDisplayNameFromUsername = (username?: string) => {
-    switch (username) {
-      case "1":
-        return "Manager";
-      case "2":
-        return "Quality Control";
-      case "3":
-        return "Operator";
-      case "4":
-        return "IT Admin";
-      default:
-        return "Staff";
-    }
+  const getDisplayNameFromUsername = (_username?: string) => {
+    return user?.label ?? getRoleLabel();
   };
 
   const getRoleLabel = () => {
@@ -114,7 +108,7 @@ export default function Layout() {
       case "manager":
         return [
           {
-            to: "/manager",
+            to: "/manager/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard",
           },
@@ -124,7 +118,12 @@ export default function Layout() {
             label: "Quản lý hàng hóa",
           },
           {
-            to: "/manager/in-out",
+            to: "/manager/materials",
+            icon: <Package size={20} />,
+            label: "Quản lý nguyên liệu",
+          },
+          {
+            to: "/manager/transaction",
             icon: <FileText size={20} />,
             label: "Quản lý nhập/xuất kho",
           },
@@ -139,30 +138,40 @@ export default function Layout() {
             label: "Báo cáo",
           },
           {
-            to: "/manager/users",
+            to: "/manager/user",
             icon: <FileText size={20} />,
             label: "Quản lý Users",
+          },
+          {
+            to: "/manager/production-batches",
+            icon: <FlaskConical size={20} />,
+            label: "Lô sản xuất",
           },
         ];
       case "quality-control":
         return [
           {
-            to: "/quality-control",
+            to: "/qc/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard",
           },
           {
-            to: "/quality-control/pending",
+            to: "/qc/inbound",
             icon: <ClipboardCheck size={20} />,
             label: "Kiểm soát đầu vào",
           },
           {
-            to: "/quality-control/inventory-qa",
+            to: "/qc/inspection",
+            icon: <ShieldCheck size={20} />,
+            label: "Kiểm định sản phẩm",
+          },
+          {
+            to: "/qc/inventory",
             icon: <ShieldCheck size={20} />,
             label: "Kiểm định tồn kho",
           },
           {
-            to: "/quality-control/traceability",
+            to: "/qc/traceability",
             icon: <FileSearch size={20} />,
             label: "Báo cáo & Truy vết",
           },
@@ -170,24 +179,29 @@ export default function Layout() {
       case "operator":
         return [
           {
-            to: "/operator",
+            to: "/operator/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard",
           },
           {
-            to: "/operator/inbound",
+            to: "/operator/materials",
+            icon: <Package size={20} />,
+            label: "Quản lý nguyên liệu",
+          },
+          {
+            to: "/operator/product",
+            icon: <ArrowDownCircle size={20} />,
+            label: "Tạo sản phẩm",
+          },
+          {
+            to: "/operator/stock-in",
             icon: <ArrowDownCircle size={20} />,
             label: "Nhập kho",
           },
           {
-            to: "/operator/outbound",
+            to: "/operator/stock-out",
             icon: <ArrowUpCircle size={20} />,
             label: "Xuất kho",
-          },
-          {
-            to: "/operator/material",
-            icon: <Package size={20} />,
-            label: "Nhập vật liệu",
           },
           {
             to: "/operator/audit",
@@ -203,27 +217,27 @@ export default function Layout() {
       case "it-admin":
         return [
           {
-            to: "/it-admin",
+            to: "/admin/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard IT",
           },
           {
-            to: "/it-admin/monitoring",
+            to: "/admin/monitoring",
             icon: <Activity size={20} />,
             label: "Giám sát hệ thống",
           },
           {
-            to: "/it-admin/logs",
+            to: "/admin/error-logs",
             icon: <Terminal size={20} />,
             label: "Nhật ký lỗi",
           },
           {
-            to: "/it-admin/backup",
+            to: "/admin/backup",
             icon: <Database size={20} />,
             label: "Sao lưu & Phục hồi",
           },
           {
-            to: "/it-admin/reports",
+            to: "/admin/reports",
             icon: <FileBarChart size={20} />,
             label: "Báo cáo hệ thống",
           },

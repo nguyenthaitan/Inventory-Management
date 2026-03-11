@@ -32,6 +32,13 @@ import StockOutOperator from '../pages/operator/StockOut';
 import TransactionHistoryOperator from '../pages/operator/TransactionHistory';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
+import ApiTestProductionBatch from '../pages/operator/production-batches/ProductionBatch';
+import ProductionBatchList from '../pages/manager/production-batches/List';
+import ProductionBatchDetail from '../pages/manager/production-batches/Detail';
+import ProductionBatchForm from '../pages/manager/production-batches/FormPage';
+import OperatorProductionBatchList from '../pages/operator/production-batches/List';
+import OperatorProductionBatchDetail from '../pages/operator/production-batches/Detail';
+import OperatorProductionBatchForm from '../pages/operator/production-batches/FormPage';
 
 export const router = createBrowserRouter([
   {
@@ -64,6 +71,10 @@ export const router = createBrowserRouter([
       { path: 'manager/reports', element: <ReportsManager /> },
       { path: 'manager/transaction', element: <TransactionManagementManager /> },
       { path: 'manager/user', element: <UserManagementManager /> },
+      { path: 'manager/production-batches', element: <ProductionBatchList /> },
+      { path: 'manager/production-batches/create', element: <ProductionBatchForm /> },
+      { path: 'manager/production-batches/:id', element: <ProductionBatchDetail /> },
+      { path: 'manager/production-batches/:id/edit', element: <ProductionBatchForm /> },
 
       // Operator
       { path: 'operator/dashboard', element: <DashboardOperator /> },
@@ -77,6 +88,13 @@ export const router = createBrowserRouter([
       { path: 'operator/stock-in', element: <StockInOperator /> },
       { path: 'operator/stock-out', element: <StockOutOperator /> },
       { path: 'operator/history', element: <TransactionHistoryOperator /> },
+      { path: 'operator/production-batches', element: <OperatorProductionBatchList /> },
+      { path: 'operator/production-batches/create', element: <OperatorProductionBatchForm /> },
+      { path: 'operator/production-batches/:id', element: <OperatorProductionBatchDetail /> },
+      { path: 'operator/production-batches/:id/edit', element: <OperatorProductionBatchForm /> },
+
+      // Catch-all placeholder
+      { path: '*', element: <div className="p-10 text-gray-400 text-lg">Page</div> },
     ],
   },
   {
@@ -86,5 +104,9 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <Register />,
-  }
+  },
+  {
+    path: '/api-test/batches',
+    element: <ApiTestProductionBatch />,
+  },
 ]);

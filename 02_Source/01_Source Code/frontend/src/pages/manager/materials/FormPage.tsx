@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import MaterialForm from '../../../components/materials/MaterialForm'
+import { MaterialForm } from '../../../components/material/components/MaterialForm'
 import { createMaterial, updateMaterial, fetchMaterial } from '../../../services/materialService'
 import { type Material } from '../../../types/Material'
 

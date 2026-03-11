@@ -4,6 +4,7 @@ import { Document, SchemaOptions } from 'mongoose';
 export type ProductionBatchDocument = ProductionBatch & Document;
 
 const options: SchemaOptions = {
+  collection: 'production_batches',
   timestamps: { createdAt: 'created_date', updatedAt: 'modified_date' },
 };
 

@@ -1,0 +1,231 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  InventoryLot,
+  InventoryLotDocument,
+} from '../schemas/inventory-lot.schema';
+import { BatchComponentRepository } from './batch-component.repository';
+import { ProductionBatchRepository } from './production-batch.repository';
+import { CreateBatchComponentDto } from './dto/create-batch-component.dto';
+import { UpdateBatchComponentDto } from './dto/update-batch-component.dto';
+import { BatchComponentResponseDto } from './production-batch.dto';
+
+/**
+ * BatchComponent Service
+ * Contains business logic for BatchComponent operations (nested under ProductionBatch)
+ */
+@Injectable()
+export class BatchComponentService {
+  private readonly logger = new Logger(BatchComponentService.name);
+
+  constructor(
+    private readonly componentRepository: BatchComponentRepository,
+    private readonly batchRepository: ProductionBatchRepository,
+    @InjectModel(InventoryLot.name)
+    private readonly lotModel: Model<InventoryLotDocument>,
+  ) {}
+
+  /**
+   * Add a component (inventory lot) to a production batch
+   * Validates: batch_id exists, lot_id exists, planned_quantity > 0
+   * Auto-fills addition_date if not provided
+   * @param batchId - Parent batch UUID (from route param)
+   * @param createDto - Component data
+   * @returns Created component response
+   * @throws NotFoundException - If batch or lot not found
+   * @throws BadRequestException - If planned_quantity <= 0
+   */
+  async create(
+    batchId: string,
+    createDto: CreateBatchComponentDto,
+  ): Promise<BatchComponentResponseDto> {
+    this.logger.log(
+      `Adding component lot_id=${createDto.lot_id} to batch_id=${batchId}`,
+    );
+
+    // Validate parent batch exists
+    const batch = await this.batchRepository.findOne(batchId);
+    if (!batch) {
+      throw new NotFoundException(
+        `Production batch with ID '${batchId}' not found`,
+      );
+    }
+
+    // Validate inventory lot exists
+    const lot = await this.lotModel.findOne({ lot_id: createDto.lot_id }).exec();
+    if (!lot) {
+      throw new NotFoundException(
+        `Inventory lot with ID '${createDto.lot_id}' not found`,
+      );
+    }
+
+    // Auto-fill addition_date if not provided
+    const addition_date = createDto.addition_date
+      ? createDto.addition_date
+      : new Date().toISOString();
+
+    const component = await this.componentRepository.create({
+      ...createDto,
+      batch_id: batchId,
+      component_id: uuidv4(),
+      addition_date,
+    });
+
+    this.logger.log(
+      `Batch component created successfully: ${component.component_id}`,
+    );
+
+    return this.toResponseDto(component);
+  }
+
+  /**
+   * Get all components for a given production batch
+   * @param batchId - Parent batch UUID
+   * @returns Array of component responses
+   * @throws NotFoundException - If batch not found
+   */
+  async findByBatchId(batchId: string): Promise<BatchComponentResponseDto[]> {
+    this.logger.debug(`Finding components for batch_id: ${batchId}`);
+
+    const batch = await this.batchRepository.findOne(batchId);
+    if (!batch) {
+      throw new NotFoundException(
+        `Production batch with ID '${batchId}' not found`,
+      );
+    }
+
+    const components = await this.componentRepository.findByBatchId(batchId);
+
+    return components.map((c) => this.toResponseDto(c));
+  }
+
+  /**
+   * Get a single batch component
+   * @param batchId - Parent batch UUID
+   * @param componentId - Component UUID
+   * @returns Component response
+   * @throws NotFoundException - If component not found within the given batch
+   */
+  async findOne(
+    batchId: string,
+    componentId: string,
+  ): Promise<BatchComponentResponseDto> {
+    this.logger.debug(
+      `Finding component ${componentId} in batch ${batchId}`,
+    );
+
+    const component = await this.componentRepository.findOneByBatch(
+      batchId,
+      componentId,
+    );
+    if (!component) {
+      throw new NotFoundException(
+        `Component '${componentId}' not found in batch '${batchId}'`,
+      );
+    }
+
+    return this.toResponseDto(component);
+  }
+
+  /**
+   * Update a batch component
+   * @param batchId - Parent batch UUID
+   * @param componentId - Component UUID
+   * @param updateDto - Fields to update
+   * @returns Updated component response
+   * @throws NotFoundException - If component not found within the given batch
+   */
+  async update(
+    batchId: string,
+    componentId: string,
+    updateDto: UpdateBatchComponentDto,
+  ): Promise<BatchComponentResponseDto> {
+    this.logger.log(`Updating batch component: ${componentId}`);
+
+    const existing = await this.componentRepository.findOneByBatch(
+      batchId,
+      componentId,
+    );
+    if (!existing) {
+      throw new NotFoundException(
+        `Component '${componentId}' not found in batch '${batchId}'`,
+      );
+    }
+
+    // If lot_id is changing, validate the new lot exists
+    if (updateDto.lot_id && updateDto.lot_id !== existing.lot_id) {
+      const lot = await this.lotModel
+        .findOne({ lot_id: updateDto.lot_id })
+        .exec();
+      if (!lot) {
+        throw new NotFoundException(
+          `Inventory lot with ID '${updateDto.lot_id}' not found`,
+        );
+      }
+    }
+
+    const updated = await this.componentRepository.update(
+      componentId,
+      updateDto,
+    );
+    this.logger.log(`Batch component updated successfully: ${componentId}`);
+
+    return this.toResponseDto(updated);
+  }
+
+  /**
+   * Delete a batch component
+   * @param batchId - Parent batch UUID
+   * @param componentId - Component UUID
+   * @returns Deletion confirmation message
+   * @throws NotFoundException - If component not found within the given batch
+   */
+  async remove(
+    batchId: string,
+    componentId: string,
+  ): Promise<{ message: string }> {
+    this.logger.log(`Deleting batch component: ${componentId}`);
+
+    const existing = await this.componentRepository.findOneByBatch(
+      batchId,
+      componentId,
+    );
+    if (!existing) {
+      throw new NotFoundException(
+        `Component '${componentId}' not found in batch '${batchId}'`,
+      );
+    }
+
+    await this.componentRepository.remove(componentId);
+    this.logger.log(`Batch component deleted successfully: ${componentId}`);
+
+    return { message: `Batch component '${componentId}' deleted successfully` };
+  }
+
+  /**
+   * Convert a BatchComponent document to response DTO
+   * Handles Decimal128 → string serialization for quantities
+   */
+  private toResponseDto(component: any): BatchComponentResponseDto {
+    return {
+      _id: component._id?.toString() ?? '',
+      component_id: component.component_id,
+      batch_id: component.batch_id,
+      lot_id: component.lot_id,
+      planned_quantity: component.planned_quantity?.toString() ?? '0',
+      actual_quantity: component.actual_quantity?.toString(),
+      unit_of_measure: component.unit_of_measure,
+      addition_date: component.addition_date,
+      added_by: component.added_by,
+      created_date: component.created_date,
+      modified_date: component.modified_date,
+    };
+  }
+}
