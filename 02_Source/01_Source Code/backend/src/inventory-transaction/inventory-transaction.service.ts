@@ -5,9 +5,9 @@ import { MaterialRepository } from '../material/material.repository';
 import { KafkaService } from '../event-bus/kafka.service';
 import {
   CreateInventoryTransactionDto,
-  UpdateInventoryTransactionDto,
   TransactionType,
-} from './dto';
+} from './dto/create-inventory-transaction.dto';
+import { UpdateInventoryTransactionDto } from './dto/update-inventory-transaction.dto';
 
 @Injectable()
 export class InventoryTransactionService {
@@ -19,7 +19,13 @@ export class InventoryTransactionService {
   ) {}
 
   async create(transactionDto: CreateInventoryTransactionDto) {
-    // tiền xử lý chung: gán ngày giao dịch mặc định, tạo uuid, ...
+    // tiền xử lý chung: gán ngày giao dịch nếu chưa có, tạo transaction_id
+    if (!transactionDto.transaction_date) {
+      transactionDto.transaction_date = new Date().toISOString();
+    }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    transactionDto.transaction_id = require('uuid').v4();
+
     switch (transactionDto.transaction_type) {
       case TransactionType.Receipt:
         return this.handleReceipt(transactionDto);

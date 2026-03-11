@@ -19,6 +19,11 @@ export enum TransactionType {
 }
 
 export class CreateInventoryTransactionDto {
+  // nếu client không cung cấp thì service sẽ tự sinh UUID
+  @IsUUID()
+  @IsOptional()
+  transaction_id?: string;
+
   @IsUUID()
   @IsNotEmpty()
   lot_id: string;
@@ -27,6 +32,7 @@ export class CreateInventoryTransactionDto {
   @IsNotEmpty()
   transaction_type: TransactionType;
 
+  // số lượng có thể âm hoặc dương; dấu sẽ được hiểu theo loại giao dịch
   @IsNumber()
   @IsNotEmpty()
   quantity: number;
