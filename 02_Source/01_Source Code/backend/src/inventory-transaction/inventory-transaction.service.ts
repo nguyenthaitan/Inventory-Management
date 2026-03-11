@@ -19,7 +19,7 @@ export class InventoryTransactionService {
   ) {}
 
   async create(transactionDto: CreateInventoryTransactionDto) {
-    // common preprocessing: set transaction_date default, uuid etc.
+    // tiền xử lý chung: gán ngày giao dịch mặc định, tạo uuid, ...
     switch (transactionDto.transaction_type) {
       case TransactionType.Receipt:
         return this.handleReceipt(transactionDto);
@@ -45,55 +45,55 @@ export class InventoryTransactionService {
     return this.repo.findOne(id);
   }
   async update(id: string, dto: UpdateInventoryTransactionDto) {
-    // could restrict which fields can be updated, logging etc.
+    // có thể giới hạn trường được phép sửa, ghi log thay đổi, v.v.
     return this.repo.update(id, dto);
   }
   async remove(id: string) {
     return this.repo.remove(id);
   }
 
-  // helpers
+  // các hàm hỗ trợ theo loại
   protected async handleReceipt(dto: CreateInventoryTransactionDto) {
-    // increase quantity on specified lot
+    // tăng số lượng của lô được chỉ định
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
     return created;
   }
 
   protected async handleUsage(dto: CreateInventoryTransactionDto) {
-    // check stock and decrement, apply FIFO/FEFO
-    // select lots if lot_id missing
-    // ensure not negative
-    // simplified: just save
+    // kiểm tra tồn kho và giảm, áp dụng FIFO/FEFO
+    // nếu thiếu lot_id thì chọn lô tự động
+    // đảm bảo không âm tồn
+    // đơn giản: chỉ lưu bản ghi
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
     return created;
   }
 
   protected async handleSplit(dto: CreateInventoryTransactionDto) {
-    // create a split transaction and new child lot(s)
+    // tạo giao dịch split và lô con mới
     const created = await this.repo.create(dto);
-    // additional lot creation skipped
+    // bỏ qua phần tạo lô bổ sung
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
     return created;
   }
 
   protected async handleAdjustment(dto: CreateInventoryTransactionDto) {
-    // +/- quantity with reason
+    // điều chỉnh +/- số lượng kèm lý do
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
     return created;
   }
 
   protected async handleTransfer(dto: CreateInventoryTransactionDto) {
-    // could call handleUsage and handleReceipt or a single transfer record
+    // có thể gọi handleUsage + handleReceipt hoặc dùng một bản ghi transfer
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
     return created;
   }
 
   protected async handleDisposal(dto: CreateInventoryTransactionDto) {
-    // similar to usage but mark disposal
+    // giống usage nhưng đánh dấu là hủy
     const created = await this.repo.create(dto);
     await this.kafka.publish('inventory-transactions', [{ value: created }]);
     return created;
