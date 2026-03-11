@@ -6,7 +6,7 @@ Thiết lập hệ thống Kafka làm event bus cho toàn bộ ứng dụng (bac
 
 ## Tổng quan
 
-Kafka sẽ chạy trong cụm (cluster) gồm ít nhất 3 broker để đảm bảo high‑availability và replication. Sử dụng ZooKeeper hoặc Kafka Raft (kRaft) tuỳ phiên bản; ở version hiện tại chọn kRaft để giảm phụ thuộc.
+Kafka sẽ chạy trong cụm (cluster) gồm ít nhất 3 broker để đảm bảo high‑availability và replication. Phiên bản hiện tại sử dụng **Kafka Raft (kRaft)** cho control plane, loại bỏ hoàn toàn ZooKeeper để giảm phụ thuộc vận hành.
 
 Kết nối với NestJS backend qua thư viện `kafkajs` hoặc `@nestjs/microservices` Kafka transport. Các service sẽ publish sự kiện và (nếu cần) consumer để xử lý.
 
@@ -19,8 +19,7 @@ Kết nối với NestJS backend qua thư viện `kafkajs` hoặc `@nestjs/micro
 
 2. **Docker Compose file**
    - Tạo `infra/kafka/docker-compose.yml` với dịch vụ:
-     - `kafka-broker`: image `confluentinc/cp-kafka`, exposes 9092.
-     - `zookeeper`: nếu không dùng kRaft, version tương thích.
+     - `kafka-broker`: image `confluentinc/cp-kafka`, exposes 9092. # cấu hình kRaft, không cần dịch vụ ZooKeeper.
    - Cấu hình lưu trữ dữ liệu (volumes) và environment variables: `KAFKA_BROKER_ID`, `KAFKA_LISTENERS`, `KAFKA_ADVERTISED_LISTENERS`, `KAFKA_KRAFT_BROKER_ID`, `KAFKA_CONTROLLER_QUORUM_VOTERS` (kRaft), `KAFKA_AUTO_CREATE_TOPICS_ENABLE=false`.
    - Tạo topic mặc định `inventory-transactions` và `audit-logs` bằng lệnh `kafka-topics` trong compose entrypoint.
 
