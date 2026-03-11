@@ -14,20 +14,26 @@ describe('KafkaService', () => {
     jest.clearAllMocks();
   });
 
-  it('should send string messages unchanged', async () => {
-    const result = await svc.publish('t', [{ value: 'hello' }]);
+  it('should send event objects as JSON', async () => {
+    const event = { type: 'x', payload: { foo: 'bar' } };
+    const result = await svc.publish('t', [{ value: event }]);
     expect(mockProducer.send).toHaveBeenCalledWith({
       topic: 't',
-      messages: [{ value: 'hello' }],
+      messages: [{ value: JSON.stringify(event) }],
     });
     expect(result).toEqual([{ topicName: 'foo' }]);
   });
 
-  it('should stringify non-string values', async () => {
-    await svc.publish('t', [{ value: { a: 1 } }]);
+  it('should handle multiple events and optional keys', async () => {
+    const event1 = { type: 'a', payload: 1 };
+    const event2 = { type: 'b', payload: 'x' };
+    await svc.publish('t', [{ value: event1 }, { key: 'k', value: event2 }]);
     expect(mockProducer.send).toHaveBeenCalledWith({
       topic: 't',
-      messages: [{ value: JSON.stringify({ a: 1 }) }],
+      messages: [
+        { value: JSON.stringify(event1) },
+        { key: 'k', value: JSON.stringify(event2) },
+      ],
     });
   });
 

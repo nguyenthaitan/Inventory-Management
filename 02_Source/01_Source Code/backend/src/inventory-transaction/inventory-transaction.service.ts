@@ -68,7 +68,7 @@ export class InventoryTransactionService {
     // tăng số lượng của lô được chỉ định
     const created = await this.repo.create(dto);
     await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: created },
+      { value: { type: dto.transaction_type, payload: created } },
     ]);
     return created;
   }
@@ -84,7 +84,7 @@ export class InventoryTransactionService {
     // đơn giản: chỉ lưu bản ghi
     const created = await this.repo.create(dto);
     await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: created },
+      { value: { type: dto.transaction_type, payload: created } },
     ]);
     return created;
   }
@@ -98,7 +98,7 @@ export class InventoryTransactionService {
     const created = await this.repo.create(dto);
     // bỏ qua phần tạo lô bổ sung
     await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: created },
+      { value: { type: dto.transaction_type, payload: created } },
     ]);
     return created;
   }
@@ -111,7 +111,7 @@ export class InventoryTransactionService {
     // điều chỉnh +/- số lượng kèm lý do
     const created = await this.repo.create(dto);
     await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: created },
+      { value: { type: dto.transaction_type, payload: created } },
     ]);
     return created;
   }
@@ -124,7 +124,7 @@ export class InventoryTransactionService {
     // có thể gọi handleUsage + handleReceipt hoặc dùng một bản ghi transfer
     const created = await this.repo.create(dto);
     await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: created },
+      { value: { type: dto.transaction_type, payload: created } },
     ]);
     return created;
   }
@@ -137,7 +137,7 @@ export class InventoryTransactionService {
     }
     const created = await this.repo.create(dto);
     await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: created },
+      { value: { type: dto.transaction_type, payload: created } },
     ]);
     return created;
   }

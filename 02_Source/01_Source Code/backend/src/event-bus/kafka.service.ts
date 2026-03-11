@@ -15,11 +15,15 @@ export class KafkaService implements OnModuleDestroy {
    * @param messages danh sách object chứa key (tuỳ chọn) và value (có thể là bất kỳ, sẽ stringify nếu không phải string)
    * @returns metadata của các bản ghi đã gửi
    */
-  async publish(topic: string, messages: Array<{ key?: string; value: any }>) {
-    // kafkajs yêu cầu value phải là Buffer hoặc string
+  // mỗi message chứa key tuỳ chọn và value kiểu Event
+  async publish(
+    topic: string,
+    messages: Array<{ key?: string; value: { type: string; payload: any } }>,
+  ) {
+    // stringify event objects directly
     const kafkaMsgs = messages.map((m) => ({
       key: m.key,
-      value: typeof m.value === 'string' ? m.value : JSON.stringify(m.value),
+      value: JSON.stringify(m.value),
     }));
     const result: RecordMetadata[] = await this.producer.send({
       topic,
