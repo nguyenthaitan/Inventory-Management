@@ -37,7 +37,7 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
      - `create-inventory-transaction.dto.ts`:
        - properties: `lot_id`, `transaction_type`, `quantity`, `unit_of_measure`, `transaction_date` (optional), `reference_number` (optional), `performed_by`, `notes` (optional).
      - `update-inventory-transaction.dto.ts`:
-     - properties allowed: tất cả các trường của transaction ngoại trừ `transaction_id`, `created_date`, `modified_date` (những trường không nên thay đổi qua patch). Đây là cấu hình ban đầu để đơn giản; service có thể tiếp tục hạn chế thêm theo nhu cầu audit.
+       - properties allowed: tất cả các trường của transaction ngoại trừ `transaction_id`, `created_date`, `modified_date` (những trường không nên thay đổi qua patch). Đây là cấu hình ban đầu để đơn giản; service có thể tiếp tục hạn chế thêm theo nhu cầu audit.
    - Validation decorators:
      - `@IsUUID()` cho `transaction_id`, `lot_id`, `performed_by` nếu dùng UUIDs.
      - `@IsEnum(TransactionType)` cho `transaction_type`.
