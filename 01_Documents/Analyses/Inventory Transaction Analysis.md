@@ -62,11 +62,12 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
        - `handleAdjustment(dto)` – áp dụng +/- quantity, lưu `reason` vào audit, không thay đổi logic khác.
        - `handleTransfer(dto)` – có thể gọi `handleUsage` cho nguồn và `handleReceipt` cho đích hoặc tạo transaction `Transfer` duy nhất và để listener cập nhật cả hai lot.
        - `handleDisposal(dto)` – tương tự `Usage` nhưng gắn thêm flag disposal và logic báo cáo hủy.
-     - Kiểm tra và áp dụng business rules trước khi commit:
-       - không cho stock âm sau `Usage`/`Disposal`;
-       - với `Receipt` và `Transfer` in-bound: update lot tồn theo đơn vị;
-       - với `Split` phải tạo lot con và giữ quan hệ parent/child (được lưu trên `InventoryLot.parent_lot_id` theo domain model).
-     - Publish sự kiện (event-bus) sau khi transaction thành công để cập nhật `InventoryLot`/Material stock, logs, search index.
+
+   - Kiểm tra và áp dụng business rules trước khi commit:
+     - không cho stock âm sau `Usage`/`Disposal`;
+     - với `Receipt` và `Transfer` in-bound: update lot tồn theo đơn vị;
+     - với `Split` phải tạo lot con và giữ quan hệ parent/child (được lưu trên `InventoryLot.parent_lot_id` theo domain model).
+   - Publish sự kiện (event-bus) sau khi transaction thành công để cập nhật `InventoryLot`/Material stock, logs, search index.
    - Nhúng repository và các repository liên quan (`InventoryLotRepository`, `MaterialRepository`) bằng DI.
 
 4. **Controller**
