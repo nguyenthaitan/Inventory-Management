@@ -85,13 +85,13 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
    - Tạo `inventory-transaction.module.ts`, import schema, provider cho repository, service, controller.
    - Đăng ký vào `app.module.ts` nếu cần hoặc lazy-load theo feature module pattern.
 
-6. **Validation & Business Rules**
+6. **Validation & Business Rules** (Cần xem kĩ lại sau)
    - Sử dụng `ValidationPipe` để validate DTOs.
    - Thực hiện kiểm tra stock trong service trước khi commit `OUTBOUND`. Nếu không đủ, trả lỗi rõ ràng (`409 Conflict` hoặc domain error).
    - Đảm bảo atomicity: dùng transaction session của Mongo / two-phase update khi cần (ví dụ rollback khi cập nhật lot thất bại).
 
 7. **Testing**
-   - Unit tests cho `inventory-transaction.service.spec.ts` (kiểm tra rules: outbound fail when insufficient stock, transfer creates two transactions, adjustment logs reason).
+   - Unit tests cho `inventory-transaction.service.spec.ts`.
    - E2E tests trong `test/app.e2e-spec.ts` hoặc thêm file e2e riêng để cover create->affect-lot workflow.
 
 8. **Frontend tích hợp**
