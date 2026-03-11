@@ -7,6 +7,7 @@ import { MaterialModule } from './material/material.module';
 import { InventoryLotModule } from './inventory-lot/inventory-lot.module';
 import { ProductionBatchModule } from './production-batch/production-batch.module';
 import { KafkaModule } from './event-bus/kafka.module';
+import { InventoryTransactionModule } from './inventory-transaction/inventory-transaction.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { KafkaModule } from './event-bus/kafka.module';
     MaterialModule,
     InventoryLotModule,
     ProductionBatchModule,
+    InventoryTransactionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
