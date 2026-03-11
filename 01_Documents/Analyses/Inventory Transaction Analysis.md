@@ -95,7 +95,7 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
    - E2E tests trong `test/app.e2e-spec.ts` hoặc thêm file e2e riêng để cover create->affect-lot workflow.
 
 8. **Frontend tích hợp**
-   - Cập nhật/tạo `transactionService.ts` ở frontend để gọi API mới.
+   - Cập nhật/tạo `inventoryTransactionService.ts` ở frontend để gọi API mới.
    - Xây dựng các màn hình cần quan tâm, sử dụng Tailwind CSS cho UI:
      - Manager:
        - Import/Export Management Screen
