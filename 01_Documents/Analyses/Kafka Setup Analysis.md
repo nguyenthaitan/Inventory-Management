@@ -48,23 +48,10 @@ Kết nối với NestJS backend qua thư viện `kafkajs` hoặc `@nestjs/micro
    - Tạo user service accounts và sử dụng ACL để hạn chế quyền access.
    - Cấu hình `KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM` và cung cấp certs qua Kubernetes secret.
 
-7. **Testing & Development**
+7. **Testing & Development** (Đã xong, ngoại trừ step cuối đợi khi nào cần cải tiến mới làm)
    - Thêm script npm `kafka:up`/`kafka:down` để khởi động/dừng container phát triển.
    - Viết tests đơn vị cho producer (mocks kafkajs) và E2E tests thực tế khởi động broker in‑memory hoặc docker.
    - Đảm bảo consumer xử lý message không block đường chính (dùng hợp từ `rxjs` hoặc services queue).
-
-8. **Monitoring & Logging**
-   - Cài Prometheus JMX exporter và Grafana dashboard.
-   - Thu thập metrics: broker status, topic lag, controller changes.
-   - Sử dụng filebeat/ELK để thu log broker.
-
-9. **Migration & Bootstrap**
-   - Nếu có cluster hiện hữu, chuẩn bị kế hoạch chuyển đổi (mirror maker) sang cluster mới.
-   - Tạo script `bootstrap-kafka.sh` chạy các lệnh `kafka-topics` và `kafka-configs` để tạo topic/ACL ban đầu.
-
-10. **Tài liệu & Sử dụng**
-    - Viết README trong `infra/kafka` hướng dẫn developer: cách chạy, gọi topic, thêm consumer.
-    - Ghi chú các topic phải tồn tại và policy retention/cleanup.
 
 ## Ghi chú
 
