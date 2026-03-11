@@ -37,8 +37,10 @@ Kết nối với NestJS backend qua thư viện `kafkajs` hoặc `@nestjs/micro
    - Nếu cần consumer, tạo `KafkaConsumerService` chạy trong background (tích hợp với `onModuleInit`).
    - Bảo đảm topic names được đưa vào enum hoặc constant để tránh typo.
 
-5. **Event schema**
+5. **Định nghĩa sự kiện & dispatcher**
    - Chuẩn hoá định dạng message: `type`, `payload`, `timestamp`, `trace_id`.
+   - Định nghĩa interface `Event` và `Handler` để mô tả sự kiện và các bộ xử lý.
+   - Tạo class `Dispatcher` (hoặc registry) với các phương thức `register(handler)` và `dispatch(evt)` để điều phối event tới handler phù hợp.
    - Sử dụng JSON với schema validation (ajv) hoặc Avro cho production.
    - Định nghĩa các loại event: `InventoryTransactionCreated`, `InventoryTransactionUpdated`, `AuditLogCreated`, ...
 
