@@ -7,7 +7,7 @@ Xây dựng module `Inventory Transaction` trong backend NestJS để quản lý
 ## Các bước thực hiện
 
 1. **Thiết kế schema và DTO**
-   - Vị trí: tạo Mongoose schema `inventory-transaction.schema.ts` dưới `backend/src/inventory-transaction/schemas` (follow module folder pattern).
+   - Vị trí: tạo Mongoose schema `inventory-transaction.schema.ts` dưới `backend/src/schemas`.
    - Thiết kế hướng theo Domain Model (lot-centric): mỗi transaction liên kết tới một `InventoryLot` (lot_id) và có `transaction_type` rõ ràng.
    - Trường chính (gợi ý tên/kiểu):
      - `transaction_id` (string, UUID v4)
