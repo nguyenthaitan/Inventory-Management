@@ -1,0 +1,76 @@
+# Kafka Setup Analysis
+
+## Mục tiêu
+
+Thiết lập hệ thống Kafka làm event bus cho toàn bộ ứng dụng (backend services, analytics, search index) nhằm đảm bảo tính mở rộng, bền vững và hỗ trợ các luồng dữ liệu bất đồng bộ như: thông báo giao dịch tồn kho, log audit, cập nhật search index, gửi sự kiện tới service khác.
+
+## Tổng quan
+
+Kafka sẽ chạy trong cụm (cluster) gồm ít nhất 3 broker để đảm bảo high‑availability và replication. Sử dụng ZooKeeper hoặc Kafka Raft (kRaft) tuỳ phiên bản; ở version hiện tại chọn kRaft để giảm phụ thuộc.
+
+Kết nối với NestJS backend qua thư viện `kafkajs` hoặc `@nestjs/microservices` Kafka transport. Các service sẽ publish sự kiện và (nếu cần) consumer để xử lý.
+
+## Các bước thiết lập
+
+1. **Chuẩn bị môi trường**
+   - Quyết định dùng Docker Compose (development) và Kubernetes (production).
+   - Tạo folder `infra/kafka` trong repo để chứa cấu hình.
+   - Chọn phiên bản Kafka (ví dụ `3.5.0` hoặc latest compatible với kRaft).
+
+2. **Docker Compose file**
+   - Tạo `infra/kafka/docker-compose.yml` với dịch vụ:
+     - `kafka-broker`: image `confluentinc/cp-kafka`, exposes 9092.
+     - `zookeeper`: nếu không dùng kRaft, version tương thích.
+   - Cấu hình lưu trữ dữ liệu (volumes) và environment variables: `KAFKA_BROKER_ID`, `KAFKA_LISTENERS`, `KAFKA_ADVERTISED_LISTENERS`, `KAFKA_KRAFT_BROKER_ID`, `KAFKA_CONTROLLER_QUORUM_VOTERS` (kRaft), `KAFKA_AUTO_CREATE_TOPICS_ENABLE=false`.
+   - Tạo topic mặc định `inventory-transactions` và `audit-logs` bằng lệnh `kafka-topics` trong compose entrypoint.
+
+3. **Kubernetes manifests** (nếu có)
+   - Tạo `infra/kafka/k8s/` chứa `statefulset.yaml`, `service.yaml`, `configmap.yaml`.
+   - Sử dụng PersistentVolumeClaims cho mỗi broker.
+   - Thiết lập readiness/liveness probes và anti-affinity để tránh single point of failure.
+   - Thêm CronJob để tạo topic nếu chưa tồn tại.
+
+4. **Client integration (NestJS)**
+   - Cài đặt `npm install kafkajs` (hoặc `@nestjs/microservices` nếu dùng transport).
+   - Tạo `shared/kafka/kafka.module.ts` cung cấp producer-global singleton và helper service.
+   - Định nghĩa `KafkaConfigService` trong `config/` để đọc từ `process.env`.
+   - Implement `KafkaProducerService` với phương thức `publish(topic, message)` bao gồm retry/backoff.
+   - Nếu cần consumer, tạo `KafkaConsumerService` chạy trong background (tích hợp với `onModuleInit`).
+   - Bảo đảm topic names được đưa vào enum hoặc constant để tránh typo.
+
+5. **Event schema**
+   - Chuẩn hoá định dạng message: `type`, `payload`, `timestamp`, `trace_id`.
+   - Sử dụng JSON với schema validation (ajv) hoặc Avro cho production.
+   - Định nghĩa các loại event: `InventoryTransactionCreated`, `InventoryTransactionUpdated`, `AuditLogCreated`, ...
+
+6. **Security & Network**
+   - Bật SASL/SSL khi chạy production.
+   - Tạo user service accounts và sử dụng ACL để hạn chế quyền access.
+   - Cấu hình `KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM` và cung cấp certs qua Kubernetes secret.
+
+7. **Testing & Development**
+   - Thêm script npm `kafka:up`/`kafka:down` để khởi động/dừng container phát triển.
+   - Viết tests đơn vị cho producer (mocks kafkajs) và E2E tests thực tế khởi động broker in‑memory hoặc docker.
+   - Đảm bảo consumer xử lý message không block đường chính (dùng hợp từ `rxjs` hoặc services queue).
+
+8. **Monitoring & Logging**
+   - Cài Prometheus JMX exporter và Grafana dashboard.
+   - Thu thập metrics: broker status, topic lag, controller changes.
+   - Sử dụng filebeat/ELK để thu log broker.
+
+9. **Migration & Bootstrap**
+   - Nếu có cluster hiện hữu, chuẩn bị kế hoạch chuyển đổi (mirror maker) sang cluster mới.
+   - Tạo script `bootstrap-kafka.sh` chạy các lệnh `kafka-topics` và `kafka-configs` để tạo topic/ACL ban đầu.
+
+10. **Tài liệu & Sử dụng**
+    - Viết README trong `infra/kafka` hướng dẫn developer: cách chạy, gọi topic, thêm consumer.
+    - Ghi chú các topic phải tồn tại và policy retention/cleanup.
+
+## Ghi chú
+
+- Chọn chế độ replication factor ≥ 3 và min.insync.replicas = 2.
+- Giữ retention phù hợp (ví dụ 7–30 ngày) hoặc bật compaction cho các topic metadata.
+- Luôn kiểm tra latency trước khi thêm consumer mới.
+- Một số service backend có thể dùng Kafka Connect để sink vào Elasticsearch/DB.
+
+> File này lưu trữ kế hoạch và phân tích chi tiết để thiết lập Kafka cho dự án.
