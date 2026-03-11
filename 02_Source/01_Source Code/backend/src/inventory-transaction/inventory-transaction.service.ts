@@ -26,6 +26,41 @@ export class InventoryTransactionService {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     transactionDto.transaction_id = require('uuid').v4();
 
+    // sign rule per type: receipt>0, usage<0, disposal>0;
+    // split/adjustment/transfer !=0 (sign indicates direction)
+    switch (transactionDto.transaction_type) {
+      case TransactionType.Receipt:
+        if (transactionDto.quantity <= 0) {
+          throw new BadRequestException('receipt quantity must be positive');
+        }
+        break;
+      case TransactionType.Usage:
+        if (transactionDto.quantity >= 0) {
+          throw new BadRequestException('usage quantity must be negative');
+        }
+        break;
+      case TransactionType.Split:
+        if (transactionDto.quantity === 0) {
+          throw new BadRequestException('split quantity cannot be zero');
+        }
+        break;
+      case TransactionType.Disposal:
+        if (transactionDto.quantity <= 0) {
+          throw new BadRequestException('disposal quantity must be positive');
+        }
+        break;
+      case TransactionType.Adjustment:
+        if (transactionDto.quantity === 0) {
+          throw new BadRequestException('adjustment quantity cannot be zero');
+        }
+        break;
+      case TransactionType.Transfer:
+        if (transactionDto.quantity === 0) {
+          throw new BadRequestException('transfer quantity cannot be zero');
+        }
+        break;
+    }
+
     switch (transactionDto.transaction_type) {
       case TransactionType.Receipt:
         return this.handleReceipt(transactionDto);
