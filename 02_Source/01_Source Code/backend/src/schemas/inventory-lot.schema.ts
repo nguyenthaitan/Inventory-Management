@@ -11,17 +11,9 @@ export type InventoryLotDocument = InventoryLot & Document;
 
 const options: SchemaOptions = {
   timestamps: { createdAt: 'created_date', updatedAt: 'modified_date' },
-  toJSON: {
-    transform: (_doc: unknown, ret: Record<string, unknown>) => {
-      if (ret['quantity'] != null) {
-        ret['quantity'] = parseFloat((ret['quantity'] as { toString(): string }).toString());
-      }
-      return ret;
-    },
-  },
 };
 
-@Schema({ collection: 'inventory_lots', ...options })
+@Schema(options)
 export class InventoryLot {
   @Prop({ type: String, required: true, unique: true, maxlength: 36 })
   lot_id: string;
@@ -49,7 +41,7 @@ export class InventoryLot {
 
   @Prop({
     type: String,
-    enum: ['Quarantine', 'Accepted', 'Rejected', 'Depleted', 'Hold'],
+    enum: ['Quarantine', 'Accepted', 'Rejected', 'Depleted'],
     required: true,
   })
   status: string;
