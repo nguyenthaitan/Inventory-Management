@@ -1,23 +1,7 @@
 import React, { useState } from "react";
 import { Filter, Download, Eye, Edit2 } from "lucide-react";
-
-export interface InventoryTransaction {
-  transaction_id: string;
-  lot_id: string;
-  transaction_type:
-    | "Receipt"
-    | "Usage"
-    | "Split"
-    | "Adjustment"
-    | "Transfer"
-    | "Disposal";
-  quantity: number;
-  unit_of_measure: string;
-  transaction_date: string; // ISO date string
-  reference_number?: string;
-  performed_by: string;
-  notes?: string;
-}
+import type { InventoryTransaction } from "../../types/inventoryTransaction";
+import { fetchTransactions } from "../../services/inventoryTransactionService";
 
 interface Props {
   title?: string;
@@ -34,10 +18,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
       setLoading(true);
       setError(null);
       try {
-        // TODO: replace with real API call
-        const resp = await fetch("/api/inventory-transactions");
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data: InventoryTransaction[] = await resp.json();
+        const data = await fetchTransactions();
         setTransactions(data);
       } catch (err: any) {
         console.error(err);
@@ -51,7 +32,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
   const filtered = transactions.filter((t) => {
     const term = search.toLowerCase();
     return (
-      t.transaction_id.toLowerCase().includes(term) ||
+      t.transaction_id?.toLowerCase().includes(term) ||
       t.performed_by.toLowerCase().includes(term)
     );
   });
