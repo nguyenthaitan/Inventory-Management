@@ -13,6 +13,15 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [showFilter, setShowFilter] = useState(false);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  const applyDateFilter = () => {
+    // placeholder: filter locally or trigger new fetch
+    setShowFilter(false);
+  };
+
   React.useEffect(() => {
     async function load() {
       setLoading(true);
@@ -128,8 +137,11 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
           placeholder="Tìm kiếm theo mã hoặc tên..."
           className="w-full sm:w-1/2 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         />
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all">
+        <div className="relative flex gap-2">
+          <button
+            onClick={() => setShowFilter((v) => !v)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all"
+          >
             <Filter size={16} />
             Bộ lọc
           </button>
@@ -137,6 +149,33 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
             <Download size={16} />
             Xuất Excel
           </button>
+
+          {showFilter && (
+            <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold">Từ ngày</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded"
+                />
+                <label className="text-xs font-bold">Đến ngày</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded"
+                />
+                <button
+                  onClick={() => applyDateFilter()}
+                  className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700"
+                >
+                  Áp dụng
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
