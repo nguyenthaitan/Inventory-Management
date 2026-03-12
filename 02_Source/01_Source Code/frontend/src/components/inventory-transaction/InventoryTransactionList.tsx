@@ -12,6 +12,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
   const [transactions, setTransactions] = useState<InventoryTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0); // total items matching server filter
 
   const [showFilter, setShowFilter] = useState(false);
   const [fromDate, setFromDate] = useState("");
@@ -32,8 +33,10 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchTransactions({ perPage: pageSize, page });
-        setTransactions(data);
+        const result: Awaited<ReturnType<typeof fetchTransactions>> =
+          await fetchTransactions({ perPage: pageSize, page });
+        setTransactions(result.items);
+        setTotalCount(result.total);
       } catch (err: any) {
         console.error(err);
         setError(err.message || "Lỗi khi tải dữ liệu");
@@ -56,10 +59,9 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
     return matchSearch && afterFrom && beforeTo;
   });
 
-  // totalPages remains based on client-side filter count; backend dictates which items are present
-  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-  // since server already returns per-page data, we don't slice any further
-  const paged = filtered;
+  // compute pages from totalCount returned by server
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const paged = filtered; // we still filter the current page locally
 
   function renderBody() {
     if (loading) {
