@@ -4,7 +4,7 @@
  */
 
 // 1. Kết nối Database
-db = db.getSiblingDB("inventory_management_db");
+db = db.getSiblingDB("inventory");
 
 // 2. Dọn dẹp Database cũ (Cẩn thận khi sử dụng)
 const collections = [
@@ -222,6 +222,22 @@ db.inventory_transactions.insertMany([
     created_date: new Date(),
   },
 ]);
+// thêm nhiều giao dịch mẫu
+const extraTxns = [];
+for (let i = 2; i <= 30; i++) {
+  extraTxns.push({
+    transaction_id: `txn-uuid-${String(i).padStart(3,'0')}`,
+    lot_id: i % 2 === 0 ? "lot-uuid-001" : "lot-uuid-002",
+    transaction_type: ["Receipt","Usage","Adjustment"][i % 3],
+    quantity: NumberDecimal((Math.random() * 50 + 1).toFixed(3)),
+    unit_of_measure: "kg",
+    performed_by: i % 2 === 0 ? "jdoe" : "asmith",
+    transaction_date: new Date(2025, 0, i),
+    created_date: new Date(2025, 0, i),
+    notes: i % 5 === 0 ? "automated seed" : undefined,
+  });
+}
+db.inventory_transactions.insertMany(extraTxns);
 
 // Chèn Mẫu nhãn
 db.label_templates.insertOne({
