@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { InventoryTransactionDocument } from '../schemas/inventory-transaction.schema';
+import {
+  InventoryTransaction,
+  InventoryTransactionDocument,
+} from '../schemas/inventory-transaction.schema';
 
 export interface PaginationOptions {
   page?: number;
@@ -18,10 +21,9 @@ export interface FilterOptions {
 @Injectable()
 export class InventoryTransactionRepository {
   constructor(
-    @InjectModel('InventoryTransaction')
+    @InjectModel(InventoryTransaction.name)
     private readonly model: Model<InventoryTransactionDocument>,
   ) {}
-
   async findAll(
     filters: FilterOptions = {},
     pagination: PaginationOptions = { page: 1, limit: 20 },
