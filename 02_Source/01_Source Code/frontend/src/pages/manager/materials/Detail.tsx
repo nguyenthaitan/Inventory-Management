@@ -1,7 +1,7 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchMaterial } from '../../../services/materialService'
-import MaterialDetail from '../../../components/materials/MaterialDetail'
+import MaterialDetail from '../../../components/material/components/MaterialDetail'
 
 const Page: React.FC = () => {
   const { id } = useParams()

@@ -1,5 +1,5 @@
 import React from 'react'
-import MaterialList from '../../components/materials/MaterialList'
+import MaterialList from '../../components/material/components/MaterialList'
 
 const Page: React.FC = () => {
 	return (
