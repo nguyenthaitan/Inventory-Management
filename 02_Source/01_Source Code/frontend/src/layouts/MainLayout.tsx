@@ -63,19 +63,13 @@ const UserProfileSection = ({
 );
 
 export default function Layout() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const user = {
-    username: "John123",
-    role: "quality-control", // manager, quality-control, operator, it-admin
-  };
-
-  const handleLogout = () => {
-    // logout();
-    navigate("/");
-  };
+  // Lấy user từ localStorage
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
 
   // Hàm hiển thị tên vai trò trên giao diện
   const getDisplayNameFromUsername = (username?: string) => {
@@ -101,7 +95,7 @@ export default function Layout() {
         return "Kiểm soát chất lượng";
       case "operator":
         return "Nhân viên kho";
-      case "it-admin":
+      case "it_admin":
         return "Quản trị viên hệ thống";
       default:
         return "";
@@ -205,7 +199,7 @@ export default function Layout() {
             label: "Lịch sử",
           },
         ];
-      case "it-admin":
+      case "it_admin":
         return [
           {
             to: "/it-admin",
@@ -239,6 +233,14 @@ export default function Layout() {
   };
 
   const navItems = getNavItems();
+
+  // Thêm handleLogout
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
