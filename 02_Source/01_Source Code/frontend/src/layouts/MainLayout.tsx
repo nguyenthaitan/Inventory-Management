@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -22,6 +22,7 @@ import {
   FileSearch,
   ChevronRight,
   Tag,
+  FlaskConical,
 } from "lucide-react";
 
 interface NavItem {
@@ -143,6 +144,11 @@ export default function Layout() {
             icon: <Tag size={20} />,
             label: "Quản lý nhãn",
           },
+          {
+            to: "/manager/production-batches",
+            icon: <FlaskConical size={20} />,
+            label: "Lô sản xuất",
+          },
         ];
       case "quality-control":
         return [
@@ -175,24 +181,29 @@ export default function Layout() {
       case "operator":
         return [
           {
-            to: "/operator",
+            to: "/operator/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard",
           },
           {
-            to: "/operator/inbound",
+            to: "/operator/materials",
+            icon: <Package size={20} />,
+            label: "Quản lý nguyên liệu",
+          },
+          {
+            to: "/operator/product",
+            icon: <ArrowDownCircle size={20} />,
+            label: "Tạo sản phẩm",
+          },
+          {
+            to: "/operator/stock-in",
             icon: <ArrowDownCircle size={20} />,
             label: "Nhập kho",
           },
           {
-            to: "/operator/outbound",
+            to: "/operator/stock-out",
             icon: <ArrowUpCircle size={20} />,
             label: "Xuất kho",
-          },
-          {
-            to: "/operator/material",
-            icon: <Package size={20} />,
-            label: "Nhập vật liệu",
           },
           {
             to: "/operator/audit",
