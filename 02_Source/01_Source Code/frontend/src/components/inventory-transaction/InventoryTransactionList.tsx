@@ -17,17 +17,22 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const applyDateFilter = () => {
     // closing menu; filtering happens automatically via derived state below
     setShowFilter(false);
+    setPage(1);
   };
 
+  // reload whenever page or pageSize changes (backend will default perPage=20 if absent)
   React.useEffect(() => {
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchTransactions();
+        const data = await fetchTransactions({ perPage: pageSize, page });
         setTransactions(data);
       } catch (err: any) {
         console.error(err);
@@ -36,7 +41,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [page, pageSize]);
 
   const filtered = transactions.filter((t) => {
     const term = search.toLowerCase();
@@ -50,6 +55,11 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
 
     return matchSearch && afterFrom && beforeTo;
   });
+
+  // totalPages remains based on client-side filter count; backend dictates which items are present
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  // since server already returns per-page data, we don't slice any further
+  const paged = filtered;
 
   function renderBody() {
     if (loading) {
@@ -79,7 +89,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
         </tr>
       );
     }
-    return filtered.map((t) => (
+    return paged.map((t) => (
       <tr
         key={t.transaction_id}
         className="border-t border-gray-50 hover:bg-blue-50/30 transition-colors"
@@ -211,6 +221,46 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
           </thead>
           <tbody>{renderBody()}</tbody>
         </table>
+        {/* pagination controls */}
+        <div className="px-5 py-3 flex items-center justify-between bg-gray-50">
+          <div className="flex items-center gap-2">
+            <span className="text-xs">Hiển thị</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="text-xs border border-gray-200 rounded px-2 py-1"
+            >
+              {[10, 20, 50].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs">mục mỗi trang</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-2 py-1 text-xs border rounded disabled:opacity-50"
+            >
+              &lt;
+            </button>
+            <span className="text-xs">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-2 py-1 text-xs border rounded disabled:opacity-50"
+            >
+              &gt;
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
