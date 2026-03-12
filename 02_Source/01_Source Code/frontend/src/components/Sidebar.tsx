@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Package, BarChart3, ClipboardCheck, ShieldCheck, FileText, FileSearch, User, LogOut } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+// import { NavLink } from 'react-router-dom';
 
 const navItems = [
   { to: '/qc/dashboard', label: 'Tổng quan chất lượng', icon: BarChart3 },

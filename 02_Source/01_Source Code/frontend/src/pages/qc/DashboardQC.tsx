@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FlaskConical, Package, ClipboardList, BarChart3 } from 'lucide-react';
+// import { FlaskConical, Package, ClipboardList, BarChart3 } from 'lucide-react';
 import { getDashboardKPI, getInventoryLots } from '../../services/qcServices';
 import type { DashboardKPI, InventoryLot } from '../../types/qc';
 

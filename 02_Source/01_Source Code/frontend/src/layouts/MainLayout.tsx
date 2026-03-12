@@ -69,7 +69,7 @@ export default function Layout() {
 
   const user = {
     username: "John123",
-    role: "quality-control",
+    role: "quality-control", // manager, quality-control, operator, it-admin
   };
 
   const handleLogout = () => {

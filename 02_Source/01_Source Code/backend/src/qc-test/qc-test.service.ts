@@ -13,6 +13,7 @@ import {
 import { CreateQCTestDto } from './dto/create-qc-test.dto';
 import { UpdateQCTestDto } from './dto/update-qc-test.dto';
 import { QCDecisionDto } from './dto/qc-decision.dto';
+import {InventoryLotStatus} from "../inventory-lot/inventory-lot.dto";
 
 // TODO [Workflow B]: After ProductionBatchModule is ready, inject ProductionBatchService
 // and call QCTestService.createTest() after batch QC completes.
@@ -63,7 +64,7 @@ export class QCTestService {
   // TODO: replace with real DB findOneAndUpdate (status) via InventoryLotService
   private mockUpdateLotStatus(
     lot_id: string,
-    status: string,
+    status: InventoryLotStatus,
   ): Promise<InventoryLotDocument> {
     return Promise.resolve(this._mockLot(lot_id, { status }));
   }
@@ -167,12 +168,12 @@ export class QCTestService {
       updateData,
     );
 
-    const lotStatus =
+    const lotStatus: InventoryLotStatus =
       dto.decision === 'Accepted'
-        ? 'Accepted'
+        ? InventoryLotStatus.ACCEPTED
         : dto.decision === 'Rejected'
-          ? 'Rejected'
-          : 'Hold';
+          ? InventoryLotStatus.REJECTED
+          : InventoryLotStatus.QUARANTINE;
 
     const lot = await this.mockUpdateLotStatus(lot_id, lotStatus); // TODO: delegate to InventoryLotService
 
@@ -195,7 +196,7 @@ export class QCTestService {
 
       // TODO: delegate to InventoryLotService.updateLot()
       const lot = await this.mockUpdateLot(lot_id, {
-        status: 'Accepted',
+        status: InventoryLotStatus.ACCEPTED,
         expiration_date: new Date(dto.new_expiry_date),
       });
 
@@ -212,7 +213,7 @@ export class QCTestService {
 
       return lot;
     } else {
-      const lot = await this.mockUpdateLotStatus(lot_id, 'Depleted'); // TODO: delegate to InventoryLotService
+      const lot = await this.mockUpdateLotStatus(lot_id, InventoryLotStatus.DEPLETED); // TODO: delegate to InventoryLotService
 
       await this.repository.create({
         test_id: uuidv4(),

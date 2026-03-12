@@ -32,6 +32,7 @@ export interface InventoryLot {
   created_date?: string;
   modified_date?: string;
   unit_of_measure?: string;
+  location?: string;
 }
 
 // ── KPI / Reporting ──────────────────────────────────────────────────────────

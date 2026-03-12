@@ -9,7 +9,7 @@ const options: SchemaOptions = {
 
 @Schema({ collection: 'qc_tests' })
 export class QCTest {
-  @Prop({ type: String, required: true, unique: true, maxlength: 36 })
+  @Prop({ type: String, required: true, maxlength: 36 })
   test_id: string;
 
   @Prop({ type: String, required: true, maxlength: 36 })

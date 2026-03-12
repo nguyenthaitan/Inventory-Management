@@ -13,10 +13,10 @@ const options: SchemaOptions = {
  */
 @Schema(options)
 export class Material {
-  @Prop({ type: String, required: true, unique: true, maxlength: 20 })
+  @Prop({ type: String, required: true, maxlength: 20 })
   material_id: string;
 
-  @Prop({ type: String, required: true, unique: true, maxlength: 20 })
+  @Prop({ type: String, required: true, maxlength: 20 })
   part_number: string;
 
   @Prop({ type: String, required: true, maxlength: 100 })

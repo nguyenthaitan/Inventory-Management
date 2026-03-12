@@ -17,7 +17,7 @@ import { AiModule } from './ai/ai.module';
     InventoryLotModule,
     ProductionBatchModule,
     QCTestModule,
-    AiModule,
+    // AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
