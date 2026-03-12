@@ -27,9 +27,9 @@ import {
 export class InventoryTransactionModule {
   constructor(
     private readonly dispatcher: Dispatcher,
-    private readonly adjustmentHandler: InventoryLotChangeHandler,
+    private readonly inventoryLotChangeHandler: InventoryLotChangeHandler,
   ) {
     // đăng ký handler khi khởi động
-    this.dispatcher.register(this.adjustmentHandler);
+    this.dispatcher.register(this.inventoryLotChangeHandler);
   }
 }
