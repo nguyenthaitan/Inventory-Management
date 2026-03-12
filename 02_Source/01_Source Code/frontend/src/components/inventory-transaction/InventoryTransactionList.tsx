@@ -18,7 +18,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
   const [toDate, setToDate] = useState("");
 
   const applyDateFilter = () => {
-    // placeholder: filter locally or trigger new fetch
+    // closing menu; filtering happens automatically via derived state below
     setShowFilter(false);
   };
 
@@ -40,10 +40,15 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
 
   const filtered = transactions.filter((t) => {
     const term = search.toLowerCase();
-    return (
+    const matchSearch =
       t.transaction_id?.toLowerCase().includes(term) ||
-      t.performed_by.toLowerCase().includes(term)
-    );
+      t.performed_by.toLowerCase().includes(term);
+
+    const txDate = new Date(t.transaction_date);
+    const afterFrom = fromDate ? txDate >= new Date(fromDate) : true;
+    const beforeTo = toDate ? txDate <= new Date(toDate) : true;
+
+    return matchSearch && afterFrom && beforeTo;
   });
 
   function renderBody() {
