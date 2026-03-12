@@ -7,25 +7,25 @@ import {
 import { InventoryTransactionService } from '../inventory-transaction.service';
 
 @Injectable()
-export class AdjustmentHandler implements Handler {
-  private readonly logger = new Logger(AdjustmentHandler.name);
+export class InventoryLotChangeHandler implements Handler {
+  private readonly logger = new Logger(InventoryLotChangeHandler.name);
 
   constructor(private readonly invTxService: InventoryTransactionService) {}
 
   supports(type: string): boolean {
-    return type === 'InventoryLotAdjusted';
+    return type === 'InventoryLotChange';
   }
 
   async handle(payload: any): Promise<void> {
     // payload là bản ghi giao dịch vừa tạo (hoặc thông tin adjustment từ module khác)
     this.logger.log(
-      `Adjustment event received, payload: ${JSON.stringify(payload)}`,
+      `InventoryLotChange event received, payload: ${JSON.stringify(payload)}`,
     );
 
     // chuyển payload thành CreateInventoryTransactionDto với loại Adjustment
     const dto: CreateInventoryTransactionDto = {
       lot_id: payload.lot_id || payload.inventory_lot_id,
-      transaction_type: TransactionType.Adjustment,
+      transaction_type: payload.transaction_type,
       quantity: payload.quantity,
       unit_of_measure: payload.unit_of_measure || payload.uom || '',
       performed_by: payload.performed_by || payload.user_id || '',
