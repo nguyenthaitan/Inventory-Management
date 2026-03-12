@@ -1,20 +1,46 @@
-export type BatchStatus = 'planned' | 'in_progress' | 'complete' | 'rejected';
+export type BatchStatus = 'In Progress' | 'Complete' | 'On Hold' | 'Cancelled';
+
+export const BATCH_STATUS_LIST: BatchStatus[] = [
+  'In Progress',
+  'Complete',
+  'On Hold',
+  'Cancelled',
+];
 
 export interface ProductionBatch {
   _id: string;
+  batch_id: string;
   product_id: string;
   batch_number: string;
-  batch_size: number;
-  status: BatchStatus;
+  unit_of_measure: string;
   manufacture_date: string;
-  created_at: string;
-  updated_at: string;
+  expiration_date: string;
+  status: BatchStatus;
+  batch_size: string; // Decimal128 serialized as string
+  created_date: string;
+  modified_date: string;
 }
 
 export interface BatchComponent {
   _id: string;
+  component_id: string;
   batch_id: string;
   lot_id: string;
-  planned_qty: number;
-  actual_qty?: number;
+  planned_quantity: string;
+  actual_quantity?: string;
+  unit_of_measure: string;
+  addition_date?: string;
+  added_by?: string;
+  created_date: string;
+  modified_date: string;
+}
+
+export interface PaginatedProductionBatch {
+  data: ProductionBatch[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }

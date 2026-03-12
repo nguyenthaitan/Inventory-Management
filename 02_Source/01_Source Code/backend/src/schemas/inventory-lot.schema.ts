@@ -10,6 +10,7 @@ import type { Decimal128 } from 'mongoose';
 export type InventoryLotDocument = InventoryLot & Document;
 
 const options: SchemaOptions = {
+  collection: 'inventory_lots',
   timestamps: { createdAt: 'created_date', updatedAt: 'modified_date' },
 };
 
