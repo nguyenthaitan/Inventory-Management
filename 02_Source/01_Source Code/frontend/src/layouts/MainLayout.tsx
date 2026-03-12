@@ -1,5 +1,11 @@
 import { useState, type ReactNode } from "react";
-import { Link, useNavigate, useLocation, Outlet, Navigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useLocation,
+  Outlet,
+  Navigate,
+} from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -68,7 +74,7 @@ export default function Layout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const stored = localStorage.getItem('currentUser');
+  const stored = localStorage.getItem("currentUser");
   const user: { username: string; role: string; label?: string } | null = stored
     ? JSON.parse(stored)
     : null;
@@ -78,8 +84,8 @@ export default function Layout() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate('/login');
+    localStorage.removeItem("currentUser");
+    navigate("/login");
   };
 
   // Hàm hiển thị tên vai trò trên giao diện
@@ -126,6 +132,11 @@ export default function Layout() {
             to: "/manager/transaction",
             icon: <FileText size={20} />,
             label: "Quản lý nhập/xuất kho",
+          },
+          {
+            to: "/manager/inventory-transactions",
+            icon: <FileText size={20} />,
+            label: "Quản lý giao dịch kho",
           },
           {
             to: "/manager/stock",
@@ -212,6 +223,11 @@ export default function Layout() {
             to: "/operator/history",
             icon: <History size={20} />,
             label: "Lịch sử",
+          },
+          {
+            to: "/operator/inventory-transactions",
+            icon: <FileText size={20} />,
+            label: "Quản lý giao dịch kho",
           },
         ];
       case "it-admin":
