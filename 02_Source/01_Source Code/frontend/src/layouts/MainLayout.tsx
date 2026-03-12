@@ -115,7 +115,7 @@ export default function Layout() {
       case "manager":
         return [
           {
-            to: "/manager",
+            to: "/manager/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard",
           },
@@ -272,7 +272,9 @@ export default function Layout() {
           {/* NAVIGATION SECTION */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.to;
+              const isActive =
+                location.pathname === item.to ||
+                location.pathname.startsWith(item.to + "/");
               return (
                 <Link
                   key={item.to}
