@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { MaterialModule } from './material/material.module';
 import { InventoryLotModule } from './inventory-lot/inventory-lot.module';
@@ -18,6 +17,6 @@ import { LabelTemplateModule } from './label-template/label-template.module';
     LabelTemplateModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}
