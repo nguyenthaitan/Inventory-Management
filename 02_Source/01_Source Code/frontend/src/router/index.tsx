@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import DashboardIT from "../pages/admin/DashboardIT";
 import SystemMonitoring from "../pages/admin/SystemMonitoring";
@@ -26,46 +26,92 @@ import StockOutOperator from "../pages/operator/StockOut";
 import TransactionHistoryOperator from "../pages/operator/TransactionHistory";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import type {JSX} from "react";
+
+// ProtectedRoute component - React component thực sự kiểm tra token mỗi lần render
+function ProtectedRoute({ element }: { element: JSX.Element }) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return element;
+}
+
+function requireAuth(element: JSX.Element) {
+  return <ProtectedRoute element={element} />;
+}
+
+// HomeRedirect component - redirect "/" về login hoặc dashboard dựa trên token và role
+function HomeRedirect() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+  if (!token || !userStr) {
+    return <Navigate to="/login" replace />;
+  }
+
+  try {
+    const user = JSON.parse(userStr);
+    switch (user.role) {
+      case 'manager':
+        return <Navigate to="/manager/dashboard" replace />;
+      case 'operator':
+        return <Navigate to="/operator/dashboard" replace />;
+      case 'quality-control':
+        return <Navigate to="/qc/dashboard" replace />;
+      case 'it_admin':
+        return <Navigate to="/admin/dashboard" replace />;
+      default:
+        return <Navigate to="/login" replace />;
+    }
+  } catch (e) {
+    return <Navigate to="/login" replace />;
+  }
+}
 
 export const router = createBrowserRouter([
   {
     path: "/",
+    element: <HomeRedirect />,
+  },
+  {
+    path: "",
     element: <MainLayout />,
     children: [
       // IT ADMIN
-      { path: "admin/dashboard", element: <DashboardIT /> },
-      { path: "admin/monitoring", element: <SystemMonitoring /> },
-      { path: "admin/backup", element: <BackupRestore /> },
-      { path: "admin/error-logs", element: <ErrorLogs /> },
-      { path: "admin/reports", element: <SystemReports /> },
+      { path: "/admin/dashboard", element: requireAuth(<DashboardIT />) },
+      { path: "/admin/monitoring", element: requireAuth(<SystemMonitoring />) },
+      { path: "/admin/backup", element: requireAuth(<BackupRestore />) },
+      { path: "/admin/error-logs", element: requireAuth(<ErrorLogs />) },
+      { path: "/admin/reports", element: requireAuth(<SystemReports />) },
 
       // QC
-      { path: "qc/dashboard", element: <DashboardQC /> },
-      { path: "qc/inbound", element: <InboundControl /> },
-      { path: "qc/inventory", element: <InventoryQC /> },
-      { path: "qc/inspection", element: <ProductInspection /> },
-      { path: "qc/traceability", element: <ReportTraceability /> },
+      { path: "/qc/dashboard", element: requireAuth(<DashboardQC />) },
+      { path: "/qc/inbound", element: requireAuth(<InboundControl />) },
+      { path: "/qc/inventory", element: requireAuth(<InventoryQC />) },
+      { path: "/qc/inspection", element: requireAuth(<ProductInspection />) },
+      { path: "/qc/traceability", element: requireAuth(<ReportTraceability />) },
 
       // Manager
-      { path: "manager/dashboard", element: <DashboardManager /> },
-      { path: "manager/inventory", element: <InventoryLot /> },
-      { path: "manager/material", element: <MaterialManagementManager /> },
-      { path: "manager/product", element: <ProductManagementManager /> },
-      { path: "manager/reports", element: <ReportsManager /> },
+      { path: "/manager/dashboard", element: requireAuth(<DashboardManager />) },
+      { path: "/manager/inventory", element: requireAuth(<InventoryLot />) },
+      { path: "/manager/material", element: requireAuth(<MaterialManagementManager />) },
+      { path: "/manager/product", element: requireAuth(<ProductManagementManager />) },
+      { path: "/manager/reports", element: requireAuth(<ReportsManager />) },
       {
-        path: "manager/transaction",
-        element: <TransactionManagementManager />,
+        path: "/manager/transaction",
+        element: requireAuth(<TransactionManagementManager />),
       },
-      { path: "manager/user", element: <UserManagementManager /> },
+      { path: "/manager/user", element: requireAuth(<UserManagementManager />) },
 
       // Operator
-      { path: "operator/dashboard", element: <DashboardOperator /> },
-      { path: "operator/audit", element: <InventoryAuditOperator /> },
-      { path: "operator/material", element: <MaterialManagementOperator /> },
-      { path: "operator/product", element: <ProductCreationOperator /> },
-      { path: "operator/stock-in", element: <StockInOperator /> },
-      { path: "operator/stock-out", element: <StockOutOperator /> },
-      { path: "operator/history", element: <TransactionHistoryOperator /> },
+      { path: "/operator/dashboard", element: requireAuth(<DashboardOperator />) },
+      { path: "/operator/audit", element: requireAuth(<InventoryAuditOperator />) },
+      { path: "/operator/material", element: requireAuth(<MaterialManagementOperator />) },
+      { path: "/operator/product", element: requireAuth(<ProductCreationOperator />) },
+      { path: "/operator/stock-in", element: requireAuth(<StockInOperator />) },
+      { path: "/operator/stock-out", element: requireAuth(<StockOutOperator />) },
+      { path: "/operator/history", element: requireAuth(<TransactionHistoryOperator />) },
     ],
   },
   {
