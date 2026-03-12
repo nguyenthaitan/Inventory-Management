@@ -2,14 +2,21 @@ import React, { useState } from "react";
 import { Filter, Download, Eye, Edit2 } from "lucide-react";
 
 export interface InventoryTransaction {
-  id: string;
-  date: string;
-  type: "RECEIPT" | "USAGE" | "ADJUSTMENT";
-  itemCode: string;
-  itemName: string;
+  transaction_id: string;
+  lot_id: string;
+  transaction_type:
+    | "Receipt"
+    | "Usage"
+    | "Split"
+    | "Adjustment"
+    | "Transfer"
+    | "Disposal";
   quantity: number;
-  location: string;
-  status: string;
+  unit_of_measure: string;
+  transaction_date: string; // ISO date string
+  reference_number?: string;
+  performed_by: string;
+  notes?: string;
 }
 
 interface Props {
@@ -41,12 +48,13 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
     load();
   }, []);
 
-  const filtered = transactions.filter(
-    (t) =>
-      t.id.includes(search) ||
-      t.itemCode.toLowerCase().includes(search.toLowerCase()) ||
-      t.itemName.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = transactions.filter((t) => {
+    const term = search.toLowerCase();
+    return (
+      t.transaction_id.toLowerCase().includes(term) ||
+      t.performed_by.toLowerCase().includes(term)
+    );
+  });
 
   function renderBody() {
     if (loading) {
@@ -78,31 +86,35 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
     }
     return filtered.map((t) => (
       <tr
-        key={t.id}
+        key={t.transaction_id}
         className="border-t border-gray-50 hover:bg-blue-50/30 transition-colors"
       >
-        <td className="px-5 py-4 font-bold text-gray-900">{t.id}</td>
-        <td className="px-5 py-4">{t.date}</td>
+        <td className="px-5 py-4 font-bold text-gray-900">
+          {t.transaction_id}
+        </td>
+        <td className="px-5 py-4">
+          {new Date(t.transaction_date).toLocaleDateString()}
+        </td>
         <td className="px-5 py-4">
           <span
             className={`font-bold ${
-              t.type === "RECEIPT"
+              t.transaction_type === "Receipt"
                 ? "text-blue-600"
-                : t.type === "USAGE"
+                : t.transaction_type === "Usage"
                   ? "text-red-600"
                   : "text-yellow-600"
             }`}
           >
-            {t.type}
+            {t.transaction_type}
           </span>
         </td>
-        <td className="px-5 py-4">{t.itemCode}</td>
-        <td className="px-5 py-4">{t.itemName}</td>
+        <td className="px-5 py-4">{t.lot_id}</td>
+        <td className="px-5 py-4">{t.performed_by}</td>
         <td className="px-5 py-4">{t.quantity}</td>
-        <td className="px-5 py-4">{t.location}</td>
+        <td className="px-5 py-4">{t.unit_of_measure}</td>
         <td className="px-5 py-4">
-          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-            {t.status}
+          <span className="text-gray-700 text-sm">
+            {t.notes || t.reference_number || ""}
           </span>
         </td>
         <td className="px-5 py-4 flex gap-2">
@@ -156,11 +168,11 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
                 "Mã giao dịch",
                 "Ngày",
                 "Loại",
-                "Mã hàng",
-                "Tên hàng",
+                "Lot ID",
+                "Người thực hiện",
                 "Số lượng",
-                "Vị trí",
-                "Trạng thái",
+                "Đơn vị",
+                "Ghi chú",
                 "Thao tác",
               ].map((h) => (
                 <th
