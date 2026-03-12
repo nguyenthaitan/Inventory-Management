@@ -19,7 +19,7 @@ const options: SchemaOptions = {
  */
 @Schema(options)
 export class LabelTemplate {
-  @Prop({ type: String, required: true, unique: true, maxlength: 20 })
+  @Prop({ type: String, required: true, maxlength: 20 })
   template_id: string;
 
   @Prop({ type: String, required: true, maxlength: 100 })
