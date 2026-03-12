@@ -8,8 +8,13 @@ export class AppController {
 
   @Public()
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getApiInfo() {
+    return {
+      name: 'Inventory Management API',
+      version: '1.0.0',
+      status: 'running',
+      endpoints: ['/materials', '/inventory-lots', '/production-batches', '/label-templates'],
+    };
   }
 
   @Public()
