@@ -49,7 +49,7 @@ Loại test: ${qcData.test_type}
 Tên test: ${qcData.test_name}
 Kết quả đo được: ${qcData.test_result}
 Tiêu chuẩn chấp nhận: ${qcData.acceptance_criteria}
-${qcData.product_name ? `Sản phẩm: ${qcData.product_name}` : ''}
+${qcData.material_name ? `Sản phẩm: ${qcData.material_name}` : ''}
 ${qcData.batch_number ? `Lô sản xuất: ${qcData.batch_number}` : ''}
 
 Hãy đưa ra nhận xét và khuyến nghị.`;

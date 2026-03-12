@@ -1,8 +1,9 @@
-import { MaterialManagement } from "./components/material/MaterialManagement";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router";
 import "./App.css";
 
 function App() {
-  return <MaterialManagement />;
+  return <RouterProvider router={router} />;
 }
 
 export default App;

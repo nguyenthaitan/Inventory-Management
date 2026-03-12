@@ -69,7 +69,7 @@ export default function Layout() {
 
   const user = {
     username: "John123",
-    role: "manager",
+    role: "quality-control",
   };
 
   const handleLogout = () => {
@@ -147,25 +147,30 @@ export default function Layout() {
       case "quality-control":
         return [
           {
-            to: "/quality-control",
+            to: "/qc/dashboard",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard",
           },
           {
-            to: "/quality-control/pending",
+            to: "/qc/inbound",
             icon: <ClipboardCheck size={20} />,
             label: "Kiểm soát đầu vào",
           },
           {
-            to: "/quality-control/inventory-qa",
+            to: "/qc/inventory",
             icon: <ShieldCheck size={20} />,
             label: "Kiểm định tồn kho",
           },
           {
-            to: "/quality-control/traceability",
+            to: "/qc/traceability",
             icon: <FileSearch size={20} />,
             label: "Báo cáo & Truy vết",
           },
+          {
+            to: "/qc/inspection",
+            icon: <FileText size={20} />,
+            label: "Kiểm định sản phẩm",
+          }
         ];
       case "operator":
         return [

@@ -3,7 +3,7 @@ export class AnalyzeQcDto {
   test_name: string;
   test_result: string;
   acceptance_criteria: string;
-  product_name?: string;
+  material_name?: string;
   batch_number?: string;
 }
 
