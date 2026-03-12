@@ -49,9 +49,13 @@ export class InventoryTransactionRepository {
       pagination.limit && pagination.limit > 0 ? pagination.limit : 20;
     const skip = (page - 1) * limit;
 
-    query.skip(skip).limit(limit);
+    const [items, total] = await Promise.all([
+      query.skip(skip).limit(limit).exec(),
+      // count filtered documents without pagination
+      this.model.countDocuments(query.getFilter()).exec(),
+    ]);
 
-    return query.exec();
+    return { items, total };
   }
 
   async findOne(id: string) {

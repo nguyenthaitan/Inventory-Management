@@ -19,9 +19,14 @@ function normalize(t: any): InventoryTransaction {
   };
 }
 
+export interface FetchTransactionsResult {
+  items: InventoryTransaction[];
+  total: number;
+}
+
 export async function fetchTransactions(
   params: Record<string, any> = {},
-): Promise<InventoryTransaction[]> {
+): Promise<FetchTransactionsResult> {
   const query = new URLSearchParams();
   Object.entries(params).forEach(
     ([k, v]) => v !== undefined && query.append(k, String(v)),
@@ -29,7 +34,11 @@ export async function fetchTransactions(
   const res = await fetch(`${API_BASE}/transactions?${query.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch transactions");
   const data = await res.json();
-  return Array.isArray(data) ? data.map(normalize) : [];
+  if (Array.isArray(data.items)) {
+    return { items: data.items.map(normalize), total: data.total || 0 };
+  }
+  // fallback when API returns plain array
+  return { items: Array.isArray(data) ? data.map(normalize) : [], total: 0 };
 }
 
 export async function fetchTransaction(
