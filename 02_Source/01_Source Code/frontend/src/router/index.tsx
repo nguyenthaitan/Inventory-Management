@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import DashboardIT from '../pages/admin/DashboardIT';
 import SystemMonitoring from '../pages/admin/SystemMonitoring';
@@ -40,6 +40,8 @@ export const router = createBrowserRouter([
     path: '/',
     element: <MainLayout />, // Khung chung
     children: [
+      { index: true, element: <Navigate to="/login" replace /> },
+
       // IT ADMIN
       { path: 'admin/dashboard', element: <DashboardIT /> },
       { path: 'admin/monitoring', element: <SystemMonitoring /> },
@@ -56,7 +58,11 @@ export const router = createBrowserRouter([
 
       // Manager
       { path: 'manager/dashboard', element: <DashboardManager /> },
+      { path: 'manager', element: <Navigate to="/manager/dashboard" replace /> },
       { path: 'manager/inventory', element: <InventoryManager /> },
+      { path: 'manager/stock', element: <InventoryManager /> },
+      { path: 'manager/in-out', element: <TransactionManagementManager /> },
+      { path: 'manager/users', element: <UserManagementManager /> },
       { path: 'manager/material', element: <MaterialManagementManager /> },
       { path: 'manager/materials', element: <ManagerMaterialList /> },
       { path: 'manager/materials/create', element: <ManagerMaterialForm /> },
