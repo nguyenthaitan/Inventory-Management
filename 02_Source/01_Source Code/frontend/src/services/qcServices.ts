@@ -9,12 +9,19 @@ import type {
   RetestDto,
 } from '../types/qc';
 
+const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
+
 // TODO: restore these helpers when removing mocks:
-// const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
 // type RawDecimal = { $numberDecimal: string };
 // function toNumber(val: number | string | RawDecimal | undefined | null): number { ... }
 // function normalizeLot(lot: InventoryLot): InventoryLot { return { ...lot, quantity: toNumber(...) }; }
-// async function handleApiError(res: Response): Promise<void> { if (!res.ok) throw new Error(...); }
+
+async function handleApiError(res: Response): Promise<void> {
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`[${res.status}] ${text}`);
+  }
+}
 
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 // TODO: remove this entire section once the backend is stable.
@@ -49,26 +56,6 @@ const _MOCK_KPI: DashboardKPI = {
   error_rate: 14.29,
 };
 
-const _MOCK_AI_RESPONSE: SupplierAnalysisResponse = {
-  success: true,
-  suppliers_analyzed: 3,
-  timestamp: new Date().toISOString(),
-  model_used: 'mock',
-  analysis: `## Phân tích chất lượng nhà cung cấp (Mock)
-
-### Tổng quan
-- **MedChem Vietnam** dẫn đầu với tỷ lệ đạt **93.33%** (14/15 lô).
-- **Pharma Supply Co.** đạt **90%** (18/20 lô), ổn định và đáng tin cậy.
-- **BioTech Ltd** có tỷ lệ thấp nhất **75%** (9/12 lô), cần theo dõi.
-
-### Khuyến nghị
-1. Tăng tần suất kiểm tra đối với **BioTech Ltd**.
-2. Xem xét phân bổ đơn hàng lớn hơn cho **MedChem Vietnam**.
-3. Yêu cầu **BioTech Ltd** cung cấp CAPA trong vòng 30 ngày.
-
-> *Dữ liệu mock — kết nối backend để phân tích thực tế.*`,
-};
-
 function _mockDelay<T>(value: T, ms = 400): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
@@ -79,7 +66,6 @@ export async function getDashboardKPI(): Promise<DashboardKPI> {
 }
 
 // TODO: restore real fetch — GET /inventory-lots/status/:status or /inventory-lots
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getInventoryLots(_status?: string): Promise<InventoryLot[]> {
   const lots = _status ? _MOCK_LOTS.filter((l) => l.status === _status) : _MOCK_LOTS;
   return _mockDelay(lots);
@@ -176,31 +162,32 @@ export async function getSupplierPerformance(
   return _mockDelay(_MOCK_SUPPLIERS);
 }
 
-// TODO: restore real fetch — GET /ai/supplier-analysis
+// GET /ai/supplier-analysis?from=&to=
 export async function analyzeAllSuppliers(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _from?: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _to?: string,
+  from?: string,
+  to?: string,
 ): Promise<SupplierAnalysisResponse> {
-  return _mockDelay(_MOCK_AI_RESPONSE, 800);
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(`${BASE_URL}/ai/supplier-analysis${query}`);
+  await handleApiError(res);
+  return res.json() as Promise<SupplierAnalysisResponse>;
 }
 
-// TODO: restore real fetch — GET /ai/supplier-analysis/:supplierName
+// GET /ai/supplier-analysis/:name?from=&to=
 export async function analyzeOneSupplier(
   supplierName: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _from?: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _to?: string,
+  from?: string,
+  to?: string,
 ): Promise<SupplierAnalysisResponse> {
-  const supplier = _MOCK_SUPPLIERS.find((s) => s.supplier_name === supplierName);
-  const analysis: SupplierAnalysisResponse = {
-    ..._MOCK_AI_RESPONSE,
-    suppliers_analyzed: 1,
-    analysis: supplier
-      ? `## Phân tích: ${supplier.supplier_name} (Mock)\n\n- Tổng lô: **${supplier.total_batches}**\n- Đạt: **${supplier.approved}** | Từ chối: **${supplier.rejected}**\n- Tỷ lệ đạt: **${supplier.quality_rate.toFixed(2)}%**\n\n> *Dữ liệu mock.*`
-      : `Không tìm thấy nhà cung cấp "${supplierName}" trong dữ liệu mock.`,
-  };
-  return _mockDelay(analysis, 800);
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const encodedName = encodeURIComponent(supplierName);
+  const res = await fetch(`${BASE_URL}/ai/supplier-analysis/${encodedName}${query}`);
+  await handleApiError(res);
+  return res.json() as Promise<SupplierAnalysisResponse>;
 }
