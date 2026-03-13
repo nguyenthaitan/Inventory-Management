@@ -1,5 +1,5 @@
-import React from 'react'
-import { MaterialList } from '../../../components/material/components/MaterialList'
+import React from "react";
+import { MaterialList } from "../../../components/material/components/MaterialList";
 
 const Page: React.FC = () => {
   return (
@@ -7,7 +7,7 @@ const Page: React.FC = () => {
       <h1>Materials (Manager) - List</h1>
       <MaterialList />
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;

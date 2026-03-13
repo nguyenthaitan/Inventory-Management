@@ -11,7 +11,7 @@ const options: SchemaOptions = {
 
 @Schema(options)
 export class InventoryLot {
-  @Prop({ type: String, required: true, unique: true, maxlength: 36 })
+  @Prop({ type: String, required: true, maxlength: 36 })
   lot_id: string;
 
   @Prop({ type: String, required: true, maxlength: 20 })

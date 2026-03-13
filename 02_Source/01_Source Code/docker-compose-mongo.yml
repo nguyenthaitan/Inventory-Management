@@ -17,6 +17,22 @@ services:
     networks:
       - inventory_network
 
+  mongo-express:
+    image: mongo-express:1.0
+    container_name: inventory_mongo_express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:password123@mongodb:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      - mongodb
+    networks:
+      - inventory_network
+
 networks:
   inventory_network:
     external: true

@@ -113,7 +113,7 @@ curl -X POST http://localhost:3000/ai/analyze-mock `
     "test_name": "Vi sinh vật",
     "test_result": "550 CFU/g",
     "acceptance_criteria": "< 100 CFU/g",
-    "product_name": "Thực phẩm chức năng ABC",
+    "material_name": "Thực phẩm chức năng ABC",
     "batch_number": "BATCH-20260218-01"
   }'
 ```

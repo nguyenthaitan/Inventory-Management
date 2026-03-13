@@ -27,6 +27,7 @@ import {
   User as UserIcon,
   FileSearch,
   ChevronRight,
+  Tag,
   FlaskConical,
 } from "lucide-react";
 
@@ -70,8 +71,8 @@ const UserProfileSection = ({
 );
 
 export default function Layout() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const stored = localStorage.getItem("currentUser");
@@ -101,7 +102,7 @@ export default function Layout() {
         return "Kiểm soát chất lượng";
       case "operator":
         return "Nhân viên kho";
-      case "it-admin":
+      case "it_admin":
         return "Quản trị viên hệ thống";
       default:
         return "";
@@ -129,7 +130,7 @@ export default function Layout() {
             label: "Quản lý nguyên liệu",
           },
           {
-            to: "/manager/transaction",
+            to: "/manager/in-out",
             icon: <FileText size={20} />,
             label: "Quản lý nhập/xuất kho",
           },
@@ -149,9 +150,14 @@ export default function Layout() {
             label: "Báo cáo",
           },
           {
-            to: "/manager/user",
+            to: "/manager/users",
             icon: <FileText size={20} />,
             label: "Quản lý Users",
+          },
+          {
+            to: "/manager/labels",
+            icon: <Tag size={20} />,
+            label: "Quản lý nhãn",
           },
           {
             to: "/manager/production-batches",
@@ -186,6 +192,11 @@ export default function Layout() {
             icon: <FileSearch size={20} />,
             label: "Báo cáo & Truy vết",
           },
+          {
+            to: "/qc/inspection",
+            icon: <FileText size={20} />,
+            label: "Kiểm định sản phẩm",
+          }
         ];
       case "operator":
         return [
@@ -229,31 +240,36 @@ export default function Layout() {
             icon: <FileText size={20} />,
             label: "Quản lý giao dịch kho",
           },
+          {
+            to: "/operator/labels",
+            icon: <Tag size={20} />,
+            label: "In nhãn",
+          },
         ];
-      case "it-admin":
+      case "it_admin":
         return [
           {
-            to: "/admin/dashboard",
+            to: "/it-admin",
             icon: <LayoutDashboard size={20} />,
             label: "Dashboard IT",
           },
           {
-            to: "/admin/monitoring",
+            to: "/it-admin/monitoring",
             icon: <Activity size={20} />,
             label: "Giám sát hệ thống",
           },
           {
-            to: "/admin/error-logs",
+            to: "/it-admin/logs",
             icon: <Terminal size={20} />,
             label: "Nhật ký lỗi",
           },
           {
-            to: "/admin/backup",
+            to: "/it-admin/backup",
             icon: <Database size={20} />,
             label: "Sao lưu & Phục hồi",
           },
           {
-            to: "/admin/reports",
+            to: "/it-admin/reports",
             icon: <FileBarChart size={20} />,
             label: "Báo cáo hệ thống",
           },
@@ -264,6 +280,14 @@ export default function Layout() {
   };
 
   const navItems = getNavItems();
+
+  // Thêm handleLogout
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
@@ -291,7 +315,9 @@ export default function Layout() {
           {/* NAVIGATION SECTION */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.to;
+              const isActive =
+                location.pathname === item.to ||
+                location.pathname.startsWith(item.to + "/");
               return (
                 <Link
                   key={item.to}

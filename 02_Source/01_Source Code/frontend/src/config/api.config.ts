@@ -22,4 +22,15 @@ export const API_ENDPOINTS = {
   MATERIALS_UPDATE: (id: string) => `/materials/${id}`,
   MATERIALS_DELETE: (id: string) => `/materials/${id}`,
   MATERIALS_FILTER_TYPE: (type: string) => `/materials/type/${type}`,
+
+  // Label Template endpoints
+  LABEL_TEMPLATES: "/label-templates",
+  LABEL_TEMPLATES_SEARCH: "/label-templates/search",
+  LABEL_TEMPLATES_TYPES: "/label-templates/types",
+  LABEL_TEMPLATES_GENERATE: "/label-templates/generate",
+  LABEL_TEMPLATES_DETAIL: (id: string) => `/label-templates/${id}`,
+  LABEL_TEMPLATES_UPDATE: (id: string) => `/label-templates/${id}`,
+  LABEL_TEMPLATES_DELETE: (id: string) => `/label-templates/${id}`,
+  LABEL_TEMPLATES_FILTER_TYPE: (type: string) =>
+    `/label-templates/type/${encodeURIComponent(type)}`,
 };

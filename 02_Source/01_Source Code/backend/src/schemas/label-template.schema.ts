@@ -19,7 +19,7 @@ const options: SchemaOptions = {
  */
 @Schema(options)
 export class LabelTemplate {
-  @Prop({ type: String, required: true, unique: true, maxlength: 20 })
+  @Prop({ type: String, required: true, maxlength: 20 })
   template_id: string;
 
   @Prop({ type: String, required: true, maxlength: 100 })
@@ -51,3 +51,9 @@ export class LabelTemplate {
 }
 
 export const LabelTemplateSchema = SchemaFactory.createForClass(LabelTemplate);
+
+// Indexes for fast queries
+LabelTemplateSchema.index({ template_id: 1 }, { unique: true });
+LabelTemplateSchema.index({ label_type: 1 });
+LabelTemplateSchema.index({ template_name: 'text' });
+LabelTemplateSchema.index({ created_date: -1 });

@@ -37,15 +37,16 @@ export interface FetchOptions {
   validateStatus?: (status: number) => boolean;
 }
 
-export enum ErrorType {
-  NETWORK_ERROR = "NETWORK_ERROR",
-  VALIDATION_ERROR = "VALIDATION_ERROR",
-  UNAUTHORIZED = "UNAUTHORIZED",
-  FORBIDDEN = "FORBIDDEN",
-  NOT_FOUND = "NOT_FOUND",
-  SERVER_ERROR = "SERVER_ERROR",
-  UNKNOWN_ERROR = "UNKNOWN_ERROR",
-}
+export const ErrorType = {
+  NETWORK_ERROR: "NETWORK_ERROR",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  UNAUTHORIZED: "UNAUTHORIZED",
+  FORBIDDEN: "FORBIDDEN",
+  NOT_FOUND: "NOT_FOUND",
+  SERVER_ERROR: "SERVER_ERROR",
+  UNKNOWN_ERROR: "UNKNOWN_ERROR",
+} as const;
+export type ErrorType = (typeof ErrorType)[keyof typeof ErrorType];
 
 export interface ApiErrorResponse {
   type: ErrorType;

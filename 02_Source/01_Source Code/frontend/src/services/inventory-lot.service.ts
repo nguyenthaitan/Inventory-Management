@@ -21,6 +21,8 @@ export interface InventoryLot {
   is_sample: boolean;
   parent_lot_id?: string;
   notes?: string;
+  created_date?: Date;
+  modified_date?: Date;
 }
 
 export interface GetInventoryLotsResponse {
