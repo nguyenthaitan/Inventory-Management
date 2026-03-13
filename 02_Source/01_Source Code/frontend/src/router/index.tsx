@@ -80,7 +80,7 @@ function HomeRedirect() {
       case "quality-control":
         return <Navigate to="/qc/dashboard" replace />;
       case "it_admin":
-        return <Navigate to="/admin/dashboard" replace />;
+        return <Navigate to="/it-admin/dashboard" replace />;
       default:
         return <Navigate to="/login" replace />;
     }
@@ -99,11 +99,14 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       // IT ADMIN
-      { path: "/admin/dashboard", element: requireAuth(<DashboardIT />) },
-      { path: "/admin/monitoring", element: requireAuth(<SystemMonitoring />) },
-      { path: "/admin/backup", element: requireAuth(<BackupRestore />) },
-      { path: "/admin/error-logs", element: requireAuth(<ErrorLogs />) },
-      { path: "/admin/reports", element: requireAuth(<SystemReports />) },
+      { path: "/it-admin/dashboard", element: requireAuth(<DashboardIT />) },
+      {
+        path: "/it-admin/monitoring",
+        element: requireAuth(<SystemMonitoring />),
+      },
+      { path: "/it-admin/backup", element: requireAuth(<BackupRestore />) },
+      { path: "/it-admin/error-logs", element: requireAuth(<ErrorLogs />) },
+      { path: "/it-admin/reports", element: requireAuth(<SystemReports />) },
 
       // QC
       { path: "/qc/dashboard", element: requireAuth(<DashboardQC />) },
