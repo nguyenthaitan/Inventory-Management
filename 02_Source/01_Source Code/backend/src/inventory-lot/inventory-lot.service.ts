@@ -125,8 +125,8 @@ export class InventoryLotService {
   async findByStatus(
     status: string,
     page: number = 1,
+    limit: number = 10,
   ): Promise<PaginatedInventoryLotResponse> {
-    const limit: number = 10;
     if (
       !Object.values(InventoryLotStatus).includes(status as InventoryLotStatus)
     ) {
