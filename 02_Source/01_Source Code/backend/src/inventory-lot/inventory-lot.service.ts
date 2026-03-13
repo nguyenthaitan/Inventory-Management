@@ -51,7 +51,7 @@ export class InventoryLotService {
 
     // Publish a Kafka event for new lot receipt so downstream systems can
     // create a corresponding InventoryTransaction record.
-    await this.kafkaService.publish('InventoryLotChange', [
+    await this.kafkaService.publish('inventory-transactions', [
       {
         key: createdLot.lot_id,
         value: {
@@ -125,8 +125,8 @@ export class InventoryLotService {
   async findByStatus(
     status: string,
     page: number = 1,
-    limit: number = 10,
   ): Promise<PaginatedInventoryLotResponse> {
+    const limit: number = 10;
     if (
       !Object.values(InventoryLotStatus).includes(status as InventoryLotStatus)
     ) {
@@ -272,7 +272,7 @@ export class InventoryLotService {
     // Publish a Kafka event for quantity adjustments so downstream systems can
     // create corresponding InventoryTransaction records.
     if (quantityChanged) {
-      await this.kafkaService.publish('InventoryLotChange', [
+      await this.kafkaService.publish('inventory-transactions', [
         {
           key: lot_id,
           value: {
