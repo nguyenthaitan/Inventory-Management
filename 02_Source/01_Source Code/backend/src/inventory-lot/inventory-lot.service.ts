@@ -13,7 +13,11 @@ import type {
   InventoryLotSearchParams,
 } from './inventory-lot.dto';
 import { InventoryLotStatus } from './inventory-lot.dto';
-import { InventoryLot } from 'src/schemas/inventory-lot.schema';
+import { TransactionType } from '../inventory-transaction/dto/create-inventory-transaction.dto';
+import {
+  InventoryLot,
+  InventoryLotDocument,
+} from 'src/schemas/inventory-lot.schema';
 
 @Injectable()
 export class InventoryLotService {
@@ -332,6 +336,79 @@ export class InventoryLotService {
       expiringSoon,
       expired,
     };
+  }
+
+  // ==================== QC Integration Methods ====================
+  // Added to support QCTest integration
+  // Reference: QC_INTEGRATION_NEEDS.md
+
+  /**
+   * Find multiple inventory lots by their IDs efficiently
+   * Adds support for batch queries in QCTest.getSupplierPerformance()
+   * @param lot_ids - Array of lot IDs to fetch
+   * @returns Array of InventoryLot response DTOs
+   */
+  async findByIds(lot_ids: string[]): Promise<InventoryLotResponseDto[]> {
+    if (!lot_ids || lot_ids.length === 0) {
+      return [];
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const lots: InventoryLotDocument[] =
+      await this.inventoryLotRepository.findByIds(lot_ids);
+    return lots.map((lot) => this.convertToResponse(lot));
+  }
+
+  /**
+   * Update specific fields of an inventory lot without requiring all mandatory fields
+   * Useful for QCTest.submitRetestDecision() to update status + expiry without full lot data
+   * @param lot_id - Lot to update
+   * @param updates - Partial updates (only fields to change)
+   * @returns Updated lot response
+   * @throws NotFoundException if lot not found
+   * @throws ConflictException if status transition invalid
+   */
+  async updatePartial(
+    lot_id: string,
+    updates: Partial<UpdateInventoryLotDto>,
+  ): Promise<InventoryLotResponseDto> {
+    // Verify lot exists and get current data
+    const existingLot = await this.inventoryLotRepository.findById(lot_id);
+    if (!existingLot) {
+      throw new NotFoundException(`Inventory lot ${lot_id} not found`);
+    }
+
+    // Merge provided updates with existing data (required fields)
+    const fullUpdate: UpdateInventoryLotDto = {
+      material_id: updates.material_id ?? existingLot.material_id,
+      manufacturer_name:
+        updates.manufacturer_name ?? existingLot.manufacturer_name,
+      manufacturer_lot:
+        updates.manufacturer_lot ?? existingLot.manufacturer_lot,
+      received_date: updates.received_date ?? existingLot.received_date,
+      expiration_date: updates.expiration_date ?? existingLot.expiration_date,
+      status: updates.status ?? existingLot.status,
+      quantity: updates.quantity ?? existingLot.quantity,
+      unit_of_measure: updates.unit_of_measure ?? existingLot.unit_of_measure,
+      supplier_name: updates.supplier_name ?? existingLot.supplier_name,
+      storage_location:
+        updates.storage_location ?? existingLot.storage_location,
+      is_sample:
+        updates.is_sample !== undefined
+          ? updates.is_sample
+          : existingLot.is_sample,
+      notes: updates.notes ?? existingLot.notes,
+      in_use_expiration_date:
+        updates.in_use_expiration_date ?? existingLot.in_use_expiration_date,
+      parent_lot_id: updates.parent_lot_id ?? existingLot.parent_lot_id,
+    };
+
+    // Validate status transition if status is being updated
+    if (updates.status && updates.status !== existingLot.status) {
+      this.validateStatusTransition(existingLot.status, updates.status);
+    }
+
+    // Proceed with full update using existing update method
+    return this.update(lot_id, fullUpdate);
   }
 
   // ==================== Private Helper Methods ====================
