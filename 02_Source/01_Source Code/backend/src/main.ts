@@ -5,9 +5,14 @@ import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Cấu hình CORS cơ bản: cho phép các nguồn, phương thức, header và credentials cụ thể
+  // lấy cấu hình từ ConfigService
+  const config = app.get(ConfigService);
+  const port = config.get<string>('PORT') ?? '3000';
+  const frontendOrigin = config.get<string>('FRONTEND_ORIGIN') ?? 'http://localhost:5173';
+
+  // Cấu hình CORS: cho phép các nguồn, phương thức, header và credentials cụ thể
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'], // url frontend
+    origin: frontendOrigin.split(',').map(url => url.trim()), // support multiple origins separated by comma
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-User-Role', 'X-User-Id'],
     credentials: true, // cho phép cookie và header xác thực
@@ -15,11 +20,9 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  // lấy cổng từ ConfigService (đọc từ env hoặc nơi khác)
-  const config = app.get(ConfigService);
-  const port = config.get<string>('PORT') ?? '3000';
   await app.listen(parseInt(port, 10));
 
   console.log(`Backend is running on: ${await app.getUrl()}`);
+  console.log(`CORS origin: ${frontendOrigin}`);
 }
 bootstrap();
