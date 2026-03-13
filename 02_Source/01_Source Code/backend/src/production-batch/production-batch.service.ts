@@ -4,19 +4,13 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Material, MaterialDocument } from '../schemas/material.schema';
 import { ProductionBatchRepository } from './production-batch.repository';
-import {
-  CreateProductionBatchDto,
-  BatchStatus,
-} from './dto/create-production-batch.dto';
+import { CreateProductionBatchDto, BatchStatus } from './dto/create-production-batch.dto';
 import { UpdateProductionBatchDto } from './dto/update-production-batch.dto';
-import { QCTestService } from '../qc-test/qc-test.service';
 import {
   ProductionBatchResponseDto,
   PaginatedProductionBatchResponseDto,
@@ -24,11 +18,7 @@ import {
 
 // Valid status transitions: current status -> allowed next statuses
 const STATUS_TRANSITIONS: Record<string, string[]> = {
-  [BatchStatus.InProgress]: [
-    BatchStatus.Complete,
-    BatchStatus.OnHold,
-    BatchStatus.Cancelled,
-  ],
+  [BatchStatus.InProgress]: [BatchStatus.Complete, BatchStatus.OnHold, BatchStatus.Cancelled],
   [BatchStatus.OnHold]: [BatchStatus.InProgress, BatchStatus.Cancelled],
   [BatchStatus.Complete]: [],
   [BatchStatus.Cancelled]: [],
@@ -46,8 +36,6 @@ export class ProductionBatchService {
     private readonly repository: ProductionBatchRepository,
     @InjectModel(Material.name)
     private readonly materialModel: Model<MaterialDocument>,
-    @Inject(forwardRef(() => QCTestService))
-    private readonly qcTestService: QCTestService,
   ) {}
 
   /**
@@ -172,11 +160,7 @@ export class ProductionBatchService {
 
     this.logger.debug(`Finding batches for product_id: ${productId}`);
 
-    const result = await this.repository.findByProductId(
-      productId,
-      page,
-      limit,
-    );
+    const result = await this.repository.findByProductId(productId, page, limit);
 
     return {
       data: result.data.map((b) => this.toResponseDto(b)),
@@ -248,7 +232,7 @@ export class ProductionBatchService {
     }
 
     // Validate status transition if status is being changed
-    if (updateDto.status && updateDto.status !== (existing.status as string)) {
+    if (updateDto.status && updateDto.status !== existing.status) {
       const allowed = STATUS_TRANSITIONS[existing.status] ?? [];
       if (!allowed.includes(updateDto.status)) {
         throw new BadRequestException(
@@ -274,25 +258,6 @@ export class ProductionBatchService {
     const updated = await this.repository.update(batchId, updateDto);
     this.logger.log(`Production batch updated successfully: ${batchId}`);
 
-    // Phase 3 - QC Integration: Auto-create InventoryLot when batch is Complete
-    // Reference: QC_INTEGRATION_NEEDS.md section 2.1
-    if (
-      updateDto.status === BatchStatus.Complete &&
-      (updated?.status as string) === BatchStatus.Complete
-    ) {
-      try {
-        await this.qcTestService.createLotFromProdBatch(batchId);
-        this.logger.log(`Inventory lot auto-created from batch ${batchId}`);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(
-          `Failed to auto-create inventory lot for batch ${batchId}: ${errorMessage}`,
-        );
-        // Don't throw — batch completion is independent of inventory lot creation
-      }
-    }
-
     return this.toResponseDto(updated);
   }
 
@@ -314,7 +279,7 @@ export class ProductionBatchService {
       );
     }
 
-    if ((existing.status as string) === BatchStatus.InProgress) {
+    if (existing.status === BatchStatus.InProgress) {
       throw new BadRequestException(
         `Cannot delete a production batch with status 'In Progress'. ` +
           `Please cancel or complete the batch first.`,

@@ -246,25 +246,4 @@ export class InventoryLotRepository {
       .sort({ expiration_date: 1 })
       .exec();
   }
-
-  // ==================== QC Integration Methods ====================
-  // Added to support QCTest.getSupplierPerformance() optimization
-  // Reference: QC_INTEGRATION_NEEDS.md
-
-  /**
-   * Find multiple inventory lots by their IDs
-   * Used for batch queries to optimize N+1 problem
-   * @param lot_ids - Array of lot IDs to fetch
-   * @returns Array of InventoryLot documents
-   */
-  async findByIds(lot_ids: string[]): Promise<InventoryLotDocument[]> {
-    if (!lot_ids || lot_ids.length === 0) {
-      return [];
-    }
-    const result = (await this.inventoryLotModel
-      .find({ lot_id: { $in: lot_ids } })
-      .sort({ created_date: -1 })
-      .exec()) as InventoryLotDocument[];
-    return result || [];
-  }
 }
