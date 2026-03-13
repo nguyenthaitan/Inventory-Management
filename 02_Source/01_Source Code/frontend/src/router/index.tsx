@@ -46,6 +46,7 @@ import OperatorProductionBatchForm from "../pages/operator/production-batches/Fo
 import type { JSX } from "react";
 import { isTokenValid } from "../utils/authUtils";
 import StockManagement from "../pages/manager/StockManagement.tsx";
+import InventoryLot from "../pages/manager/inventory-lot/InventoryLot.tsx";
 
 /**
  * Get user role from localStorage with normalization
