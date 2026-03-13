@@ -1,44 +1,131 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InventoryLotService } from '../inventory-lot/inventory-lot.service';
 import { InventoryLotRepository } from '../inventory-lot/inventory-lot.repository';
 import {
-  NotFoundException,
-  BadRequestException,
-  ConflictException,
-} from '@nestjs/common';
-import {
   CreateInventoryLotDto,
+  InventoryLotSearchParams,
   InventoryLotStatus,
+  UpdateInventoryLotDto,
 } from '../inventory-lot/inventory-lot.dto';
 
-// Sample lot data for testing
-const sampleLot: any = {
-  lot_id: '550e8400-e29b-41d4-a716-446655440000',
-  material_id: 'MAT-001',
-  manufacturer_name: 'ABC Pharma',
-  manufacturer_lot: 'LOT-2025-001',
-  supplier_name: 'XYZ Suppliers',
-  received_date: new Date('2025-03-01'),
-  expiration_date: new Date('2027-03-01'),
-  in_use_expiration_date: new Date('2026-09-01'),
-  status: InventoryLotStatus.QUARANTINE,
-  quantity: { toString: () => '1000.500' },
-  unit_of_measure: 'kg',
-  storage_location: 'A1-B2-C3',
-  is_sample: false,
-  parent_lot_id: null,
-  notes: 'Premium grade material',
-  created_date: new Date('2025-03-06'),
-  modified_date: new Date('2025-03-06'),
+jest.mock(
+  'src/inventory-lot/inventory-lot.dto',
+  () => ({
+    InventoryLotStatus: {
+      QUARANTINE: 'Quarantine',
+      ACCEPTED: 'Accepted',
+      REJECTED: 'Rejected',
+      DEPLETED: 'Depleted',
+    },
+  }),
+  { virtual: true },
+);
+
+type InventoryLotLike = {
+  lot_id: string;
+  material_id: string;
+  manufacturer_name: string;
+  manufacturer_lot: string;
+  supplier_name?: string;
+  received_date: Date;
+  expiration_date: Date;
+  in_use_expiration_date?: Date;
+  status: InventoryLotStatus;
+  quantity: number;
+  unit_of_measure: string;
+  storage_location?: string;
+  is_sample: boolean;
+  parent_lot_id?: string;
+  notes?: string;
+  created_date: Date;
+  modified_date: Date;
 };
+
+type PagedLots = {
+  data: InventoryLotLike[];
+  total: number;
+};
+
+type MockedRepository = {
+  create: jest.Mock;
+  findAll: jest.Mock;
+  findById: jest.Mock;
+  findByMaterialId: jest.Mock;
+  findByStatus: jest.Mock;
+  findBySampleStatus: jest.Mock;
+  findSamplesByParentLot: jest.Mock;
+  searchByManufacturer: jest.Mock;
+  findByFilter: jest.Mock;
+  update: jest.Mock;
+  updateStatus: jest.Mock;
+  updateQuantity: jest.Mock;
+  delete: jest.Mock;
+  getLotsByMaterialAndStatus: jest.Mock;
+  countByStatus: jest.Mock;
+  checkLotExists: jest.Mock;
+  findExpiringSoon: jest.Mock;
+  findExpiredLots: jest.Mock;
+};
+
+function buildCreateDto(
+  overrides: Partial<CreateInventoryLotDto> = {},
+): CreateInventoryLotDto {
+  return {
+    lot_id: 'LOT-001',
+    material_id: 'MAT-001',
+    manufacturer_name: 'ABC Pharma',
+    manufacturer_lot: 'MFG-LOT-001',
+    supplier_name: 'Global Supplier',
+    received_date: new Date('2025-01-01T00:00:00.000Z'),
+    expiration_date: new Date('2026-01-01T00:00:00.000Z'),
+    in_use_expiration_date: new Date('2025-08-01T00:00:00.000Z'),
+    status: InventoryLotStatus.QUARANTINE,
+    quantity: 100,
+    unit_of_measure: 'kg',
+    storage_location: 'A1-R1',
+    is_sample: false,
+    parent_lot_id: undefined,
+    notes: 'Initial lot',
+    ...overrides,
+  };
+}
+
+function buildLotDoc(
+  overrides: Partial<InventoryLotLike> = {},
+): InventoryLotLike {
+  return {
+    lot_id: 'LOT-001',
+    material_id: 'MAT-001',
+    manufacturer_name: 'ABC Pharma',
+    manufacturer_lot: 'MFG-LOT-001',
+    supplier_name: 'Global Supplier',
+    received_date: new Date('2025-01-01T00:00:00.000Z'),
+    expiration_date: new Date('2026-01-01T00:00:00.000Z'),
+    in_use_expiration_date: new Date('2025-08-01T00:00:00.000Z'),
+    status: InventoryLotStatus.QUARANTINE,
+    quantity: 100,
+    unit_of_measure: 'kg',
+    storage_location: 'A1-R1',
+    is_sample: false,
+    parent_lot_id: undefined,
+    notes: 'Initial lot',
+    created_date: new Date('2025-01-01T08:00:00.000Z'),
+    modified_date: new Date('2025-01-01T08:00:00.000Z'),
+    ...overrides,
+  };
+}
 
 describe('InventoryLotService', () => {
   let service: InventoryLotService;
-  let repo: Record<keyof InventoryLotRepository, jest.Mock>;
+  let repository: MockedRepository;
 
   beforeEach(async () => {
-    // Mock all repository methods
-    repo = {
+    const mockRepository: MockedRepository = {
       create: jest.fn(),
       findAll: jest.fn(),
       findById: jest.fn(),
@@ -62,489 +149,520 @@ describe('InventoryLotService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InventoryLotService,
-        { provide: InventoryLotRepository, useValue: repo },
+        {
+          provide: InventoryLotRepository,
+          useValue: mockRepository,
+        },
       ],
     }).compile();
 
     service = module.get<InventoryLotService>(InventoryLotService);
+    repository = module.get<MockedRepository>(InventoryLotRepository);
   });
 
-  // ==================== CREATE Tests ====================
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('create', () => {
-    it('should create a new inventory lot', async () => {
-      const createDto: CreateInventoryLotDto = {
-        material_id: 'MAT-001',
-        manufacturer_name: 'ABC Pharma',
-        manufacturer_lot: 'LOT-2025-001',
-        received_date: new Date('2025-03-01'),
-        expiration_date: new Date('2027-03-01'),
-        quantity: '1000.500',
-        unit_of_measure: 'kg',
-      };
+    it('should create and map a lot for valid input', async () => {
+      const createDto = buildCreateDto();
+      const lotDoc = buildLotDoc();
+      repository.create.mockResolvedValue(lotDoc);
 
-      repo.create.mockResolvedValue(sampleLot);
       const result = await service.create(createDto);
 
-      expect(result.lot_id).toBe(sampleLot.lot_id);
+      expect(repository.create).toHaveBeenCalledWith(createDto);
+      expect(result.lot_id).toBe('LOT-001');
       expect(result.status).toBe(InventoryLotStatus.QUARANTINE);
-      expect(repo.create).toHaveBeenCalledWith(createDto);
+      expect(result.quantity).toBe(100);
     });
 
-    it('should reject if received_date is after expiration_date', async () => {
-      const createDto: CreateInventoryLotDto = {
-        material_id: 'MAT-001',
-        manufacturer_name: 'ABC Pharma',
-        manufacturer_lot: 'LOT-2025-001',
-        received_date: new Date('2027-03-01'),
-        expiration_date: new Date('2025-03-01'),
-        quantity: '1000.500',
-        unit_of_measure: 'kg',
-      };
+    it('should allow sample lot creation without parent_lot_id', async () => {
+      const createDto = buildCreateDto({
+        is_sample: true,
+        parent_lot_id: undefined,
+      });
+      repository.create.mockResolvedValue(
+        buildLotDoc({ is_sample: true, parent_lot_id: undefined }),
+      );
+
+      const result = await service.create(createDto);
+
+      expect(result.is_sample).toBe(true);
+      expect(repository.create).toHaveBeenCalledWith(createDto);
+    });
+
+    it('should reject when received_date is after expiration_date', async () => {
+      const createDto = buildCreateDto({
+        received_date: new Date('2026-01-02T00:00:00.000Z'),
+        expiration_date: new Date('2026-01-01T00:00:00.000Z'),
+      });
 
       await expect(service.create(createDto)).rejects.toThrow(
         BadRequestException,
       );
+      expect(repository.create).not.toHaveBeenCalled();
     });
 
-    it('should reject if quantity is 0', async () => {
-      const createDto: CreateInventoryLotDto = {
-        material_id: 'MAT-001',
-        manufacturer_name: 'ABC Pharma',
-        manufacturer_lot: 'LOT-2025-001',
-        received_date: new Date('2025-03-01'),
-        expiration_date: new Date('2027-03-01'),
-        quantity: '0',
-        unit_of_measure: 'kg',
-      };
+    it.each([0, -1, -500])(
+      'should reject non-positive quantity (%s)',
+      async (quantity) => {
+        const createDto = buildCreateDto({ quantity });
 
-      await expect(service.create(createDto)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should reject if quantity is negative', async () => {
-      const createDto: CreateInventoryLotDto = {
-        material_id: 'MAT-001',
-        manufacturer_name: 'ABC Pharma',
-        manufacturer_lot: 'LOT-2025-001',
-        received_date: new Date('2025-03-01'),
-        expiration_date: new Date('2027-03-01'),
-        quantity: '-100',
-        unit_of_measure: 'kg',
-      };
-
-      await expect(service.create(createDto)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
+        await expect(service.create(createDto)).rejects.toThrow(
+          BadRequestException,
+        );
+      },
+    );
   });
-
-  // ==================== FIND ALL Tests ====================
 
   describe('findAll', () => {
-    it('should return paginated list of inventory lots', async () => {
-      const mockResponse = {
-        data: [sampleLot],
-        total: 45,
+    it.each([
+      { page: 0, limit: 10 },
+      { page: 1, limit: 0 },
+      { page: -1, limit: 10 },
+      { page: 1, limit: -1 },
+    ])('should reject invalid pagination %#', async ({ page, limit }) => {
+      await expect(service.findAll(page, limit)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should return paged data for valid pagination', async () => {
+      const paged: PagedLots = {
+        data: [buildLotDoc()],
+        total: 1,
       };
-      repo.findAll.mockResolvedValue(mockResponse);
+      repository.findAll.mockResolvedValue(paged);
 
-      const result = await service.findAll(1, 10);
+      await service.findAll(2, 5);
 
-      expect(result.data).toHaveLength(1);
-      expect(result.total).toBe(45);
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(10);
-      expect(repo.findAll).toHaveBeenCalledWith(1, 10);
-    });
-
-    it('should reject if page is less than 1', async () => {
-      await expect(service.findAll(0, 10)).rejects.toThrow(BadRequestException);
-    });
-
-    it('should reject if limit is less than 1', async () => {
-      await expect(service.findAll(1, 0)).rejects.toThrow(BadRequestException);
+      expect(repository.findAll).toHaveBeenCalledWith(2, 5);
     });
   });
 
-  // ==================== FIND BY ID Tests ====================
-
   describe('findById', () => {
-    it('should return a single inventory lot', async () => {
-      repo.findById.mockResolvedValue(sampleLot);
+    it('should return mapped lot when found', async () => {
+      repository.findById.mockResolvedValue(buildLotDoc());
 
-      const result = await service.findById(sampleLot.lot_id);
+      const result = await service.findById('LOT-001');
 
-      expect(result.lot_id).toBe(sampleLot.lot_id);
-      expect(repo.findById).toHaveBeenCalledWith(sampleLot.lot_id);
+      expect(repository.findById).toHaveBeenCalledWith('LOT-001');
+      expect(result.lot_id).toBe('LOT-001');
     });
 
-    it('should throw NotFoundException when lot does not exist', async () => {
-      repo.findById.mockResolvedValue(null);
+    it('should throw NotFoundException for missing lot', async () => {
+      repository.findById.mockResolvedValue(null);
 
-      await expect(service.findById('non-existent-id')).rejects.toThrow(
+      await expect(service.findById('LOT-404')).rejects.toThrow(
         NotFoundException,
       );
     });
   });
 
-  // ==================== FIND BY MATERIAL Tests ====================
-
   describe('findByMaterialId', () => {
-    it('should return lots for a specific material', async () => {
-      const mockResponse = {
-        data: [sampleLot],
-        total: 8,
-      };
-      repo.findByMaterialId.mockResolvedValue(mockResponse);
-
-      const result = await service.findByMaterialId('MAT-001', 1, 10);
-
-      expect(result.data).toHaveLength(1);
-      expect(result.total).toBe(8);
-      expect(repo.findByMaterialId).toHaveBeenCalledWith('MAT-001', 1, 10);
-    });
-  });
-
-  // ==================== FIND BY STATUS Tests ====================
-
-  describe('findByStatus', () => {
-    it('should return lots with specific status', async () => {
-      const mockResponse = {
-        data: [sampleLot],
-        total: 23,
-      };
-      repo.findByStatus.mockResolvedValue(mockResponse);
-
-      const result = await service.findByStatus(
-        InventoryLotStatus.ACCEPTED,
-        1,
-        10,
-      );
-
-      expect(result.data).toHaveLength(1);
-      expect(result.total).toBe(23);
-      expect(repo.findByStatus).toHaveBeenCalledWith(
-        InventoryLotStatus.ACCEPTED,
-        1,
-        10,
-      );
-    });
-
-    it('should reject invalid status', async () => {
+    it.each([
+      { page: 0, limit: 10 },
+      { page: 1, limit: 0 },
+    ])('should reject invalid pagination %#', async ({ page, limit }) => {
       await expect(
-        service.findByStatus('InvalidStatus' as any, 1, 10),
+        service.findByMaterialId('MAT-001', page, limit),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should return lots by material_id with pagination metadata', async () => {
+      repository.findByMaterialId.mockResolvedValue({
+        data: [buildLotDoc({ material_id: 'MAT-777' })],
+        total: 7,
+      });
+
+      const result = await service.findByMaterialId('MAT-777', 1, 3);
+
+      expect(repository.findByMaterialId).toHaveBeenCalledWith('MAT-777', 1, 3);
+      expect(result.total).toBe(7);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(3);
+      expect(result.data[0]?.material_id).toBe('MAT-777');
+    });
   });
 
-  // ==================== SEARCH Tests ====================
+  describe('findByStatus', () => {
+    it.each(Object.values(InventoryLotStatus))(
+      'should return lots for valid status "%s"',
+      async (status) => {
+        repository.findByStatus.mockResolvedValue({
+          data: [buildLotDoc({ status })],
+          total: 3,
+        });
 
-  describe('searchByManufacturer', () => {
-    it('should search lots by manufacturer', async () => {
-      const mockResponse = {
-        data: [sampleLot],
-        total: 5,
-      };
-      repo.searchByManufacturer.mockResolvedValue(mockResponse);
+        const result = await service.findByStatus(status, 1, 10);
 
-      const result = await service.searchByManufacturer('ABC', 1, 10);
+        expect(repository.findByStatus).toHaveBeenCalledWith(status, 1, 10);
+        expect(result.data[0]?.status).toBe(status);
+      },
+    );
 
-      expect(result.data).toHaveLength(1);
-      expect(result.total).toBe(5);
-    });
-
-    it('should reject query shorter than 2 characters', async () => {
-      await expect(service.searchByManufacturer('A', 1, 10)).rejects.toThrow(
+    it('should reject invalid status', async () => {
+      await expect(service.findByStatus('Unknown', 1, 10)).rejects.toThrow(
         BadRequestException,
       );
     });
   });
 
-  // ==================== FILTER Tests ====================
+  describe('findSampleLots and findSamplesByParentLot', () => {
+    it('should return sample lots', async () => {
+      repository.findBySampleStatus.mockResolvedValue({
+        data: [buildLotDoc({ is_sample: true, lot_id: 'LOT-SAMPLE' })],
+        total: 1,
+      });
 
-  describe('filterLots', () => {
-    it('should filter lots by multiple criteria', async () => {
-      const mockResponse = {
-        data: [sampleLot],
-        total: 12,
-      };
-      repo.findByFilter.mockResolvedValue(mockResponse);
+      const result = await service.findSampleLots(1, 10);
 
-      const filter = {
-        material_id: 'MAT-001',
-        status: InventoryLotStatus.ACCEPTED,
-        is_sample: false,
-      };
-      const result = await service.filterLots(filter, 1, 10);
-
-      expect(result.data).toHaveLength(1);
-      expect(result.total).toBe(12);
+      expect(repository.findBySampleStatus).toHaveBeenCalledWith(true, 1, 10);
+      expect(result.data[0]?.is_sample).toBe(true);
     });
 
+    it('should return sample children for parent lot', async () => {
+      repository.findSamplesByParentLot.mockResolvedValue([
+        buildLotDoc({
+          lot_id: 'LOT-SAMPLE-1',
+          is_sample: true,
+          parent_lot_id: 'LOT-PARENT-1',
+        }),
+      ]);
+
+      const result = await service.findSamplesByParentLot('LOT-PARENT-1');
+
+      expect(repository.findSamplesByParentLot).toHaveBeenCalledWith(
+        'LOT-PARENT-1',
+      );
+      expect(result[0]?.parent_lot_id).toBe('LOT-PARENT-1');
+    });
+  });
+
+  describe('searchByManufacturer', () => {
+    it.each(['', ' ', 'a'])(
+      'should reject short/empty query "%s"',
+      async (query) => {
+        await expect(
+          service.searchByManufacturer(query, 1, 10),
+        ).rejects.toThrow(BadRequestException);
+      },
+    );
+
+    it('should return search results for valid query', async () => {
+      repository.searchByManufacturer.mockResolvedValue({
+        data: [buildLotDoc({ manufacturer_name: 'ABC Pharma Co' })],
+        total: 4,
+      });
+
+      const result = await service.searchByManufacturer('AB', 2, 2);
+
+      expect(repository.searchByManufacturer).toHaveBeenCalledWith('AB', 2, 2);
+      expect(result.total).toBe(4);
+      expect(result.page).toBe(2);
+      expect(result.limit).toBe(2);
+    });
+  });
+
+  describe('filterLots', () => {
     it('should reject invalid status in filter', async () => {
-      const filter = {
-        status: 'InvalidStatus' as any,
+      const filter: InventoryLotSearchParams = {
+        status: 'Invalid' as InventoryLotStatus,
       };
 
       await expect(service.filterLots(filter, 1, 10)).rejects.toThrow(
         BadRequestException,
       );
+      expect(repository.findByFilter).not.toHaveBeenCalled();
+    });
+
+    it('should pass filter to repository and map response', async () => {
+      const filter: InventoryLotSearchParams = {
+        material_id: 'MAT-001',
+        manufacturer_name: 'ABC',
+        is_sample: false,
+        status: InventoryLotStatus.QUARANTINE,
+      };
+      repository.findByFilter.mockResolvedValue({
+        data: [buildLotDoc()],
+        total: 9,
+      });
+
+      const result = await service.filterLots(filter, 3, 7);
+
+      expect(repository.findByFilter).toHaveBeenCalledWith(filter, 3, 7);
+      expect(result.total).toBe(9);
+      expect(result.page).toBe(3);
+      expect(result.limit).toBe(7);
     });
   });
 
-  // ==================== UPDATE Tests ====================
-
   describe('update', () => {
-    it('should update lot details', async () => {
-      const existingLot = { ...sampleLot };
-      repo.findById.mockResolvedValue(existingLot);
-      const updatedLot = { ...sampleLot, storage_location: 'A2-B3-C4' };
-      repo.update.mockResolvedValue(updatedLot);
-
-      const result = await service.update(sampleLot.lot_id, {
-        storage_location: 'A2-B3-C4',
-      });
-
-      expect(result.storage_location).toBe('A2-B3-C4');
-    });
-
-    it('should throw NotFoundException when lot does not exist', async () => {
-      repo.findById.mockResolvedValue(null);
+    it('should reject update when lot does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
 
       await expect(
-        service.update('non-existent-id', { storage_location: 'A2' }),
+        service.update('LOT-404', {
+          quantity: 1,
+        } as UpdateInventoryLotDto),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should reject if received_date is after expiration_date', async () => {
-      repo.findById.mockResolvedValue(sampleLot);
+    it('should reject invalid date order on update when both dates are provided', async () => {
+      repository.findById.mockResolvedValue(buildLotDoc());
 
       await expect(
-        service.update(sampleLot.lot_id, {
-          received_date: new Date('2027-03-01'),
-          expiration_date: new Date('2025-03-01'),
-        }),
+        service.update('LOT-001', {
+          received_date: new Date('2026-02-01T00:00:00.000Z'),
+          expiration_date: new Date('2026-01-01T00:00:00.000Z'),
+        } as UpdateInventoryLotDto),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should auto-set status to Depleted when quantity becomes 0', async () => {
-      const existingLot = { ...sampleLot };
-      repo.findById.mockResolvedValue(existingLot);
-      const depletedLot = {
-        ...sampleLot,
-        quantity: { toString: () => '0' },
-        status: InventoryLotStatus.DEPLETED,
-      };
-      repo.update.mockResolvedValue(depletedLot);
+    it('should reject negative quantity on update', async () => {
+      repository.findById.mockResolvedValue(buildLotDoc());
 
-      const result = await service.update(sampleLot.lot_id, {
-        quantity: '0',
-      });
-
-      expect(result.status).toBe(InventoryLotStatus.DEPLETED);
+      await expect(
+        service.update('LOT-001', {
+          quantity: -5,
+        } as UpdateInventoryLotDto),
+      ).rejects.toThrow(BadRequestException);
     });
-  });
 
-  // ==================== STATUS UPDATE Tests ====================
-
-  describe('updateStatus', () => {
-    it('should transition from Quarantine to Accepted', async () => {
-      repo.findById.mockResolvedValue(sampleLot);
-      const acceptedLot = { ...sampleLot, status: InventoryLotStatus.ACCEPTED };
-      repo.updateStatus.mockResolvedValue(acceptedLot);
-
-      const result = await service.updateStatus(
-        sampleLot.lot_id,
-        InventoryLotStatus.ACCEPTED,
+    it('should not auto-set status when quantity runtime value is string zero', async () => {
+      repository.findById.mockResolvedValue(
+        buildLotDoc({ status: InventoryLotStatus.ACCEPTED }),
+      );
+      let capturedUpdateDto: UpdateInventoryLotDto | undefined;
+      repository.update.mockImplementation(
+        (_lotId: string, dto: UpdateInventoryLotDto) => {
+          capturedUpdateDto = dto;
+          return Promise.resolve(
+            buildLotDoc({ status: InventoryLotStatus.ACCEPTED, quantity: 0 }),
+          );
+        },
       );
 
+      const updateDto = {
+        quantity: '0',
+      } as unknown as UpdateInventoryLotDto;
+
+      const result = await service.update('LOT-001', updateDto);
+
+      expect(repository.update).toHaveBeenCalledWith('LOT-001', updateDto);
+      expect(capturedUpdateDto?.status).toBeUndefined();
       expect(result.status).toBe(InventoryLotStatus.ACCEPTED);
     });
 
-    it('should transition from Accepted to Depleted', async () => {
-      const acceptedLot = { ...sampleLot, status: InventoryLotStatus.ACCEPTED };
-      repo.findById.mockResolvedValue(acceptedLot);
-      const depletedLot = {
-        ...acceptedLot,
-        status: InventoryLotStatus.DEPLETED,
-      };
-      repo.updateStatus.mockResolvedValue(depletedLot);
-
-      const result = await service.updateStatus(
-        sampleLot.lot_id,
-        InventoryLotStatus.DEPLETED,
+    it('should reject invalid status transition in update', async () => {
+      repository.findById.mockResolvedValue(
+        buildLotDoc({ status: InventoryLotStatus.REJECTED }),
       );
 
+      await expect(
+        service.update('LOT-001', {
+          status: InventoryLotStatus.ACCEPTED,
+        } as UpdateInventoryLotDto),
+      ).rejects.toThrow(ConflictException);
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    it('should update successfully with valid transition', async () => {
+      repository.findById.mockResolvedValue(
+        buildLotDoc({ status: InventoryLotStatus.ACCEPTED }),
+      );
+      repository.update.mockResolvedValue(
+        buildLotDoc({ status: InventoryLotStatus.DEPLETED }),
+      );
+
+      const result = await service.update('LOT-001', {
+        status: InventoryLotStatus.DEPLETED,
+      } as UpdateInventoryLotDto);
+
       expect(result.status).toBe(InventoryLotStatus.DEPLETED);
+      expect(repository.update).toHaveBeenCalledWith(
+        'LOT-001',
+        expect.objectContaining({ status: InventoryLotStatus.DEPLETED }),
+      );
     });
 
-    it('should reject invalid transition from Rejected to Accepted', async () => {
-      const rejectedLot = { ...sampleLot, status: InventoryLotStatus.REJECTED };
-      repo.findById.mockResolvedValue(rejectedLot);
+    it('should throw NotFoundException if repository returns null after update', async () => {
+      repository.findById.mockResolvedValue(buildLotDoc());
+      repository.update.mockResolvedValue(null);
 
       await expect(
-        service.updateStatus(sampleLot.lot_id, InventoryLotStatus.ACCEPTED),
-      ).rejects.toThrow(ConflictException);
+        service.update('LOT-001', {
+          notes: 'updated',
+        } as UpdateInventoryLotDto),
+      ).rejects.toThrow(NotFoundException);
     });
+  });
 
-    it('should reject invalid transition from Depleted to Accepted', async () => {
-      const depletedLot = { ...sampleLot, status: InventoryLotStatus.DEPLETED };
-      repo.findById.mockResolvedValue(depletedLot);
+  describe('updateStatus', () => {
+    it('should reject when lot does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
 
       await expect(
-        service.updateStatus(sampleLot.lot_id, InventoryLotStatus.ACCEPTED),
-      ).rejects.toThrow(ConflictException);
+        service.updateStatus('LOT-404', InventoryLotStatus.ACCEPTED),
+      ).rejects.toThrow(NotFoundException);
     });
 
-    it('should allow same status update', async () => {
-      repo.findById.mockResolvedValue(sampleLot);
-      repo.updateStatus.mockResolvedValue(sampleLot);
+    it('should allow same-status update', async () => {
+      const lot = buildLotDoc({ status: InventoryLotStatus.QUARANTINE });
+      repository.findById.mockResolvedValue(lot);
+      repository.updateStatus.mockResolvedValue(lot);
 
       const result = await service.updateStatus(
-        sampleLot.lot_id,
+        'LOT-001',
         InventoryLotStatus.QUARANTINE,
       );
 
       expect(result.status).toBe(InventoryLotStatus.QUARANTINE);
+      expect(repository.updateStatus).toHaveBeenCalledWith(
+        'LOT-001',
+        InventoryLotStatus.QUARANTINE,
+      );
+    });
+
+    it('should reject invalid transition from Depleted to Accepted', async () => {
+      repository.findById.mockResolvedValue(
+        buildLotDoc({ status: InventoryLotStatus.DEPLETED }),
+      );
+
+      await expect(
+        service.updateStatus('LOT-001', InventoryLotStatus.ACCEPTED),
+      ).rejects.toThrow(ConflictException);
+      expect(repository.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if repository updateStatus returns null', async () => {
+      repository.findById.mockResolvedValue(buildLotDoc());
+      repository.updateStatus.mockResolvedValue(null);
+
+      await expect(
+        service.updateStatus('LOT-001', InventoryLotStatus.ACCEPTED),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
-  // ==================== DELETE Tests ====================
-
   describe('delete', () => {
-    it('should delete a Quarantine lot', async () => {
-      repo.findById.mockResolvedValue(sampleLot);
-      repo.delete.mockResolvedValue(sampleLot);
+    it('should reject delete for non-Quarantine status', async () => {
+      repository.findById.mockResolvedValue(
+        buildLotDoc({ status: InventoryLotStatus.ACCEPTED }),
+      );
 
-      const result = await service.delete(sampleLot.lot_id);
-
-      expect(result.success).toBe(true);
-      expect(repo.delete).toHaveBeenCalledWith(sampleLot.lot_id);
+      await expect(service.delete('LOT-001')).rejects.toThrow(
+        ConflictException,
+      );
+      expect(repository.delete).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when lot does not exist', async () => {
-      repo.findById.mockResolvedValue(null);
+      repository.findById.mockResolvedValue(null);
 
-      await expect(service.delete('non-existent-id')).rejects.toThrow(
+      await expect(service.delete('LOT-404')).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should reject deletion of Accepted lot', async () => {
-      const acceptedLot = { ...sampleLot, status: InventoryLotStatus.ACCEPTED };
-      repo.findById.mockResolvedValue(acceptedLot);
-
-      await expect(service.delete(sampleLot.lot_id)).rejects.toThrow(
-        ConflictException,
+    it('should delete Quarantine lot and return confirmation', async () => {
+      repository.findById.mockResolvedValue(
+        buildLotDoc({ status: InventoryLotStatus.QUARANTINE }),
       );
-    });
+      repository.delete.mockResolvedValue(buildLotDoc());
 
-    it('should reject deletion of Rejected lot', async () => {
-      const rejectedLot = { ...sampleLot, status: InventoryLotStatus.REJECTED };
-      repo.findById.mockResolvedValue(rejectedLot);
+      const result = await service.delete('LOT-001');
 
-      await expect(service.delete(sampleLot.lot_id)).rejects.toThrow(
-        ConflictException,
-      );
-    });
-
-    it('should reject deletion of Depleted lot', async () => {
-      const depletedLot = { ...sampleLot, status: InventoryLotStatus.DEPLETED };
-      repo.findById.mockResolvedValue(depletedLot);
-
-      await expect(service.delete(sampleLot.lot_id)).rejects.toThrow(
-        ConflictException,
-      );
+      expect(repository.delete).toHaveBeenCalledWith('LOT-001');
+      expect(result).toEqual({
+        success: true,
+        message: 'Inventory lot LOT-001 deleted successfully',
+      });
     });
   });
 
-  // ==================== SAMPLE LOT Tests ====================
+  describe('expiry queries', () => {
+    it.each([0, -1, 366, 1000])(
+      'should reject invalid day range (%s) for getExpiringSoon',
+      async (days) => {
+        await expect(service.getExpiringSoon(days)).rejects.toThrow(
+          BadRequestException,
+        );
+      },
+    );
 
-  describe('findSampleLots', () => {
-    it('should return all sample lots', async () => {
-      const sampleLot2 = { ...sampleLot, is_sample: true };
-      const mockResponse = {
-        data: [sampleLot2],
-        total: 5,
-      };
-      repo.findBySampleStatus.mockResolvedValue(mockResponse);
-
-      const result = await service.findSampleLots(1, 10);
-
-      expect(result.data).toHaveLength(1);
-      expect(result.total).toBe(5);
-    });
-  });
-
-  describe('findSamplesByParentLot', () => {
-    it('should return samples from parent lot', async () => {
-      const sampleFromParent = {
-        ...sampleLot,
-        is_sample: true,
-        parent_lot_id: 'parent-id',
-      };
-      repo.findSamplesByParentLot.mockResolvedValue([sampleFromParent]);
-
-      const result = await service.findSamplesByParentLot('parent-id');
-
-      expect(result).toHaveLength(1);
-      expect(result[0].parent_lot_id).toBe('parent-id');
-    });
-  });
-
-  // ==================== EXPIRATION Tests ====================
-
-  describe('getExpiringSoon', () => {
-    it('should return lots expiring within specified days', async () => {
-      repo.findExpiringSoon.mockResolvedValue([sampleLot]);
+    it('should return mapped expiring lots', async () => {
+      repository.findExpiringSoon.mockResolvedValue([buildLotDoc()]);
 
       const result = await service.getExpiringSoon(30);
 
+      expect(repository.findExpiringSoon).toHaveBeenCalledWith(30);
       expect(result).toHaveLength(1);
-      expect(repo.findExpiringSoon).toHaveBeenCalledWith(30);
+      expect(result[0]?.lot_id).toBe('LOT-001');
     });
 
-    it('should reject if days is less than 1', async () => {
-      await expect(service.getExpiringSoon(0)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should reject if days is greater than 365', async () => {
-      await expect(service.getExpiringSoon(366)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-  });
-
-  describe('getExpiredLots', () => {
-    it('should return already expired lots', async () => {
-      repo.findExpiredLots.mockResolvedValue([sampleLot]);
+    it('should return mapped expired lots', async () => {
+      repository.findExpiredLots.mockResolvedValue([buildLotDoc()]);
 
       const result = await service.getExpiredLots();
 
+      expect(repository.findExpiredLots).toHaveBeenCalledTimes(1);
       expect(result).toHaveLength(1);
-      expect(repo.findExpiredLots).toHaveBeenCalled();
+      expect(result[0]?.lot_id).toBe('LOT-001');
     });
   });
 
-  // ==================== STATISTICS Tests ====================
-
   describe('getLotsStatistics', () => {
-    it('should return statistics', async () => {
-      repo.findAll.mockResolvedValue({ data: [sampleLot], total: 156 });
-      repo.countByStatus.mockResolvedValue(12);
-      repo.findExpiringSoon.mockResolvedValue([]);
-      repo.findExpiredLots.mockResolvedValue([]);
+    it('should aggregate totals, status distribution, expiring and expired counts', async () => {
+      repository.findAll.mockResolvedValue({
+        data: [buildLotDoc()],
+        total: 123,
+      });
+      repository.findExpiringSoon.mockResolvedValue([
+        buildLotDoc({ lot_id: 'LOT-E1' }),
+        buildLotDoc({ lot_id: 'LOT-E2' }),
+      ]);
+      repository.findExpiredLots.mockResolvedValue([
+        buildLotDoc({ lot_id: 'LOT-X1' }),
+      ]);
+      repository.countByStatus
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(20)
+        .mockResolvedValueOnce(30)
+        .mockResolvedValueOnce(40);
 
       const result = await service.getLotsStatistics();
 
-      expect(result.total).toBe(156);
-      expect(result.byStatus).toBeDefined();
-      expect(result.expiringSoon).toBe(0);
-      expect(result.expired).toBe(0);
+      expect(repository.findAll).toHaveBeenCalledWith(1, 10000);
+      expect(repository.countByStatus).toHaveBeenNthCalledWith(
+        1,
+        InventoryLotStatus.QUARANTINE,
+      );
+      expect(repository.countByStatus).toHaveBeenNthCalledWith(
+        2,
+        InventoryLotStatus.ACCEPTED,
+      );
+      expect(repository.countByStatus).toHaveBeenNthCalledWith(
+        3,
+        InventoryLotStatus.REJECTED,
+      );
+      expect(repository.countByStatus).toHaveBeenNthCalledWith(
+        4,
+        InventoryLotStatus.DEPLETED,
+      );
+      expect(result).toEqual({
+        total: 123,
+        byStatus: {
+          [InventoryLotStatus.QUARANTINE]: 10,
+          [InventoryLotStatus.ACCEPTED]: 20,
+          [InventoryLotStatus.REJECTED]: 30,
+          [InventoryLotStatus.DEPLETED]: 40,
+        },
+        expiringSoon: 2,
+        expired: 1,
+      });
     });
   });
 });

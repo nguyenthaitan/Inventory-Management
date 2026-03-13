@@ -8,6 +8,7 @@ import type {
   CreateMaterialRequest,
   UpdateMaterialRequest,
   PaginatedMaterialResponse,
+  MaterialSearchParams,
   MaterialType,
 } from "../types/Material";
 import { API_ENDPOINTS } from "../config/api.config";
