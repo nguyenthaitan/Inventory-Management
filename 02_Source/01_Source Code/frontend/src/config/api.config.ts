@@ -31,6 +31,5 @@ export const API_ENDPOINTS = {
   LABEL_TEMPLATES_DETAIL: (id: string) => `/label-templates/${id}`,
   LABEL_TEMPLATES_UPDATE: (id: string) => `/label-templates/${id}`,
   LABEL_TEMPLATES_DELETE: (id: string) => `/label-templates/${id}`,
-  LABEL_TEMPLATES_FILTER_TYPE: (type: string) =>
-    `/label-templates/type/${encodeURIComponent(type)}`,
+  LABEL_TEMPLATES_FILTER_TYPE: (type: string) => `/label-templates/type/${encodeURIComponent(type)}`,
 };

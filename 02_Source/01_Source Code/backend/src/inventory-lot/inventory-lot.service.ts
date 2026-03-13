@@ -4,7 +4,6 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { KafkaService } from 'src/event-bus/kafka.service';
 import { InventoryLotRepository } from './inventory-lot.repository';
 import type {
   CreateInventoryLotDto,
@@ -24,7 +23,6 @@ import {
 export class InventoryLotService {
   constructor(
     private readonly inventoryLotRepository: InventoryLotRepository,
-    private readonly kafkaService: KafkaService,
   ) {}
 
   async create(
@@ -51,27 +49,6 @@ export class InventoryLotService {
     }
 
     const createdLot = await this.inventoryLotRepository.create(createDto);
-
-    // Publish a Kafka event for new lot receipt so downstream systems can
-    // create a corresponding InventoryTransaction record.
-    await this.kafkaService.publish('inventory-transactions', [
-      {
-        key: createdLot.lot_id,
-        value: {
-          type: 'InventoryLotChange',
-          payload: {
-            lot_id: createdLot.lot_id,
-            transaction_type: TransactionType.Receipt,
-            quantity: createdLot.quantity,
-            unit_of_measure: createdLot.unit_of_measure,
-            performed_by: 'system',
-            notes: `Created lot ${createdLot.lot_id}`,
-            reference_number: `lot-create:${createdLot.lot_id}`,
-          },
-        },
-      },
-    ]);
-
     return this.convertToResponse(createdLot);
   }
 
@@ -243,20 +220,20 @@ export class InventoryLotService {
       }
     }
 
-    // Determine quantity change and validate new quantity
-    const quantityDelta = updateDto.quantity - existingLot.quantity;
-    const quantityChanged = quantityDelta !== 0;
+    // Validate quantity if provided
+    if (updateDto.quantity) {
+      const quantity = updateDto.quantity;
+      if (quantity < 0) {
+        throw new BadRequestException('Quantity cannot be negative');
+      }
 
-    if (updateDto.quantity < 0) {
-      throw new BadRequestException('Quantity cannot be negative');
-    }
-
-    // Check if lot would become Depleted
-    if (
-      updateDto.quantity === 0 &&
-      existingLot.status !== InventoryLotStatus.DEPLETED
-    ) {
-      updateDto.status = InventoryLotStatus.DEPLETED;
+      // Check if lot would become Depleted
+      if (
+        quantity === 0 &&
+        existingLot.status !== InventoryLotStatus.DEPLETED
+      ) {
+        updateDto.status = InventoryLotStatus.DEPLETED;
+      }
     }
 
     // Validate status transitions
@@ -271,30 +248,6 @@ export class InventoryLotService {
     if (!updatedLot) {
       throw new NotFoundException(`Inventory lot ${lot_id} not found`);
     }
-
-    // Publish a Kafka event for quantity adjustments so downstream systems can
-    // create corresponding InventoryTransaction records.
-    if (quantityChanged) {
-      await this.kafkaService.publish('inventory-transactions', [
-        {
-          key: lot_id,
-          value: {
-            type: 'InventoryLotChange',
-            payload: {
-              lot_id,
-              transaction_type: TransactionType.Adjustment,
-              quantity: quantityDelta,
-              unit_of_measure:
-                updateDto.unit_of_measure || existingLot.unit_of_measure,
-              performed_by: 'system',
-              notes: `Quantity changed from ${existingLot.quantity} to ${updateDto.quantity}`,
-              reference_number: `lot-update:${lot_id}`,
-            },
-          },
-        },
-      ]);
-    }
-
     return this.convertToResponse(updatedLot);
   }
 
