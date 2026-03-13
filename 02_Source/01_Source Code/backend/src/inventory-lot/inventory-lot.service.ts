@@ -48,6 +48,27 @@ export class InventoryLotService {
     }
 
     const createdLot = await this.inventoryLotRepository.create(createDto);
+
+    // Publish a Kafka event for new lot receipt so downstream systems can
+    // create a corresponding InventoryTransaction record.
+    await this.kafkaService.publish('InventoryLotChange', [
+      {
+        key: createdLot.lot_id,
+        value: {
+          type: 'InventoryLotChange',
+          payload: {
+            lot_id: createdLot.lot_id,
+            transaction_type: TransactionType.Receipt,
+            quantity: createdLot.quantity,
+            unit_of_measure: createdLot.unit_of_measure,
+            performed_by: 'system',
+            notes: `Created lot ${createdLot.lot_id}`,
+            reference_number: `lot-create:${createdLot.lot_id}`,
+          },
+        },
+      },
+    ]);
+
     return this.convertToResponse(createdLot);
   }
 
