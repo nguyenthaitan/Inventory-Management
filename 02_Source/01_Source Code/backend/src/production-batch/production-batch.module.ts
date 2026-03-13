@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProductionBatch,
@@ -18,6 +18,7 @@ import { ProductionBatchService } from './production-batch.service';
 import { ProductionBatchRepository } from './production-batch.repository';
 import { BatchComponentService } from './batch-component.service';
 import { BatchComponentRepository } from './batch-component.repository';
+import { QCTestModule } from '../qc-test/qc-test.module';
 
 @Module({
   imports: [
@@ -28,6 +29,9 @@ import { BatchComponentRepository } from './batch-component.repository';
       { name: Material.name, schema: MaterialSchema },
       { name: InventoryLot.name, schema: InventoryLotSchema },
     ]),
+    // Phase 3 - QC Integration: Enable auto-create InventoryLot when batch status = Complete
+    // Reference: QC_INTEGRATION_NEEDS.md section 2.1
+    forwardRef(() => QCTestModule), // Forward ref to handle circular dependency
   ],
   controllers: [ProductionBatchController],
   providers: [

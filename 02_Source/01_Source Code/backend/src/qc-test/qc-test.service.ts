@@ -2,80 +2,45 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { QCTestRepository } from './qc-test.repository';
 import { QCTest, QCTestDocument } from '../schemas/qc-test.schema';
-import {
-  InventoryLot,
-  InventoryLotDocument,
-} from '../schemas/inventory-lot.schema';
+import { InventoryLotDocument } from '../schemas/inventory-lot.schema';
 import { CreateQCTestDto } from './dto/create-qc-test.dto';
 import { UpdateQCTestDto } from './dto/update-qc-test.dto';
 import { QCDecisionDto } from './dto/qc-decision.dto';
-import {InventoryLotStatus} from "../inventory-lot/inventory-lot.dto";
+import { InventoryLotStatus } from '../inventory-lot/inventory-lot.dto';
+import { InventoryLotService } from '../inventory-lot/inventory-lot.service';
+import { CreateInventoryLotDto } from '../inventory-lot/inventory-lot.dto';
+import { ProductionBatchService } from '../production-batch/production-batch.service';
 
-// TODO [Workflow B]: After ProductionBatchModule is ready, inject ProductionBatchService
-// and call QCTestService.createTest() after batch QC completes.
-// Expected data mapping:
+// Phase 3 - QC Integration with ProductionBatchService
+// Data mapping for creating InventoryLot from ProductionBatch:
 //   lot_id           ← uuidv4()
 //   material_id      ← batch.product_id
 //   manufacturer_name ← 'Internal Production'
 //   manufacturer_lot  ← batch.batch_number
 //   received_date    ← new Date()
 //   expiration_date  ← batch.expiration_date
-//   status           ← 'Accepted' | 'Rejected'
 //   quantity         ← batch.batch_size (Decimal128 → number)
 //   unit_of_measure  ← batch.unit_of_measure
+//   is_sample        ← false
+//   status           ← InventoryLotStatus.QUARANTINE
 
 @Injectable()
 export class QCTestService {
-  constructor(private readonly repository: QCTestRepository) {}
+  private readonly logger = new Logger(QCTestService.name);
 
-  // ─── TODO: InventoryLot mock helpers ─────────────────────────────────────
-  // These stubs will be replaced once InventoryLotService is fully implemented.
-  // TODO: inject InventoryLotService and delegate to it.
-
-  private _mockLot(
-    lot_id: string,
-    overrides: Partial<InventoryLot> = {},
-  ): InventoryLotDocument {
-    return { lot_id, ...overrides } as unknown as InventoryLotDocument;
-  }
-
-  // TODO: replace with real DB lookup via InventoryLotService
-  private mockGetLotById(lot_id: string): Promise<InventoryLotDocument> {
-    return Promise.resolve(this._mockLot(lot_id));
-  }
-
-  // TODO: replace with real DB query filtered by status via InventoryLotService
-  private mockGetLotsByStatus(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _status: string,
-  ): Promise<InventoryLotDocument[]> {
-    return Promise.resolve([]);
-  }
-
-  // TODO: replace with real { lot_id: { $in: ids } } query via InventoryLotService
-  private mockGetLotsByIds(lot_ids: string[]): Promise<InventoryLotDocument[]> {
-    return Promise.resolve(lot_ids.map((id) => this._mockLot(id)));
-  }
-
-  // TODO: replace with real DB findOneAndUpdate (status) via InventoryLotService
-  private mockUpdateLotStatus(
-    lot_id: string,
-    status: InventoryLotStatus,
-  ): Promise<InventoryLotDocument> {
-    return Promise.resolve(this._mockLot(lot_id, { status }));
-  }
-
-  // TODO: replace with real DB findOneAndUpdate (partial) via InventoryLotService
-  private mockUpdateLot(
-    lot_id: string,
-    data: Partial<InventoryLot>,
-  ): Promise<InventoryLotDocument> {
-    return Promise.resolve(this._mockLot(lot_id, data));
-  }
+  constructor(
+    private readonly repository: QCTestRepository,
+    private readonly inventoryLotService: InventoryLotService,
+    @Inject(forwardRef(() => ProductionBatchService))
+    private readonly productionBatchService: ProductionBatchService,
+  ) {}
 
   // ─── CRUD ────────────────────────────────────────────────────────────────
 
@@ -95,12 +60,14 @@ export class QCTestService {
   }
 
   async getTestsByLotId(lot_id: string): Promise<QCTestDocument[]> {
-    await this.mockGetLotById(lot_id); // TODO: validate lot exists via InventoryLotService
+    // Validate lot exists via InventoryLotService
+    await this.inventoryLotService.findById(lot_id);
     return this.repository.findByLotId(lot_id);
   }
 
   async createTest(dto: CreateQCTestDto): Promise<QCTestDocument> {
-    await this.mockGetLotById(dto.lot_id); // TODO: validate lot exists via InventoryLotService
+    // Validate lot exists via InventoryLotService
+    await this.inventoryLotService.findById(dto.lot_id);
 
     const data: Partial<QCTest> = {
       ...dto,
@@ -140,7 +107,8 @@ export class QCTestService {
     lot_id: string,
     dto: QCDecisionDto,
   ): Promise<{ lot: InventoryLotDocument; tests: QCTestDocument[] }> {
-    await this.mockGetLotById(lot_id); // TODO: validate via InventoryLotService
+    // Validate lot exists via InventoryLotService
+    await this.inventoryLotService.findById(lot_id);
 
     if (dto.decision === 'Rejected' && !dto.reject_reason?.trim()) {
       throw new BadRequestException(
@@ -175,7 +143,13 @@ export class QCTestService {
           ? InventoryLotStatus.REJECTED
           : InventoryLotStatus.QUARANTINE;
 
-    const lot = await this.mockUpdateLotStatus(lot_id, lotStatus); // TODO: delegate to InventoryLotService
+    // Update lot status via InventoryLotService
+    const updatedLotResponse = await this.inventoryLotService.updateStatus(
+      lot_id,
+      lotStatus,
+    );
+    // Convert response to InventoryLotDocument-like object
+    const lot = updatedLotResponse as unknown as InventoryLotDocument;
 
     return { lot, tests };
   }
@@ -185,7 +159,8 @@ export class QCTestService {
     action: 'extend' | 'discard',
     dto: { new_expiry_date?: string; performed_by: string },
   ): Promise<InventoryLotDocument> {
-    await this.mockGetLotById(lot_id); // TODO: validate via InventoryLotService
+    // Validate lot exists via InventoryLotService
+    await this.inventoryLotService.findById(lot_id);
 
     if (action === 'extend') {
       if (!dto.new_expiry_date) {
@@ -194,12 +169,17 @@ export class QCTestService {
         );
       }
 
-      // TODO: delegate to InventoryLotService.updateLot()
-      const lot = await this.mockUpdateLot(lot_id, {
-        status: InventoryLotStatus.ACCEPTED,
-        expiration_date: new Date(dto.new_expiry_date),
-      });
+      // Update lot status & expiration date via InventoryLotService.updatePartial()
+      const updatedLotResponse = await this.inventoryLotService.updatePartial(
+        lot_id,
+        {
+          status: InventoryLotStatus.ACCEPTED,
+          expiration_date: new Date(dto.new_expiry_date),
+        },
+      );
+      const lot = updatedLotResponse as unknown as InventoryLotDocument;
 
+      // Create re-test record
       await this.repository.create({
         test_id: uuidv4(),
         lot_id,
@@ -213,7 +193,12 @@ export class QCTestService {
 
       return lot;
     } else {
-      const lot = await this.mockUpdateLotStatus(lot_id, InventoryLotStatus.DEPLETED); // TODO: delegate to InventoryLotService
+      // Discard action: update lot status to DEPLETED
+      const updatedLotResponse = await this.inventoryLotService.updateStatus(
+        lot_id,
+        InventoryLotStatus.DEPLETED,
+      );
+      const lot = updatedLotResponse as unknown as InventoryLotDocument;
 
       await this.repository.create({
         test_id: uuidv4(),
@@ -241,8 +226,15 @@ export class QCTestService {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [quarantineLots, approved_count, rejected_count] = await Promise.all([
-      this.mockGetLotsByStatus('Quarantine'), // TODO: delegate to InventoryLotService
+    // Get lots by status via InventoryLotService
+    // NOTE: findByStatus returns paginated response, using first page with high limit
+    const quarantineResponse = await this.inventoryLotService.findByStatus(
+      InventoryLotStatus.QUARANTINE,
+      1,
+      1000,
+    );
+
+    const [approved_count, rejected_count] = await Promise.all([
       this.repository.countByResultStatus('Pass', startOfMonth, now),
       this.repository.countByResultStatus('Fail', startOfMonth, now),
     ]);
@@ -251,7 +243,7 @@ export class QCTestService {
     const error_rate = total > 0 ? (rejected_count / total) * 100 : 0;
 
     return {
-      pending_count: quarantineLots.length,
+      pending_count: quarantineResponse.data.length,
       approved_count,
       rejected_count,
       error_rate: Math.round(error_rate * 100) / 100,
@@ -277,7 +269,9 @@ export class QCTestService {
     if (tests.length === 0) return [];
 
     const uniqueLotIds = [...new Set(tests.map((t) => t.lot_id))];
-    const lots = await this.mockGetLotsByIds(uniqueLotIds); // TODO: delegate to InventoryLotService
+
+    // Use batch query via InventoryLotService.findByIds() for efficiency
+    const lots = await this.inventoryLotService.findByIds(uniqueLotIds);
     const lotMap = new Map(lots.map((l) => [l.lot_id, l]));
 
     const supplierMap = new Map<
@@ -303,5 +297,62 @@ export class QCTestService {
         total > 0 ? Math.round((data.approved / total) * 100 * 100) / 100 : 0;
       return { supplier_name, ...data, quality_rate };
     });
+  }
+
+  // ─── Phase 3 - ProductionBatch Integration ────────────────────────────────────
+
+  /**
+   * Create InventoryLot from completed ProductionBatch
+   * Called automatically when batch status transitions to Complete
+   * Reference: QC_INTEGRATION_NEEDS.md section 3.1
+   *
+   * @param batch_id - UUID of the completed production batch
+   * @returns Created InventoryLot response DTO
+   * @throws NotFoundException - If batch not found or batch status is not Complete
+   * @throws BadRequestException - If batch data is invalid for lot creation
+   */
+  async createLotFromProdBatch(
+    batch_id: string,
+  ): Promise<InventoryLotDocument> {
+    this.logger.log(
+      `Creating inventory lot from production batch: ${batch_id}`,
+    );
+
+    // 1. Fetch production batch
+    const batch = await this.productionBatchService.findOne(batch_id);
+    if (!batch) {
+      throw new NotFoundException(`Production batch '${batch_id}' not found`);
+    }
+
+    // 2. Validate batch status is Complete
+    if (batch.status !== 'Complete') {
+      throw new BadRequestException(
+        `Cannot create inventory lot from batch with status '${batch.status}'. ` +
+          `Batch must be Complete`,
+      );
+    }
+
+    // 3. Create InventoryLot from batch data
+    // Data mapping as documented at top of file
+    const createLotDto: CreateInventoryLotDto = {
+      lot_id: uuidv4(),
+      material_id: batch.product_id,
+      manufacturer_name: 'Internal Production',
+      manufacturer_lot: batch.batch_number,
+      quantity: Number(batch.batch_size), // Convert Decimal128 to number
+      unit_of_measure: batch.unit_of_measure,
+      received_date: new Date(),
+      expiration_date: batch.expiration_date,
+      is_sample: false,
+      status: InventoryLotStatus.QUARANTINE,
+      notes: `Auto-created from production batch ${batch.batch_number}`,
+    };
+
+    this.logger.log(
+      `Auto-creating inventory lot ${createLotDto.lot_id} from batch ${batch_id}`,
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this.inventoryLotService.create(createLotDto) as any;
   }
 }
