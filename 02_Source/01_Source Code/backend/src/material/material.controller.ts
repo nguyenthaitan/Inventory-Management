@@ -11,10 +11,14 @@ import {
   HttpStatus,
   ParseIntPipe,
   BadRequestException,
-  ValidationPipe,
+  ValidationPipe, UseGuards,
 } from '@nestjs/common';
 import { MaterialService } from './material.service';
 import { CreateMaterialDto, UpdateMaterialDto } from './material.dto';
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import {Roles} from "../auth/decorators/roles.decorator";
+import {UserRole} from "../schemas/user.schema";
 
 /**
  * Material Controller
@@ -22,6 +26,7 @@ import { CreateMaterialDto, UpdateMaterialDto } from './material.dto';
  * Routes: /api/materials
  */
 @Controller('materials')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class MaterialController {
   constructor(private readonly materialService: MaterialService) {}
 
@@ -31,6 +36,7 @@ export class MaterialController {
    * Query params: page (default: 1), limit (default: 20)
    * Accessible by: All authenticated users
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(

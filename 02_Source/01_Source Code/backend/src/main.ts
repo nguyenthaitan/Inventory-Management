@@ -9,7 +9,7 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:5173', 'http://localhost:3000'], // url frontend
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-User-Role', 'X-User-Id'],
     credentials: true, // cho phép cookie và header xác thực
     preflightContinue: false, // truyền phản hồi preflight cho bộ xử lý tiếp theo
     optionsSuccessStatus: 204,

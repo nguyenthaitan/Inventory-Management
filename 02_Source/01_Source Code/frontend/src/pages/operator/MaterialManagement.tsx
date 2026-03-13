@@ -1,11 +1,4 @@
-import React from 'react'
-
-const Page: React.FC = () => {
-	return (
-		<div>
-			<h1>Material Management (Operator)</h1>
-		</div>
-	)
+import ComingSoon from "../../components/ComingSoon";
+export default function MaterialManagement() {
+  return <ComingSoon title="Quan ly nguyen lieu" description="Quan ly nguyen lieu" />;
 }
-
-export default Page

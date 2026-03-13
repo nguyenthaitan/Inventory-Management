@@ -54,11 +54,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     // Lấy realm roles từ token
     const realmRoles = payload.realm_access?.roles ?? [];
+    this.logger.debug(`[JwtStrategy] Token realm_roles: ${JSON.stringify(realmRoles)}`);
 
     // Map Keycloak role → UserRole enum
     const appRoles: UserRole[] = Object.values(UserRole);
+    this.logger.debug(`[JwtStrategy] Available app roles: ${JSON.stringify(appRoles)}`);
+
     const matchedRole = appRoles.find((r) => realmRoles.includes(r));
+    this.logger.debug(`[JwtStrategy] Matched role: ${matchedRole}`);
+
     const role = matchedRole ?? UserRole.OPERATOR;
+    this.logger.log(`[JwtStrategy] User ${payload.preferred_username} assigned role: ${role}`);
 
     return {
       keycloak_id: payload.sub,

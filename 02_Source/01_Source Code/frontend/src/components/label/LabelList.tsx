@@ -56,11 +56,15 @@ export const LabelList: React.FC<LabelListProps> = ({
       } else {
         result = await labelService.findAll(page, limit);
       }
-      setTemplates(result.data);
-      setTotal(result.total);
-      setTotalPages(result.totalPages);
-    } catch {
+      setTemplates(result?.data || []);
+      setTotal(result?.total || 0);
+      setTotalPages(result?.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to load label templates:", err);
       setError("Failed to load label templates. Please try again.");
+      setTemplates([]);
+      setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }

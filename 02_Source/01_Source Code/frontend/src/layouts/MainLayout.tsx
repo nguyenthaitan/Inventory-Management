@@ -186,7 +186,7 @@ export default function Layout() {
             label: "Dashboard",
           },
           {
-            to: "/operator/materials",
+            to: "/operator/material",
             icon: <Package size={20} />,
             label: "Quản lý nguyên liệu",
           },

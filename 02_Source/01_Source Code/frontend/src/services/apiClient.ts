@@ -16,6 +16,76 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const API_TIMEOUT = 30000;
 
+// ───── Token & Auth Utilities ─────────────────────────────────────────────────
+/**
+ * Validate token format và kiểm tra hết hạn
+ */
+export function isTokenValid(): boolean {
+  const token = localStorage.getItem("auth_token");
+  if (!token) return false;
+
+  try {
+    // Decode JWT payload (without verification)
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+
+    const decoded = JSON.parse(atob(parts[1]));
+    const exp = decoded.exp;
+
+    // Check if token expired
+    if (exp && exp * 1000 < Date.now()) {
+      localStorage.removeItem("auth_token");
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get current user info từ localStorage
+ */
+export function getCurrentUser(): { user_id?: string; role?: string; username?: string } | null {
+  try {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) return null;
+    return JSON.parse(userStr);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get user role
+ */
+export function getCurrentUserRole(): string | null {
+  const user = getCurrentUser();
+  return user?.role || null;
+}
+
+/**
+ * Check if user has required role(s)
+ */
+export function hasPermission(requiredRoles: string | string[]): boolean {
+  const userRole = getCurrentUserRole();
+  if (!userRole) return false;
+
+  if (typeof requiredRoles === "string") {
+    return userRole === requiredRoles;
+  }
+
+  return requiredRoles.includes(userRole);
+}
+
+/**
+ * Check if user is authenticated
+ */
+export function isAuthenticated(): boolean {
+  return isTokenValid();
+}
+
 /**
  * API Client class
  * Quản lý tất cả HTTP requests với error handling tổng quát
@@ -32,13 +102,33 @@ class ApiClient {
       },
     });
 
-    // Request interceptor - thêm token auth
+    // Request interceptor - thêm token auth + user info
     this.axiosInstance.interceptors.request.use(
       (config) => {
+        // Không require token cho auth endpoints
+        const isAuthEndpoint = config.url?.includes('/auth/');
+
+        // Thêm Authorization header với token (ngoại trừ auth endpoints)
         const token = localStorage.getItem("auth_token");
-        if (token) {
+        if (token && !isAuthEndpoint) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log(`[API] Request to ${config.url} - Token added:`, token.substring(0, 20) + '...');
+        } else if (!isAuthEndpoint && !token) {
+          console.warn(`[API] Request to ${config.url} - NO TOKEN FOUND!`);
+        } else if (isAuthEndpoint) {
+          console.log(`[API] Auth endpoint ${config.url} - Skipping token`);
         }
+
+        // Thêm user role info vào header (optional, để backend dễ check)
+        const user = getCurrentUser();
+        if (user?.role) {
+          config.headers["X-User-Role"] = user.role;
+          console.log(`[API] X-User-Role header set to:`, user.role);
+        }
+        if (user?.user_id) {
+          config.headers["X-User-Id"] = user.user_id;
+        }
+
         return config;
       },
       (error) => Promise.reject(error),
@@ -48,11 +138,30 @@ class ApiClient {
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       (error) => {
-        // Nếu token hết hạn, redirect to login
+        // Nếu token hết hạn hoặc unauthorized, redirect to login
         if (error.response?.status === 401) {
+          console.error(`[API] 401 Unauthorized - Token invalid or expired`);
+          console.error(`[API] Response:`, error.response?.data);
           localStorage.removeItem("auth_token");
+          localStorage.removeItem("user");
           window.location.href = "/login";
         }
+
+        // Nếu forbidden (role không phù hợp), redirect to dashboard
+        if (error.response?.status === 403) {
+          console.error(`[API] 403 Forbidden - Insufficient role`);
+          console.error(`[API] Response:`, error.response?.data);
+          const userRole = getCurrentUserRole();
+          const dashboardMap: Record<string, string> = {
+            manager: "/manager/dashboard",
+            operator: "/operator/dashboard",
+            "quality-control": "/qc/dashboard",
+            it_admin: "/admin/dashboard",
+          };
+          const redirectUrl = userRole ? dashboardMap[userRole] || "/" : "/login";
+          window.location.href = redirectUrl;
+        }
+
         return Promise.reject(error);
       },
     );

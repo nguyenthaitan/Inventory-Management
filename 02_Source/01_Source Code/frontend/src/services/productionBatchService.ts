@@ -1,10 +1,9 @@
+import { apiClient } from './apiClient';
 import type {
   ProductionBatch,
   BatchComponent,
   PaginatedProductionBatch,
 } from '../types/production';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // ─── Production Batch ─────────────────────────────────────────────────────────
 
@@ -12,11 +11,12 @@ export async function fetchProductionBatches(
   page = 1,
   limit = 20,
 ): Promise<PaginatedProductionBatch> {
-  const res = await fetch(
-    `${API_BASE}/production-batches?page=${page}&limit=${limit}`,
+  const { data, error } = await apiClient.get<PaginatedProductionBatch>(
+    '/production-batches',
+    { params: { page, limit } }
   );
-  if (!res.ok) throw new Error('Failed to fetch production batches');
-  return res.json();
+  if (error) throw error;
+  return data!;
 }
 
 export async function fetchProductionBatchesByStatus(
@@ -24,58 +24,50 @@ export async function fetchProductionBatchesByStatus(
   page = 1,
   limit = 20,
 ): Promise<PaginatedProductionBatch> {
-  const res = await fetch(
-    `${API_BASE}/production-batches/status/${encodeURIComponent(status)}?page=${page}&limit=${limit}`,
+  const { data, error } = await apiClient.get<PaginatedProductionBatch>(
+    `/production-batches/status/${encodeURIComponent(status)}`,
+    { params: { page, limit } }
   );
-  if (!res.ok) throw new Error('Failed to fetch batches by status');
-  return res.json();
+  if (error) throw error;
+  return data!;
 }
 
 export async function fetchProductionBatch(id: string): Promise<ProductionBatch> {
-  const res = await fetch(`${API_BASE}/production-batches/${id}`);
-  if (!res.ok) throw new Error('Failed to fetch production batch');
-  return res.json();
+  const { data, error } = await apiClient.get<ProductionBatch>(
+    `/production-batches/${id}`
+  );
+  if (error) throw error;
+  return data!;
 }
 
 export async function createProductionBatch(
   payload: Partial<ProductionBatch>,
 ): Promise<ProductionBatch> {
-  const res = await fetch(`${API_BASE}/production-batches`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to create production batch');
-  }
-  return res.json();
+  const { data, error } = await apiClient.post<ProductionBatch>(
+    '/production-batches',
+    payload
+  );
+  if (error) throw error;
+  return data!;
 }
 
 export async function updateProductionBatch(
   id: string,
   payload: Partial<ProductionBatch>,
 ): Promise<ProductionBatch> {
-  const res = await fetch(`${API_BASE}/production-batches/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to update production batch');
-  }
-  return res.json();
+  const { data, error } = await apiClient.put<ProductionBatch>(
+    `/production-batches/${id}`,
+    payload
+  );
+  if (error) throw error;
+  return data!;
 }
 
 export async function deleteProductionBatch(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/production-batches/${id}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to delete production batch');
-  }
+  const { error } = await apiClient.delete(
+    `/production-batches/${id}`
+  );
+  if (error) throw error;
 }
 
 // ─── Batch Components ─────────────────────────────────────────────────────────
@@ -83,30 +75,23 @@ export async function deleteProductionBatch(id: string): Promise<void> {
 export async function fetchBatchComponents(
   batchId: string,
 ): Promise<BatchComponent[]> {
-  const res = await fetch(
-    `${API_BASE}/production-batches/${batchId}/components`,
+  const { data, error } = await apiClient.get<BatchComponent[]>(
+    `/production-batches/${batchId}/components`
   );
-  if (!res.ok) throw new Error('Failed to fetch batch components');
-  return res.json();
+  if (error) throw error;
+  return data!;
 }
 
 export async function createBatchComponent(
   batchId: string,
   payload: Partial<BatchComponent>,
 ): Promise<BatchComponent> {
-  const res = await fetch(
-    `${API_BASE}/production-batches/${batchId}/components`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    },
+  const { data, error } = await apiClient.post<BatchComponent>(
+    `/production-batches/${batchId}/components`,
+    payload
   );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to create batch component');
-  }
-  return res.json();
+  if (error) throw error;
+  return data!;
 }
 
 export async function updateBatchComponent(
@@ -114,31 +99,20 @@ export async function updateBatchComponent(
   componentId: string,
   payload: Partial<BatchComponent>,
 ): Promise<BatchComponent> {
-  const res = await fetch(
-    `${API_BASE}/production-batches/${batchId}/components/${componentId}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    },
+  const { data, error } = await apiClient.put<BatchComponent>(
+    `/production-batches/${batchId}/components/${componentId}`,
+    payload
   );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to update batch component');
-  }
-  return res.json();
+  if (error) throw error;
+  return data!;
 }
 
 export async function deleteBatchComponent(
   batchId: string,
   componentId: string,
 ): Promise<void> {
-  const res = await fetch(
-    `${API_BASE}/production-batches/${batchId}/components/${componentId}`,
-    { method: 'DELETE' },
+  const { error } = await apiClient.delete(
+    `/production-batches/${batchId}/components/${componentId}`
   );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to delete batch component');
-  }
+  if (error) throw error;
 }

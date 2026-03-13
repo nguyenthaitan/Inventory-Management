@@ -28,8 +28,11 @@ export default function LabelPrintPage() {
   useEffect(() => {
     labelService
       .findAll(1, 100)
-      .then((r) => setTemplates(r.data))
-      .catch(console.error)
+      .then((response) => setTemplates(response.data || []))
+      .catch((err) => {
+        console.error("Failed to load label templates:", err);
+        setTemplates([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
