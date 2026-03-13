@@ -7,7 +7,7 @@ import {
   Put,
   Delete,
   Query,
-  ValidationPipe,
+  ValidationPipe, UseGuards,
 } from '@nestjs/common';
 import { InventoryLotService } from './inventory-lot.service';
 import {
@@ -16,18 +16,24 @@ import {
   InventoryLotSearchParams,
   InventoryLotStatus,
 } from './inventory-lot.dto';
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import {Roles} from "../auth/decorators/roles.decorator";
+import {UserRole} from "../schemas/user.schema";
 
-@Controller('api/inventory-lots')
+@Controller('inventory-lots')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class InventoryLotController {
   constructor(private readonly inventoryLotService: InventoryLotService) {}
 
   // ==================== CRUD Operations ====================
-
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Post()
   async create(@Body(ValidationPipe) dto: CreateInventoryLotDto) {
     return await this.inventoryLotService.create(dto);
   }
 
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get()
   async findAll(
     @Query('page') page: string = '1',

@@ -44,11 +44,16 @@ export default function ProductionBatchList() {
       const result = statusFilter
         ? await fetchProductionBatchesByStatus(statusFilter, page, LIMIT)
         : await fetchProductionBatches(page, LIMIT);
-      setBatches(result.data);
-      setTotal(result.pagination.total);
-      setTotalPages(result.pagination.totalPages || 1);
+
+      setBatches(result?.data || []);
+      setTotal(result?.pagination?.total || 0);
+      setTotalPages(result?.pagination?.totalPages || 1);
     } catch (e: any) {
-      setError(e.message);
+      console.error('Failed to load production batches:', e);
+      setError(e.message || 'Failed to load production batches');
+      setBatches([]);
+      setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }

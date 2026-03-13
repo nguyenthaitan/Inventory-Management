@@ -31,7 +31,7 @@ import { AppService } from './app.service';
     ProductionBatchModule,
     InventoryTransactionModule,
     QCTestModule,
-    AiModule,
+    // AiModule,
     LabelTemplateModule,
   ],
   controllers: [AppController],

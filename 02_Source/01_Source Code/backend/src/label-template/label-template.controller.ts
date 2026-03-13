@@ -11,7 +11,7 @@ import {
   HttpStatus,
   ParseIntPipe,
   BadRequestException,
-  ValidationPipe,
+  ValidationPipe, UseGuards,
 } from '@nestjs/common';
 import { LabelTemplateService } from './label-template.service';
 import {
@@ -21,12 +21,17 @@ import {
   LabelTypeValues,
   LabelType,
 } from './label-template.dto';
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { UserRole } from "../schemas/user.schema";
 
 /**
  * LabelTemplate Controller
  * REST API: /api/label-templates
  */
 @Controller('label-templates')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class LabelTemplateController {
   constructor(private readonly service: LabelTemplateService) {}
 
@@ -34,6 +39,7 @@ export class LabelTemplateController {
    * GET /label-templates
    * List all templates with pagination
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get()
   @HttpCode(HttpStatus.OK)
   findAll(
@@ -47,6 +53,7 @@ export class LabelTemplateController {
    * GET /label-templates/search?q=query
    * Search by template_id or template_name
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get('search')
   @HttpCode(HttpStatus.OK)
   search(
@@ -64,6 +71,7 @@ export class LabelTemplateController {
    * GET /label-templates/types
    * Get all available label types
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get('types')
   @HttpCode(HttpStatus.OK)
   getTypes() {
@@ -74,6 +82,7 @@ export class LabelTemplateController {
    * GET /label-templates/type/:type
    * Filter templates by label_type
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get('type/:type')
   @HttpCode(HttpStatus.OK)
   filterByType(
@@ -93,6 +102,7 @@ export class LabelTemplateController {
    * GET /label-templates/:id
    * Get a single template by MongoDB _id
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
@@ -103,6 +113,7 @@ export class LabelTemplateController {
    * POST /label-templates
    * Create a new label template
    */
+  @Roles(UserRole.MANAGER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -116,6 +127,7 @@ export class LabelTemplateController {
    * POST /label-templates/generate
    * Generate a label by populating template with entity data
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Post('generate')
   @HttpCode(HttpStatus.OK)
   generate(
@@ -129,6 +141,7 @@ export class LabelTemplateController {
    * PUT /label-templates/:id
    * Update a label template
    */
+  @Roles(UserRole.MANAGER)
   @Put(':id')
   @HttpCode(HttpStatus.OK)
   update(
@@ -143,6 +156,7 @@ export class LabelTemplateController {
    * DELETE /label-templates/:id
    * Delete a label template
    */
+  @Roles(UserRole.MANAGER)
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string) {

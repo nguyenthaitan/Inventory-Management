@@ -44,19 +44,104 @@ import OperatorProductionBatchList from "../pages/operator/production-batches/Li
 import OperatorProductionBatchDetail from "../pages/operator/production-batches/Detail";
 import OperatorProductionBatchForm from "../pages/operator/production-batches/FormPage";
 import type { JSX } from "react";
+import { isTokenValid } from "../utils/authUtils";
+import StockManagement from "../pages/manager/StockManagement.tsx";
 
-// ProtectedRoute component - React component thực sự kiểm tra token mỗi lần render
-function ProtectedRoute({ element }: { element: JSX.Element }) {
+/**
+ * Get user role from localStorage with normalization
+ */
+function getUserRole(): string | null {
+  try {
+    const userStr =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (!userStr) return null;
+    const user = JSON.parse(userStr);
+    const role = user.role as string;
+
+    // Normalize role: backend sends uppercase, convert to frontend lowercase format
+    const roleMap: Record<string, string> = {
+      Manager: "manager",
+      Operator: "operator",
+      "Quality Control Technician": "quality-control",
+      "IT Administrator": "it_admin",
+    };
+
+    return roleMap[role] || role;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * ProtectedRoute component - kiểm tra token + optional role
+ */
+function ProtectedRoute({
+  element,
+  requiredRoles,
+}: {
+  element: JSX.Element;
+  requiredRoles?: string[];
+}) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  if (!token) {
+  const userRole = getUserRole();
+
+  // Check token validity
+  if (!token || !isTokenValid()) {
     return <Navigate to="/login" replace />;
   }
+
+  // Check role if required
+  if (requiredRoles && requiredRoles.length > 0) {
+    if (!userRole || !requiredRoles.includes(userRole)) {
+      // Redirect to appropriate dashboard based on role
+      const dashboardMap: Record<string, string> = {
+        manager: "/manager/dashboard",
+        operator: "/operator/dashboard",
+        "quality-control": "/qc/dashboard",
+        it_admin: "/admin/dashboard",
+      };
+      const redirectUrl = userRole ? dashboardMap[userRole] || "/" : "/login";
+      return <Navigate to={redirectUrl} replace />;
+    }
+  }
+
   return element;
 }
 
-function requireAuth(element: JSX.Element) {
-  return <ProtectedRoute element={element} />;
+/**
+ * Helper function để wrap component với ProtectedRoute
+ */
+function requireAuth(element: JSX.Element, requiredRoles?: string[]) {
+  return <ProtectedRoute element={element} requiredRoles={requiredRoles} />;
+}
+
+/**
+ * Helper function cho Manager routes
+ */
+function requireManagerAuth(element: JSX.Element) {
+  return requireAuth(element, ["manager"]);
+}
+
+/**
+ * Helper function cho Operator routes
+ */
+function requireOperatorAuth(element: JSX.Element) {
+  return requireAuth(element, ["operator"]);
+}
+
+/**
+ * Helper function cho QC routes
+ */
+function requireQCAuth(element: JSX.Element) {
+  return requireAuth(element, ["quality-control"]);
+}
+
+/**
+ * Helper function cho Admin routes
+ */
+function requireAdminAuth(element: JSX.Element) {
+  return requireAuth(element, ["it_admin"]);
 }
 
 // HomeRedirect component - redirect "/" về login hoặc dashboard dựa trên token và role
@@ -72,7 +157,17 @@ function HomeRedirect() {
 
   try {
     const user = JSON.parse(userStr);
-    switch (user.role) {
+    // Normalize role to frontend format
+    const role = typeof user.role === "string" ? user.role : "";
+    const roleMap: Record<string, string> = {
+      Manager: "manager",
+      Operator: "operator",
+      "Quality Control Technician": "quality-control",
+      "IT Administrator": "it_admin",
+    };
+    const normalizedRole = roleMap[role] || role;
+
+    switch (normalizedRole) {
       case "manager":
         return <Navigate to="/manager/dashboard" replace />;
       case "operator":
@@ -98,95 +193,133 @@ export const router = createBrowserRouter([
     path: "",
     element: <MainLayout />,
     children: [
-      // IT ADMIN
-      { path: "/it-admin/dashboard", element: requireAuth(<DashboardIT />) },
+      // IT ADMIN - Chỉ allow role 'it_admin'
+      { path: "/admin/dashboard", element: requireAdminAuth(<DashboardIT />) },
       {
-        path: "/it-admin/monitoring",
-        element: requireAuth(<SystemMonitoring />),
+        path: "/admin/monitoring",
+        element: requireAdminAuth(<SystemMonitoring />),
       },
-      { path: "/it-admin/backup", element: requireAuth(<BackupRestore />) },
-      { path: "/it-admin/error-logs", element: requireAuth(<ErrorLogs />) },
-      { path: "/it-admin/reports", element: requireAuth(<SystemReports />) },
+      { path: "/admin/backup", element: requireAdminAuth(<BackupRestore />) },
+      { path: "/admin/error-logs", element: requireAdminAuth(<ErrorLogs />) },
+      { path: "/admin/reports", element: requireAdminAuth(<SystemReports />) },
 
-      // QC
-      { path: "/qc/dashboard", element: requireAuth(<DashboardQC />) },
-      { path: "/qc/inbound", element: requireAuth(<InboundControl />) },
-      { path: "/qc/inventory", element: requireAuth(<InventoryQC />) },
-      { path: "/qc/inspection", element: requireAuth(<ProductInspection />) },
+      // QC - Chỉ allow role 'quality-control'
+      { path: "/qc/dashboard", element: requireQCAuth(<DashboardQC />) },
+      { path: "/qc/inbound", element: requireQCAuth(<InboundControl />) },
+      { path: "/qc/inventory", element: requireQCAuth(<InventoryQC />) },
+      { path: "/qc/inspection", element: requireQCAuth(<ProductInspection />) },
       {
         path: "/qc/traceability",
-        element: requireAuth(<ReportTraceability />),
+        element: requireQCAuth(<ReportTraceability />),
       },
 
       // Manager
-      { path: "manager/dashboard", element: <DashboardManager /> },
-      { path: "manager/inventory", element: <InventoryManager /> },
-      { path: "manager/material", element: <MaterialManagementManager /> },
-      { path: "manager/materials", element: <ManagerMaterialList /> },
-      { path: "manager/materials/create", element: <ManagerMaterialForm /> },
-      { path: "manager/materials/:id", element: <ManagerMaterialDetail /> },
-      { path: "manager/materials/:id/edit", element: <ManagerMaterialForm /> },
-      { path: "manager/product", element: <ProductManagementManager /> },
-      { path: "manager/reports", element: <ReportsManager /> },
       {
-        path: "manager/transaction",
-        element: requireAuth(<TransactionManagementManager />),
+        path: "/manager/dashboard",
+        element: requireAuth(<DashboardManager />),
       },
-      { path: "manager/user", element: <UserManagementManager /> },
-      { path: "manager/production-batches", element: <ProductionBatchList /> },
+      { path: "/manager/inventory", element: requireAuth(<InventoryLot />) },
       {
-        path: "manager/production-batches/create",
+        path: "/manager/material",
+        element: requireAuth(<MaterialManagementManager />),
+      },
+      {
+        path: "/manager/product",
+        element: requireAuth(<ProductManagementManager />),
+      },
+      { path: "/manager/reports", element: requireAuth(<ReportsManager />) },
+      {
+        path: "/manager/transaction",
+        element: requireManagerAuth(<TransactionManagementManager />),
+      },
+      {
+        path: "/manager/user",
+        element: requireAuth(<UserManagementManager />),
+      },
+      { path: "/manager/labels", element: <LabelManagement /> },
+      { path: "/manager/production-batches", element: <ProductionBatchList /> },
+      {
+        path: "/manager/production-batches/create",
         element: <ProductionBatchForm />,
       },
       {
-        path: "manager/production-batches/:id",
+        path: "/manager/production-batches/:id",
         element: <ProductionBatchDetail />,
       },
       {
-        path: "manager/production-batches/:id/edit",
+        path: "/manager/production-batches/:id/edit",
         element: <ProductionBatchForm />,
       },
-      {
-        path: "manager/inventory-transactions",
-        element: <InventoryTransactionListManager />,
-      },
 
-      // Operator
-      { path: "operator/dashboard", element: <DashboardOperator /> },
-      { path: "operator/audit", element: <InventoryAuditOperator /> },
-      { path: "operator/material", element: <MaterialManagementOperator /> },
-      { path: "operator/materials", element: <OperatorMaterialList /> },
-      { path: "operator/materials/create", element: <OperatorMaterialForm /> },
-      { path: "operator/materials/:id", element: <OperatorMaterialDetail /> },
+      // Operator - Chỉ allow role 'operator'
       {
-        path: "operator/materials/:id/edit",
-        element: <OperatorMaterialForm />,
-      },
-      { path: "operator/product", element: <ProductCreationOperator /> },
-      { path: "operator/stock-in", element: <StockInOperator /> },
-      { path: "operator/stock-out", element: <StockOutOperator /> },
-      { path: "operator/history", element: <TransactionHistoryOperator /> },
-      {
-        path: "operator/production-batches",
-        element: <OperatorProductionBatchList />,
+        path: "/operator/dashboard",
+        element: requireOperatorAuth(<DashboardOperator />),
       },
       {
-        path: "operator/production-batches/create",
-        element: <OperatorProductionBatchForm />,
+        path: "/operator/audit",
+        element: requireOperatorAuth(<InventoryAuditOperator />),
       },
       {
-        path: "operator/production-batches/:id",
-        element: <OperatorProductionBatchDetail />,
+        path: "/operator/material",
+        element: requireOperatorAuth(<MaterialManagementOperator />),
       },
       {
-        path: "operator/production-batches/:id/edit",
-        element: <OperatorProductionBatchForm />,
+        path: "/operator/materials",
+        element: requireOperatorAuth(<OperatorMaterialList />),
       },
       {
-        path: "operator/inventory-transactions",
-        element: <InventoryTransactionListOperator />,
+        path: "/operator/materials/create",
+        element: requireOperatorAuth(<OperatorMaterialForm />),
       },
-
+      {
+        path: "/operator/materials/:id",
+        element: requireOperatorAuth(<OperatorMaterialDetail />),
+      },
+      {
+        path: "/operator/materials/:id/edit",
+        element: requireOperatorAuth(<OperatorMaterialForm />),
+      },
+      {
+        path: "/operator/product",
+        element: requireOperatorAuth(<ProductCreationOperator />),
+      },
+      {
+        path: "/operator/stock-in",
+        element: requireOperatorAuth(<StockInOperator />),
+      },
+      {
+        path: "/operator/stock-out",
+        element: requireOperatorAuth(<StockOutOperator />),
+      },
+      {
+        path: "/operator/history",
+        element: requireOperatorAuth(<TransactionHistoryOperator />),
+      },
+      {
+        path: "/operator/labels",
+        element: requireOperatorAuth(<LabelPrintOperator />),
+      },
+      {
+        path: "/operator/production-batches",
+        element: requireOperatorAuth(<OperatorProductionBatchList />),
+      },
+      {
+        path: "/operator/production-batches/create",
+        element: requireOperatorAuth(<OperatorProductionBatchForm />),
+      },
+      {
+        path: "/operator/production-batches/:id",
+        element: requireOperatorAuth(<OperatorProductionBatchDetail />),
+      },
+      {
+        path: "/operator/production-batches/:id/edit",
+        element: requireOperatorAuth(<OperatorProductionBatchForm />),
+      },
+      {
+        path: "/operator/inventory-transactions",
+        element: requireOperatorAuth(<InventoryTransactionListOperator />),
+      },
       // Catch-all placeholder
       {
         path: "*",
