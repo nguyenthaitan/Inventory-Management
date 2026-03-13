@@ -11,7 +11,7 @@ import InventoryQC from "../pages/qc/InventoryQC";
 import ProductInspection from "../pages/qc/ProductInspection";
 import ReportTraceability from "../pages/qc/ReportTraceability";
 import DashboardManager from "../pages/manager/Dashboard";
-import InventoryManager from "../pages/manager/Inventory";
+import InventoryManager from "../pages/manager/InventoryManager";
 import MaterialManagementManager from "../pages/manager/MaterialManagement";
 import ManagerMaterialList from "../pages/manager/materials/List";
 import ManagerMaterialDetail from "../pages/manager/materials/Detail";
