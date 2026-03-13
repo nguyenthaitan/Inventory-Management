@@ -23,7 +23,7 @@ services:
     container_name: inventory_frontend
     restart: always
     ports:
-      - "3000:3000"
+      - "3000:80"
     networks:
       - inventory_network
     depends_on:
