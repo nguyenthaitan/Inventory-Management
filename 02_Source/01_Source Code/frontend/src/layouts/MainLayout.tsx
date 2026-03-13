@@ -84,10 +84,10 @@ export default function Layout() {
     return <Navigate to="/login" replace />;
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
-    navigate("/login");
-  };
+  // const handleLogout = () => {
+  //   localStorage.removeItem("currentUser");
+  //   navigate("/login");
+  // };
 
   // Hàm hiển thị tên vai trò trên giao diện
   const getDisplayNameFromUsername = (_username?: string) => {
@@ -196,7 +196,7 @@ export default function Layout() {
             to: "/qc/inspection",
             icon: <FileText size={20} />,
             label: "Kiểm định sản phẩm",
-          }
+          },
         ];
       case "operator":
         return [
@@ -283,10 +283,10 @@ export default function Layout() {
 
   // Thêm handleLogout
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    navigate('/login', { replace: true });
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
   };
 
   return (
