@@ -16,17 +16,6 @@ async function bootstrap() {
   });
 
   // lấy cổng từ ConfigService (đọc từ env hoặc nơi khác)
-  // bật ValidationPipe toàn cục để xử lý các DTO
-  // whitelist loại bỏ các thuộc tính không khai báo trong DTO,
-  // transform tự động convert payload thành instance class
-  app.useGlobalPipes(
-    new (require('@nestjs/common').ValidationPipe)({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
-
   const config = app.get(ConfigService);
   const port = config.get<string>('PORT') ?? '3000';
   await app.listen(parseInt(port, 10));

@@ -4,20 +4,10 @@
  */
 
 // 1. Kết nối Database
-db = db.getSiblingDB("inventory");
-
-// 2. Dọn dẹp Database cũ (Cẩn thận khi sử dụng)
-const collections = [
-  "users",
-  "materials",
-  "labeltemplates",
-  "inventorylots",
-  "inventorytransactions",
-  "productionbatches",
-  "batchcomponents",
-  "qctests",
-];
-collections.forEach((col) => db[col].drop());
+db = db.getSiblingDB("inventory_management_db");
+// Drop database nếu đã tồn tại để đảm bảo khởi tạo mới
+db.dropDatabase();
+print(">>> Database 'inventory_management_db' created and selected.");
 
 // --------------------------------------------------------------------------
 // 3. TẠO COLLECTIONS VỚI SCHEMA VALIDATION
@@ -76,7 +66,7 @@ db.createCollection("materials", {
 });
 
 // --- Inventory Lots ---
-db.createCollection("inventorylots", {
+db.createCollection("inventory_lots", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -115,7 +105,7 @@ db.createCollection("inventorylots", {
 });
 
 // --- Inventory Transactions ---
-db.createCollection("inventorytransactions", {
+db.createCollection("inventory_transactions", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -137,7 +127,7 @@ db.createCollection("inventorytransactions", {
 });
 
 // --- QC Tests ---
-db.createCollection("qctests", {
+db.createCollection("qc_tests", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -150,7 +140,7 @@ db.createCollection("qctests", {
 });
 
 // --- Production Batches ---
-db.createCollection("productionbatches", {
+db.createCollection("production_batches", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -163,8 +153,8 @@ db.createCollection("productionbatches", {
 });
 
 // --- Batch Components & Label Templates (Tạo cơ bản) ---
-db.createCollection("batchcomponents");
-db.createCollection("labeltemplates");
+db.createCollection("batch_components");
+db.createCollection("label_templates");
 
 // --------------------------------------------------------------------------
 // 4. TẠO INDEXES (TỐI ƯU HÓA TRUY VẤN)
@@ -177,16 +167,16 @@ db.materials.createIndex({ material_id: 1 }, { unique: true });
 db.materials.createIndex({ part_number: 1 }, { unique: true });
 db.materials.createIndex({ material_name: "text" }); // Tìm kiếm nhanh tên vật tư
 
-db.inventorylots.createIndex({ lot_id: 1 }, { unique: true });
-db.inventorylots.createIndex({ material_id: 1 });
-db.inventorylots.createIndex({ expiration_date: 1 }); // Cảnh báo hàng hết hạn
+db.inventory_lots.createIndex({ lot_id: 1 }, { unique: true });
+db.inventory_lots.createIndex({ material_id: 1 });
+db.inventory_lots.createIndex({ expiration_date: 1 }); // Cảnh báo hàng hết hạn
 
-db.inventorytransactions.createIndex({ lot_id: 1, transaction_date: -1 });
+db.inventory_transactions.createIndex({ lot_id: 1, transaction_date: -1 });
 
-db.productionbatches.createIndex({ batch_number: 1 }, { unique: true });
-db.productionbatches.createIndex({ product_id: 1 });
+db.production_batches.createIndex({ batch_number: 1 }, { unique: true });
+db.production_batches.createIndex({ product_id: 1 });
 
-db.qctests.createIndex({ lot_id: 1 });
+db.qc_tests.createIndex({ lot_id: 1 });
 
 // --------------------------------------------------------------------------
 // 5. CHÈN DỮ LIỆU MẪU (INSERT MANY)
@@ -276,7 +266,7 @@ db.materials.insertMany([
 ]);
 
 // Chèn Lô hàng
-db.inventorylots.insertMany([
+db.inventory_lots.insertMany([
   {
     lot_id: "lot-001-d3-2025",
     material_id: "MAT-001",
@@ -456,7 +446,7 @@ db.inventorylots.insertMany([
 ]);
 
 // Chèn Giao dịch
-db.inventorytransactions.insertMany([
+db.inventory_transactions.insertMany([
   {
     transaction_id: "txn-001-receipt",
     lot_id: "lot-001-d3-2025",
@@ -508,25 +498,9 @@ db.inventorytransactions.insertMany([
     created_date: new Date(),
   },
 ]);
-// thêm nhiều giao dịch mẫu
-const extraTxns = [];
-for (let i = 2; i <= 30; i++) {
-  extraTxns.push({
-    transaction_id: `txn-uuid-${String(i).padStart(3,'0')}`,
-    lot_id: i % 2 === 0 ? "lot-uuid-001" : "lot-uuid-002",
-    transaction_type: ["Receipt","Usage","Adjustment"][i % 3],
-    quantity: NumberDecimal((Math.random() * 50 + 1).toFixed(3)),
-    unit_of_measure: "kg",
-    performed_by: i % 2 === 0 ? "jdoe" : "asmith",
-    transaction_date: new Date(2025, 0, i),
-    created_date: new Date(2025, 0, i),
-    notes: i % 5 === 0 ? "automated seed" : undefined,
-  });
-}
-db.inventorytransactions.insertMany(extraTxns);
 
 // Chèn Mẫu nhãn
-db.labeltemplates.insertOne({
+db.label_templates.insertOne({
   template_id: "TPL-RM-01",
   template_name: "Raw Material 2x1",
   label_type: "Raw Material",

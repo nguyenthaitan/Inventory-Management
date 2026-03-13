@@ -184,10 +184,9 @@ export class InventoryLotAPI {
    * Update inventory lot
    */
   static async update(id: string, payload: Partial<InventoryLot>) {
-    const { lot_id, ...body } = payload; // Ensure lot_id is not sent in the body
     const { data, error } = await apiClient.put<InventoryLot>(
       `/inventory-lots/${id}`,
-      body,
+      payload,
     );
 
     if (error) {

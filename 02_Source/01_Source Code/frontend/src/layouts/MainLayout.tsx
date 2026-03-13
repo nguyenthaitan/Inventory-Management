@@ -1,11 +1,5 @@
 import { useState, type ReactNode } from "react";
-import {
-  Link,
-  useNavigate,
-  useLocation,
-  Outlet,
-  Navigate,
-} from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -75,23 +69,24 @@ export default function Layout() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const stored = localStorage.getItem("currentUser");
-  const user: { username: string; role: string; label?: string } | null = stored
-    ? JSON.parse(stored)
-    : null;
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // const handleLogout = () => {
-  //   localStorage.removeItem("currentUser");
-  //   navigate("/login");
-  // };
+  // Lấy user từ localStorage
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
 
   // Hàm hiển thị tên vai trò trên giao diện
-  const getDisplayNameFromUsername = (_username?: string) => {
-    return user?.label ?? getRoleLabel();
+  const getDisplayNameFromUsername = (username?: string) => {
+    switch (username) {
+      case "1":
+        return "Manager";
+      case "2":
+        return "Quality Control";
+      case "3":
+        return "Operator";
+      case "4":
+        return "IT Admin";
+      default:
+        return "Staff";
+    }
   };
 
   const getRoleLabel = () => {
@@ -125,19 +120,9 @@ export default function Layout() {
             label: "Quản lý hàng hóa",
           },
           {
-            to: "/manager/materials",
-            icon: <Package size={20} />,
-            label: "Quản lý nguyên liệu",
-          },
-          {
             to: "/manager/in-out",
             icon: <FileText size={20} />,
             label: "Quản lý nhập/xuất kho",
-          },
-          {
-            to: "/manager/inventory-transactions",
-            icon: <FileText size={20} />,
-            label: "Quản lý giao dịch kho",
           },
           {
             to: "/manager/stock",
@@ -176,11 +161,6 @@ export default function Layout() {
             to: "/qc/inbound",
             icon: <ClipboardCheck size={20} />,
             label: "Kiểm soát đầu vào",
-          },
-          {
-            to: "/qc/inspection",
-            icon: <ShieldCheck size={20} />,
-            label: "Kiểm định sản phẩm",
           },
           {
             to: "/qc/inventory",
@@ -234,11 +214,6 @@ export default function Layout() {
             to: "/operator/history",
             icon: <History size={20} />,
             label: "Lịch sử",
-          },
-          {
-            to: "/operator/inventory-transactions",
-            icon: <FileText size={20} />,
-            label: "Quản lý giao dịch kho",
           },
           {
             to: "/operator/labels",

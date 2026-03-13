@@ -10,7 +10,6 @@ import type {
   CreateMaterialRequest,
   UpdateMaterialRequest,
   PaginatedMaterialResponse,
-  MaterialSearchParams,
   MaterialType,
 } from "../types/Material";
 import { apiConfig, API_ENDPOINTS } from "../config/api.config";
