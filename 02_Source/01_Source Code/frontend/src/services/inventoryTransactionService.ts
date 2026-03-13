@@ -6,6 +6,11 @@ function normalize(t: any): InventoryTransaction {
   return {
     ...t,
     transaction_id: t.transaction_id || t._id,
+    quantity: Number(
+      typeof t.quantity === "object" && t.quantity.$numberDecimal
+        ? t.quantity.$numberDecimal
+        : t.quantity,
+    ), // convert Decimal128 wrapper if present
     _id: t._id || t.transaction_id,
     transaction_date: t.transaction_date
       ? new Date(t.transaction_date).toISOString()
