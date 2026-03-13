@@ -109,7 +109,9 @@ export default function InventoryLot() {
       supplier_name: values.supplier_name,
       received_date: values.received_date,
       expiration_date: values.expiration_date,
-      in_use_expiration_date: values.in_use_expiration_date,
+      ...(values.in_use_expiration_date
+        ? { in_use_expiration_date: values.in_use_expiration_date }
+        : {}),
       status: values.status,
       quantity: values.quantity,
       unit_of_measure: values.unit_of_measure,
@@ -142,7 +144,9 @@ export default function InventoryLot() {
       supplier_name: values.supplier_name,
       received_date: values.received_date,
       expiration_date: values.expiration_date,
-      in_use_expiration_date: values.in_use_expiration_date,
+      ...(values.in_use_expiration_date
+        ? { in_use_expiration_date: values.in_use_expiration_date }
+        : {}),
       status: values.status,
       quantity: values.quantity,
       unit_of_measure: values.unit_of_measure,
