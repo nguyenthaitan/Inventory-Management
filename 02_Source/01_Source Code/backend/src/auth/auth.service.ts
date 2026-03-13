@@ -33,7 +33,6 @@ export class AuthService {
       if (!user) {
         // Nếu không có user trong MongoDB, lấy info từ Keycloak
         const kcUser = await this.keycloakService.findKeycloakUserByUsername(dto.username);
-        console.log('User info from Keycloak:', kcUser);
         if (!kcUser) {
           throw new UnauthorizedException('Không tìm thấy tài khoản Keycloak');
         }
@@ -46,7 +45,6 @@ export class AuthService {
             break;
           }
         }
-        console.log('Assigned role based on Keycloak realm roles:', role);
         // Tạo user trong MongoDB
         const userCreated = await this.userService.create({
           username: kcUser.username,
@@ -70,7 +68,6 @@ export class AuthService {
       if (!user.is_active) {
         throw new UnauthorizedException('Tài khoản đã bị vô hiệu hóa');
       }
-      console.log('User found in MongoDB:', user)
 
       // 3. Cập nhật last_login
       await this.userService.updateLastLogin(user.user_id);
