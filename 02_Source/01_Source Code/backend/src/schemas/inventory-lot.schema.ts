@@ -1,11 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import {
-  Document,
-  SchemaOptions,
-  Types,
-  Schema as MongooseSchema,
-} from 'mongoose';
-import type { Decimal128 } from 'mongoose';
+import { Document, SchemaOptions } from 'mongoose';
+import { InventoryLotStatus } from 'src/inventory-lot/inventory-lot.dto';
 
 export type InventoryLotDocument = InventoryLot & Document;
 
@@ -42,13 +37,13 @@ export class InventoryLot {
 
   @Prop({
     type: String,
-    enum: ['Quarantine', 'Accepted', 'Rejected', 'Depleted'],
+    enum: Object.values(InventoryLotStatus),
     required: true,
   })
-  status: string;
+  status: InventoryLotStatus;
 
-  @Prop({ type: MongooseSchema.Types.Decimal128, required: true })
-  quantity: Decimal128;
+  @Prop({ type: Number, required: true })
+  quantity: number;
 
   @Prop({ type: String, required: true, maxlength: 10 })
   unit_of_measure: string;
@@ -64,6 +59,21 @@ export class InventoryLot {
 
   @Prop({ type: String, required: false })
   notes?: string;
+
+  @Prop({ type: Date, default: Date.now })
+  created_date: Date;
+
+  @Prop({ type: Date, default: Date.now })
+  modified_date: Date;
 }
 
 export const InventoryLotSchema = SchemaFactory.createForClass(InventoryLot);
+
+// Create indexes for performance
+InventoryLotSchema.index({ lot_id: 1 }, { unique: true });
+InventoryLotSchema.index({ material_id: 1 });
+InventoryLotSchema.index({ status: 1 });
+InventoryLotSchema.index({ expiration_date: 1 });
+InventoryLotSchema.index({ created_date: -1 });
+InventoryLotSchema.index({ material_id: 1, status: 1 });
+InventoryLotSchema.index({ is_sample: 1, parent_lot_id: 1 });

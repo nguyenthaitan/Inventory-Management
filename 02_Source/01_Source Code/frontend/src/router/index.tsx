@@ -53,8 +53,18 @@ export const router = createBrowserRouter([
       { path: "admin/backup", element: <BackupRestore /> },
       { path: "admin/error-logs", element: <ErrorLogs /> },
       { path: "admin/reports", element: <SystemReports /> },
+      { path: "admin/dashboard", element: <DashboardIT /> },
+      { path: "admin/monitoring", element: <SystemMonitoring /> },
+      { path: "admin/backup", element: <BackupRestore /> },
+      { path: "admin/error-logs", element: <ErrorLogs /> },
+      { path: "admin/reports", element: <SystemReports /> },
 
       // QC
+      { path: "qc/dashboard", element: <DashboardQC /> },
+      { path: "qc/inbound", element: <InboundControl /> },
+      { path: "qc/inventory", element: <InventoryQC /> },
+      { path: "qc/inspection", element: <ProductInspection /> },
+      { path: "qc/traceability", element: <ReportTraceability /> },
       { path: "qc/dashboard", element: <DashboardQC /> },
       { path: "qc/inbound", element: <InboundControl /> },
       { path: "qc/inventory", element: <InventoryQC /> },
