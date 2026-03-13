@@ -25,8 +25,8 @@ FROM nginx:stable-alpine
 # Copy các file đã build từ Giai đoạn 1 vào thư mục mặc định của Nginx
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Mở cổng 80 (cổng mặc định của HTTP)
-EXPOSE 80
+# Mở cổng 3000 (cổng mặc định của HTTP)
+EXPOSE 3000
 
 # Chạy Nginx
 CMD ["nginx", "-g", "daemon off;"]

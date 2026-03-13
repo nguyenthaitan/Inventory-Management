@@ -27,8 +27,8 @@ RUN npm install --only=production
 # Copy folder 'dist' đã được build từ Giai đoạn 1
 COPY --from=builder /app/dist ./dist
 
-# Mở cổng 3000 (cổng mặc định của NestJS)
-EXPOSE 3000
+# Mở cổng 3001 (cổng mặc định của NestJS)
+EXPOSE 3001
 
 # Lệnh khởi chạy ứng dụng
 CMD ["node", "dist/main"]
