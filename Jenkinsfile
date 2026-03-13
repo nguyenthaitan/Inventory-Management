@@ -3,6 +3,15 @@ pipeline {
 
     stages {
 
+        stage('Prepare ENV') {
+            steps {
+                sh '''
+                cp "/home/ubuntu/codes/Inventory-Management/02_Source/01_Source Code/backend/.env" \
+                "02_Source/01_Source Code/backend/.env"
+                '''
+            }
+        }
+
         stage('Build Docker') {
             steps {
                 sh '''
