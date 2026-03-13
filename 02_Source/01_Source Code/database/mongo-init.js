@@ -10,12 +10,12 @@ db = db.getSiblingDB("inventory");
 const collections = [
   "users",
   "materials",
-  "label_templates",
-  "inventory_lots",
-  "inventory_transactions",
-  "production_batches",
-  "batch_components",
-  "qc_tests",
+  "labeltemplates",
+  "inventorylots",
+  "inventorytransactions",
+  "productionbatches",
+  "batchcomponents",
+  "qctests",
 ];
 collections.forEach((col) => db[col].drop());
 
@@ -76,7 +76,7 @@ db.createCollection("materials", {
 });
 
 // --- Inventory Lots ---
-db.createCollection("inventory_lots", {
+db.createCollection("inventorylots", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -90,7 +90,7 @@ db.createCollection("inventory_lots", {
 });
 
 // --- Inventory Transactions ---
-db.createCollection("inventory_transactions", {
+db.createCollection("inventorytransactions", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -112,7 +112,7 @@ db.createCollection("inventory_transactions", {
 });
 
 // --- QC Tests ---
-db.createCollection("qc_tests", {
+db.createCollection("qctests", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -125,7 +125,7 @@ db.createCollection("qc_tests", {
 });
 
 // --- Production Batches ---
-db.createCollection("production_batches", {
+db.createCollection("productionbatches", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -138,8 +138,8 @@ db.createCollection("production_batches", {
 });
 
 // --- Batch Components & Label Templates (Tạo cơ bản) ---
-db.createCollection("batch_components");
-db.createCollection("label_templates");
+db.createCollection("batchcomponents");
+db.createCollection("labeltemplates");
 
 // --------------------------------------------------------------------------
 // 4. TẠO INDEXES (TỐI ƯU HÓA TRUY VẤN)
@@ -152,16 +152,16 @@ db.materials.createIndex({ material_id: 1 }, { unique: true });
 db.materials.createIndex({ part_number: 1 }, { unique: true });
 db.materials.createIndex({ material_name: "text" }); // Tìm kiếm nhanh tên vật tư
 
-db.inventory_lots.createIndex({ lot_id: 1 }, { unique: true });
-db.inventory_lots.createIndex({ material_id: 1 });
-db.inventory_lots.createIndex({ expiration_date: 1 }); // Cảnh báo hàng hết hạn
+db.inventorylots.createIndex({ lot_id: 1 }, { unique: true });
+db.inventorylots.createIndex({ material_id: 1 });
+db.inventorylots.createIndex({ expiration_date: 1 }); // Cảnh báo hàng hết hạn
 
-db.inventory_transactions.createIndex({ lot_id: 1, transaction_date: -1 });
+db.inventorytransactions.createIndex({ lot_id: 1, transaction_date: -1 });
 
-db.production_batches.createIndex({ batch_number: 1 }, { unique: true });
-db.production_batches.createIndex({ product_id: 1 });
+db.productionbatches.createIndex({ batch_number: 1 }, { unique: true });
+db.productionbatches.createIndex({ product_id: 1 });
 
-db.qc_tests.createIndex({ lot_id: 1 });
+db.qctests.createIndex({ lot_id: 1 });
 
 // --------------------------------------------------------------------------
 // 5. CHÈN DỮ LIỆU MẪU (INSERT MANY)
@@ -191,7 +191,7 @@ db.materials.insertMany([
 ]);
 
 // Chèn Lô hàng
-db.inventory_lots.insertMany([
+db.inventorylots.insertMany([
   {
     lot_id: "lot-uuid-001",
     material_id: "MAT-001",
@@ -210,7 +210,7 @@ db.inventory_lots.insertMany([
 ]);
 
 // Chèn Giao dịch
-db.inventory_transactions.insertMany([
+db.inventorytransactions.insertMany([
   {
     transaction_id: "txn-uuid-001",
     lot_id: "lot-uuid-001",
@@ -237,10 +237,10 @@ for (let i = 2; i <= 30; i++) {
     notes: i % 5 === 0 ? "automated seed" : undefined,
   });
 }
-db.inventory_transactions.insertMany(extraTxns);
+db.inventorytransactions.insertMany(extraTxns);
 
 // Chèn Mẫu nhãn
-db.label_templates.insertOne({
+db.labeltemplates.insertOne({
   template_id: "TPL-RM-01",
   template_name: "Raw Material 2x1",
   label_type: "Raw Material",

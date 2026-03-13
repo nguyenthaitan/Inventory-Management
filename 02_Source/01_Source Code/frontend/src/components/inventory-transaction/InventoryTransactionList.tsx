@@ -35,6 +35,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
       try {
         const result: Awaited<ReturnType<typeof fetchTransactions>> =
           await fetchTransactions({ perPage: pageSize, page });
+        // console.log("Fetched transactions:", result);
         setTransactions(result.items);
         setTotalCount(result.total);
       } catch (err: any) {
