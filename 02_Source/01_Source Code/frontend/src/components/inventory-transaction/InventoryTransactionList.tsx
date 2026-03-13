@@ -32,9 +32,10 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
     async function load() {
       setLoading(true);
       setError(null);
+      console.log("Loading transactions with params:", { page, pageSize });
       try {
         const result: Awaited<ReturnType<typeof fetchTransactions>> =
-          await fetchTransactions({ perPage: pageSize, page });
+          await fetchTransactions({ limit: pageSize, page });
         console.log("Fetched transactions:", result);
         setTransactions(result.items);
         setTotalCount(result.total);
