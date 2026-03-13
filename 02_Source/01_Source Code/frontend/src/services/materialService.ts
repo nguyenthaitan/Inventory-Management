@@ -1,6 +1,5 @@
-import { type Material } from '../types/Material'
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+import { apiClient } from './apiClient';
+import type { Material } from '../types/Material'
 
 function normalize(m: any): Material {
   return {
@@ -12,43 +11,33 @@ function normalize(m: any): Material {
 }
 
 export async function fetchMaterials(): Promise<Material[]> {
-  const res = await fetch(`${API_BASE}/materials`)
-  if (!res.ok) throw new Error('Failed to fetch materials')
-  const data = await res.json()
-  return Array.isArray(data) ? data.map(normalize) : []
+  const { data, error } = await apiClient.get<any[]>('/materials');
+  if (error) throw error;
+  return Array.isArray(data) ? data.map(normalize) : [];
 }
 
 export async function fetchMaterial(id: string): Promise<Material> {
-  const res = await fetch(`${API_BASE}/materials/${id}`)
-  if (!res.ok) throw new Error('Failed to fetch material')
-  const data = await res.json()
-  return normalize(data)
+  const { data, error } = await apiClient.get<any>(`/materials/${id}`);
+  if (error) throw error;
+  return normalize(data);
 }
 
 export async function createMaterial(payload: Partial<Material>) {
-  const res = await fetch(`${API_BASE}/materials`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error('Failed to create material')
-  return normalize(await res.json())
+  const { data, error } = await apiClient.post<any>('/materials', payload);
+  if (error) throw error;
+  return normalize(data);
 }
 
 export async function updateMaterial(id: string, payload: Partial<Material>) {
-  const res = await fetch(`${API_BASE}/materials/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error('Failed to update material')
-  return normalize(await res.json())
+  const { data, error } = await apiClient.put<any>(`/materials/${id}`, payload);
+  if (error) throw error;
+  return normalize(data);
 }
 
 export async function removeMaterial(id: string) {
-  const res = await fetch(`${API_BASE}/materials/${id}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error('Failed to delete material')
-  return await res.json()
+  const { data, error } = await apiClient.delete<any>(`/materials/${id}`);
+  if (error) throw error;
+  return data;
 }
 
 export default {

@@ -18,6 +18,8 @@ import { CreateProductionBatchDto } from './dto/create-production-batch.dto';
 import { UpdateProductionBatchDto } from './dto/update-production-batch.dto';
 import { CreateBatchComponentDto } from './dto/create-batch-component.dto';
 import { UpdateBatchComponentDto } from './dto/update-batch-component.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../schemas/user.schema';
 
 /**
  * ProductionBatch Controller
@@ -38,6 +40,7 @@ export class ProductionBatchController {
    * List all production batches with pagination
    * Query params: page (default: 1), limit (default: 20)
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -52,6 +55,7 @@ export class ProductionBatchController {
    * List all batches for a given product (material)
    * Query params: page, limit
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get('product/:productId')
   @HttpCode(HttpStatus.OK)
   async findByProductId(
@@ -67,6 +71,7 @@ export class ProductionBatchController {
    * List all batches with a given status
    * Query params: page, limit
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get('status/:status')
   @HttpCode(HttpStatus.OK)
   async findByStatus(
@@ -81,6 +86,7 @@ export class ProductionBatchController {
    * GET /production-batches/:id
    * Get a single production batch by batch_id
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
@@ -92,6 +98,7 @@ export class ProductionBatchController {
    * Create a new production batch
    * Body: CreateProductionBatchDto
    */
+  @Roles(UserRole.MANAGER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -106,6 +113,7 @@ export class ProductionBatchController {
    * Update a production batch (partial update)
    * Body: UpdateProductionBatchDto
    */
+  @Roles(UserRole.MANAGER)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
@@ -121,6 +129,7 @@ export class ProductionBatchController {
    * Delete a production batch
    * Batches with status 'In Progress' cannot be deleted
    */
+  @Roles(UserRole.MANAGER)
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
@@ -133,6 +142,7 @@ export class ProductionBatchController {
    * GET /production-batches/:id/components
    * List all components for a given production batch
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get(':id/components')
   @HttpCode(HttpStatus.OK)
   async findComponents(@Param('id') batchId: string) {
@@ -143,6 +153,7 @@ export class ProductionBatchController {
    * GET /production-batches/:id/components/:componentId
    * Get a single batch component
    */
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Get(':id/components/:componentId')
   @HttpCode(HttpStatus.OK)
   async findOneComponent(
@@ -157,6 +168,7 @@ export class ProductionBatchController {
    * Add a component (inventory lot) to a production batch
    * Body: CreateBatchComponentDto
    */
+  @Roles(UserRole.MANAGER)
   @Post(':id/components')
   @HttpCode(HttpStatus.CREATED)
   async createComponent(
@@ -172,6 +184,7 @@ export class ProductionBatchController {
    * Update a batch component (partial update)
    * Body: UpdateBatchComponentDto
    */
+  @Roles(UserRole.MANAGER)
   @Patch(':id/components/:componentId')
   @HttpCode(HttpStatus.OK)
   async updateComponent(
@@ -187,6 +200,7 @@ export class ProductionBatchController {
    * DELETE /production-batches/:id/components/:componentId
    * Remove a component from a production batch
    */
+  @Roles(UserRole.MANAGER)
   @Delete(':id/components/:componentId')
   @HttpCode(HttpStatus.OK)
   async removeComponent(

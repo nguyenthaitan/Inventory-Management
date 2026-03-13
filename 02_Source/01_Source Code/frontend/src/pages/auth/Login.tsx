@@ -23,23 +23,27 @@ const Login = () => {
       if (data) {
         localStorage.setItem('auth_token', data.access_token);
         localStorage.setItem('refresh_token', data.refresh_token);
-        // Map backend role to frontend role
-        const mapRole = (role: string) => {
-          switch (role) {
-            case 'Manager': return 'manager';
-            case 'Operator': return 'operator';
-            case 'Quality Control Technician': return 'quality-control';
-            case 'IT Administrator': return 'it_admin';
-            default: return 'operator';
-          }
+
+        // Map backend role (uppercase format) to frontend format (lowercase)
+        const mapRole = (backendRole: string): string => {
+          const roleMap: Record<string, string> = {
+            'Manager': 'manager',
+            'Operator': 'operator',
+            'Quality Control Technician': 'quality-control',
+            'IT Administrator': 'it_admin',
+          };
+          return roleMap[backendRole] || 'operator';
         };
-        const frontendRole = mapRole(data.user.role as string);
+
+        const frontendRole = mapRole(String(data.user.role));
         const user = { ...data.user, role: frontendRole };
         localStorage.setItem('user', JSON.stringify(user));
+
         // Log session
         console.log('Login success. User:', user.username, 'Role:', frontendRole);
+
         // Redirect theo role
-        let dashboardPath = '/';
+        let dashboardPath = '/operator/dashboard'; // default to operator
         switch (frontendRole) {
           case 'manager':
             dashboardPath = '/manager/dashboard';
@@ -53,8 +57,6 @@ const Login = () => {
           case 'it_admin':
             dashboardPath = '/admin/dashboard';
             break;
-          default:
-            dashboardPath = '/';
         }
         navigate(dashboardPath, { replace: true });
       }
