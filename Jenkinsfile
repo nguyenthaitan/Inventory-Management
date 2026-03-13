@@ -12,10 +12,18 @@ pipeline {
             }
         }
 
+        stage('Stop Old Containers') {
+            steps {
+                sh '''
+                docker compose -f "02_Source/01_Source Code/docker-compose.yml" down || true
+                '''
+            }
+        }
+
         stage('Build Docker') {
             steps {
                 sh '''
-                docker-compose -f "02_Source/01_Source Code/docker-compose.yml" build
+                docker compose -f "02_Source/01_Source Code/docker-compose.yml" build --no-cache
                 '''
             }
         }
@@ -23,7 +31,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                docker-compose -f "02_Source/01_Source Code/docker-compose.yml" up -d
+                docker compose -f "02_Source/01_Source Code/docker-compose.yml" up -d
                 '''
             }
         }
