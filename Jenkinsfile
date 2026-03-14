@@ -23,8 +23,7 @@ pipeline {
         stage('Build Docker') {
             steps {
                 sh '''
-                docker builder prune -af || true
-                docker compose -f "02_Source/01_Source Code/docker-compose.yml" build --no-cache
+                docker compose -f "02_Source/01_Source Code/docker-compose.yml" build
                 '''
             }
         }
