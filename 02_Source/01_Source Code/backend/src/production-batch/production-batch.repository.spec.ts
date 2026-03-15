@@ -14,8 +14,8 @@ type ProductionBatchLike = {
   product_id: string;
   batch_number: string;
   unit_of_measure: string;
-  manufacture_date: Date;
-  expiration_date: Date;
+  shelf_life_value: number;
+  shelf_life_unit: string;
   status: BatchStatus;
   batch_size: { toString: () => string };
   created_date: Date;
@@ -69,8 +69,8 @@ function buildBatch(
     product_id: 'MAT-001',
     batch_number: 'BATCH-2026-001',
     unit_of_measure: 'kg',
-    manufacture_date: new Date('2026-01-01T00:00:00.000Z'),
-    expiration_date: new Date('2028-01-01T00:00:00.000Z'),
+    shelf_life_value: 24,
+    shelf_life_unit: 'month',
     status: BatchStatus.InProgress,
     batch_size: { toString: () => '500' },
     created_date: now,
@@ -87,8 +87,8 @@ function buildCreateDto(
     product_id: 'MAT-001',
     batch_number: 'BATCH-2026-001',
     unit_of_measure: 'kg',
-    manufacture_date: '2026-01-01T00:00:00.000Z',
-    expiration_date: '2028-01-01T00:00:00.000Z',
+    shelf_life_value: 24,
+    shelf_life_unit: 'month',
     status: BatchStatus.InProgress,
     batch_size: 500,
     ...overrides,
@@ -267,7 +267,12 @@ describe('ProductionBatchRepository', () => {
       );
 
       expect(mockModel.findOneAndUpdate).toHaveBeenCalledWith(
-        { batch_id: '3d594650-3436-453f-901f-f7f66f18f8eb' },
+        {
+          $or: [
+            { batch_id: '3d594650-3436-453f-901f-f7f66f18f8eb' },
+            { batch_number: '3d594650-3436-453f-901f-f7f66f18f8eb' },
+          ],
+        },
         updateDto,
         {
           new: true,
@@ -285,7 +290,10 @@ describe('ProductionBatchRepository', () => {
       );
 
       expect(mockModel.findOneAndDelete).toHaveBeenCalledWith({
-        batch_id: '3d594650-3436-453f-901f-f7f66f18f8eb',
+        $or: [
+          { batch_id: '3d594650-3436-453f-901f-f7f66f18f8eb' },
+          { batch_number: '3d594650-3436-453f-901f-f7f66f18f8eb' },
+        ],
       });
       expect(result?.batch_id).toBe('3d594650-3436-453f-901f-f7f66f18f8eb');
     });

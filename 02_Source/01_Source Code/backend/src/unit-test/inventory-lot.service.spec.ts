@@ -9,10 +9,40 @@ import {
 import {
   CreateInventoryLotDto,
   InventoryLotStatus,
+  UpdateInventoryLotDto,
 } from '../inventory-lot/inventory-lot.dto';
 
+type LotHistoryEntry = {
+  action: string;
+  by: string;
+  status: InventoryLotStatus;
+};
+
+type InventoryLotFixture = {
+  lot_id: string;
+  material_id: string;
+  manufacturer_name: string;
+  manufacturer_lot: string;
+  supplier_name: string;
+  received_date: Date;
+  expiration_date: Date;
+  in_use_expiration_date: Date;
+  status: InventoryLotStatus;
+  quantity: number;
+  unit_of_measure: string;
+  storage_location: string;
+  is_sample: boolean;
+  parent_lot_id?: string;
+  notes: string;
+  created_date: Date;
+  modified_date: Date;
+  received_by: string;
+  qc_by: string;
+  history: LotHistoryEntry[];
+};
+
 // Sample lot data for testing
-const sampleLot: any = {
+const sampleLot: InventoryLotFixture = {
   lot_id: '550e8400-e29b-41d4-a716-446655440000',
   material_id: 'MAT-001',
   manufacturer_name: 'ABC Pharma',
@@ -26,7 +56,7 @@ const sampleLot: any = {
   unit_of_measure: 'kg',
   storage_location: 'A1-B2-C3',
   is_sample: false,
-  parent_lot_id: null,
+  parent_lot_id: undefined,
   notes: 'Premium grade material',
   created_date: new Date('2025-03-06'),
   modified_date: new Date('2025-03-06'),
@@ -38,40 +68,42 @@ const sampleLot: any = {
 let service: InventoryLotService;
 let repo: Record<keyof InventoryLotRepository, jest.Mock>;
 
-beforeEach(async () => {
-  // Mock all repository methods
-  repo = {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    findById: jest.fn(),
-    findByMaterialId: jest.fn(),
-    findByStatus: jest.fn(),
-    findBySampleStatus: jest.fn(),
-    findSamplesByParentLot: jest.fn(),
-    searchByManufacturer: jest.fn(),
-    findByFilter: jest.fn(),
-    update: jest.fn(),
-    updateStatus: jest.fn(),
-    updateQuantity: jest.fn(),
-    delete: jest.fn(),
-    getLotsByMaterialAndStatus: jest.fn(),
-    countByStatus: jest.fn(),
-    checkLotExists: jest.fn(),
-    findExpiringSoon: jest.fn(),
-    findExpiredLots: jest.fn(),
-  };
-
-  const module: TestingModule = await Test.createTestingModule({
-    providers: [
-      InventoryLotService,
-      { provide: InventoryLotRepository, useValue: repo },
-    ],
-  }).compile();
-
-  service = module.get<InventoryLotService>(InventoryLotService);
-});
 describe('InventoryLotService', () => {
-});
+  beforeEach(async () => {
+    // Mock all repository methods
+    repo = {
+      create: jest.fn(),
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      findByMaterialId: jest.fn(),
+      findByStatus: jest.fn(),
+      findBySampleStatus: jest.fn(),
+      findSamplesByParentLot: jest.fn(),
+      searchByManufacturer: jest.fn(),
+      findByFilter: jest.fn(),
+      update: jest.fn(),
+      updateStatus: jest.fn(),
+      updateQuantity: jest.fn(),
+      delete: jest.fn(),
+      getLotsByMaterialAndStatus: jest.fn(),
+      countByStatus: jest.fn(),
+      checkLotExists: jest.fn(),
+      findExpiringSoon: jest.fn(),
+      findExpiredLots: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        InventoryLotService,
+        { provide: InventoryLotRepository, useValue: repo },
+      ],
+    }).compile();
+
+    service = module.get<InventoryLotService>(InventoryLotService);
+  });
+
+  afterEach(() => jest.clearAllMocks());
+
   // ==================== CREATE Tests ====================
 
   describe('create', () => {
@@ -88,12 +120,15 @@ describe('InventoryLotService', () => {
         status: InventoryLotStatus.QUARANTINE,
       };
 
-        repo.create.mockResolvedValue({ ...sampleLot, received_by: 'operator1' });
+      repo.create.mockResolvedValue({ ...sampleLot, received_by: 'operator1' });
       const result = await service.create(createDto);
 
       expect(result.lot_id).toBe(sampleLot.lot_id);
       expect(result.status).toBe(InventoryLotStatus.QUARANTINE);
-        expect(repo.create).toHaveBeenCalledWith({ ...createDto, received_by: 'operator1' });
+      expect(repo.create).toHaveBeenCalledWith({
+        ...createDto,
+        received_by: 'operator1',
+      });
     });
 
     it('should reject if received_date is after expiration_date', async () => {
@@ -109,7 +144,9 @@ describe('InventoryLotService', () => {
         status: InventoryLotStatus.QUARANTINE,
       };
       // Không mock repo.create, chỉ kiểm tra exception
-      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should reject if quantity is 0', async () => {
@@ -125,7 +162,9 @@ describe('InventoryLotService', () => {
         status: InventoryLotStatus.QUARANTINE,
       };
 
-        await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should reject if quantity is negative', async () => {
@@ -141,7 +180,9 @@ describe('InventoryLotService', () => {
         status: InventoryLotStatus.QUARANTINE,
       };
 
-      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -239,7 +280,7 @@ describe('InventoryLotService', () => {
 
     it('should reject invalid status', async () => {
       await expect(
-        service.findByStatus('InvalidStatus' as any, 1, 10),
+        service.findByStatus('InvalidStatus', 1, 10),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -290,7 +331,7 @@ describe('InventoryLotService', () => {
 
     it('should reject invalid status in filter', async () => {
       const filter = {
-        status: 'InvalidStatus' as any,
+        status: 'InvalidStatus' as unknown as InventoryLotStatus,
       };
 
       await expect(service.filterLots(filter, 1, 10)).rejects.toThrow(
@@ -320,7 +361,10 @@ describe('InventoryLotService', () => {
       repo.findById.mockResolvedValue(null);
 
       await expect(
-        service.update('non-existent-id', { ...sampleLot, storage_location: 'A2' }),
+        service.update('non-existent-id', {
+          ...sampleLot,
+          storage_location: 'A2',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -577,7 +621,12 @@ describe('InventoryLotService', () => {
         received_by: 'operator1',
         status: InventoryLotStatus.QUARANTINE,
       });
-      const result = await service.create(createDto as any);
+      const createWithReceiver = {
+        ...createDto,
+        received_by: 'operator1',
+      } as unknown as CreateInventoryLotDto;
+
+      const result = await service.create(createWithReceiver);
       expect(result.received_by).toBe('operator1');
       expect(result.status).toBe(InventoryLotStatus.QUARANTINE);
     });
@@ -600,10 +649,12 @@ describe('InventoryLotService', () => {
           { action: 'QC', by: 'qc1', status: InventoryLotStatus.ACCEPTED },
         ],
       });
-      const result = await service.update(sampleLot.lot_id, {
+      const qcUpdate = {
         qc_by: 'qc1',
         status: InventoryLotStatus.ACCEPTED,
-      } as any);
+      } as unknown as UpdateInventoryLotDto;
+
+      const result = await service.update(sampleLot.lot_id, qcUpdate);
       expect(result.qc_by).toBe('qc1');
       expect(result.status).toBe(InventoryLotStatus.ACCEPTED);
       expect(result.history).toEqual(
@@ -613,3 +664,4 @@ describe('InventoryLotService', () => {
       );
     });
   });
+});
