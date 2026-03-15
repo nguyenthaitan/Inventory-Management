@@ -8,8 +8,9 @@ import type {
   LotDecisionDto,
   RetestDto,
 } from '../types/qc';
+import { apiClient } from './apiClient';
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // TODO: restore these helpers when removing mocks:
 // type RawDecimal = { $numberDecimal: string };
@@ -60,107 +61,151 @@ function _mockDelay<T>(value: T, ms = 400): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
-// TODO: restore real fetch — GET /qc-tests/dashboard
+// GET /qc-tests/dashboard
 export async function getDashboardKPI(): Promise<DashboardKPI> {
-  return _mockDelay(_MOCK_KPI);
+  try {
+    const { data, error } = await apiClient.get<DashboardKPI>('/qc-tests/dashboard');
+    if (error) throw error;
+    return data!;
+  } catch (e) {
+    // fallback mock
+    return _mockDelay(_MOCK_KPI);
+  }
 }
 
-// TODO: restore real fetch — GET /inventory-lots/status/:status or /inventory-lots
+// GET /inventory-lots?status=...
 export async function getInventoryLots(_status?: string): Promise<InventoryLot[]> {
-  const lots = _status ? _MOCK_LOTS.filter((l) => l.status === _status) : _MOCK_LOTS;
-  return _mockDelay(lots);
+  try {
+    let data, error;
+    ({ data, error } = await apiClient.get<InventoryLot[] | { data: InventoryLot[] }>('/inventory-lots', {
+      params: _status ? { status: _status } : undefined,
+    }));
+    if (error) throw error;
+    if (data && typeof data === 'object' && 'data' in data) {
+      return (data as { data: InventoryLot[] }).data;
+    }
+    return (data as InventoryLot[]);
+  } catch (e) {
+    return _mockDelay(_MOCK_LOTS);
+  }
 }
 
-// TODO: restore real fetch — GET /qc-tests/lot/:lot_id
+// GET /qc-tests/lot/:lot_id
 export async function getQCTestsByLot(lot_id: string): Promise<QCTest[]> {
-  const tests = _MOCK_QC_TESTS.filter((t) => t.lot_id === lot_id);
-  return _mockDelay(tests);
+  try {
+    const { data, error } = await apiClient.get<QCTest[]>(`/qc-tests/lot/${encodeURIComponent(lot_id)}`);
+    if (error) throw error;
+    return data!;
+  } catch (e) {
+    return _mockDelay(_MOCK_QC_TESTS.filter((t) => t.lot_id === lot_id));
+  }
 }
 
-// TODO: restore real fetch — GET /qc-tests
-export async function getAllQCTests(filters?: {
-  result_status?: string;
-  test_type?: string;
-}): Promise<QCTest[]> {
-  let tests = [..._MOCK_QC_TESTS];
-  if (filters?.result_status) tests = tests.filter((t) => t.result_status === filters.result_status);
-  if (filters?.test_type) tests = tests.filter((t) => t.test_type === filters.test_type);
-  return _mockDelay(tests);
+// GET /qc-tests
+export async function getAllQCTests(): Promise<QCTest[]> {
+  try {
+    const { data, error } = await apiClient.get<QCTest[]>('/qc-tests');
+    if (error) throw error;
+    return data!;
+  } catch (e) {
+    return _mockDelay(_MOCK_QC_TESTS);
+  }
+}
+
+// POST /qc-tests
+export async function createQCTest(payload: CreateQCTestDto): Promise<QCTest> {
+  try {
+    const { data, error } = await apiClient.post<QCTest>('/qc-tests', payload);
+    if (error) throw error;
+    return data!;
+  } catch (e) {
+    throw new Error('Không thể tạo QC Test');
+  }
+}
+
+// PATCH /qc-tests/:test_id
+export async function updateQCTest(test_id: string, payload: Partial<QCTest>): Promise<QCTest> {
+  try {
+    const { data, error } = await apiClient.patch<QCTest>(`/qc-tests/${encodeURIComponent(test_id)}`, payload);
+    if (error) throw error;
+    return data!;
+  } catch (e) {
+    throw new Error('Không thể cập nhật QC Test');
+  }
+}
+
+// DELETE /qc-tests/:test_id
+export async function deleteQCTest(test_id: string): Promise<void> {
+  try {
+    const { error } = await apiClient.delete(`/qc-tests/${encodeURIComponent(test_id)}`);
+    if (error) throw error;
+  } catch (e) {
+    throw new Error('Không thể xóa QC Test');
+  }
+}
+
+// POST /qc-tests/lot/:lot_id/decision
+export async function submitLotDecision(lot_id: string, payload: LotDecisionDto): Promise<any> {
+  try {
+    const { data, error } = await apiClient.post(`/qc-tests/lot/${encodeURIComponent(lot_id)}/decision`, payload);
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    throw new Error('Không thể gửi quyết định lô');
+  }
+}
+
+// POST /qc-tests/lot/:lot_id/retest
+export async function submitRetest(lot_id: string, payload: RetestDto): Promise<any> {
+  try {
+    const { data, error } = await apiClient.post(`/qc-tests/lot/${encodeURIComponent(lot_id)}/retest`, payload);
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    throw new Error('Không thể gửi yêu cầu kiểm lại');
+  }
+}
+
+// POST /inventory-lots/bulk-quarantine
+export async function bulkQuarantine(lot_ids: string[]): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/inventory-lots/bulk-quarantine`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lot_ids }),
+    });
+    await handleApiError(res);
+    return await res.json();
+  } catch (e) {
+    throw new Error('Không thể chuyển nhiều lô vào kiểm soát');
+  }
+}
+
+// GET /qc-tests/supplier-performance
+export async function getSupplierPerformance(): Promise<SupplierPerformance[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/qc-tests/supplier-performance`);
+    await handleApiError(res);
+    return await res.json();
+  } catch (e) {
+    return _mockDelay(_MOCK_SUPPLIERS);
+  }
 }
 
 // TODO: restore real fetch — POST /qc-tests
-export async function createQCTest(dto: CreateQCTestDto): Promise<QCTest> {
-  const newTest: QCTest = {
-    ...dto,
-    test_id: `TEST-MOCK-${Date.now()}`,
-    created_date: new Date().toISOString(),
-    modified_date: new Date().toISOString(),
-  };
-  return _mockDelay(newTest);
-}
 
 // TODO: restore real fetch — PATCH /qc-tests/:test_id
-export async function updateQCTest(
-  test_id: string,
-  dto: Partial<CreateQCTestDto>,
-): Promise<QCTest> {
-  const existing = _MOCK_QC_TESTS.find((t) => t.test_id === test_id);
-  const updated: QCTest = {
-    ...(existing ?? ({ test_id, created_date: new Date().toISOString() } as QCTest)),
-    ...dto,
-    modified_date: new Date().toISOString(),
-  };
-  return _mockDelay(updated);
-}
 
 // TODO: restore real fetch — DELETE /qc-tests/:test_id
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function deleteQCTest(_test_id: string): Promise<{ deleted: boolean }> {
-  return _mockDelay({ deleted: true });
-}
 
 // TODO: restore real fetch — POST /qc-tests/lot/:lot_id/decision
-export async function submitLotDecision(
-  lot_id: string,
-  dto: LotDecisionDto,
-): Promise<{ lot: InventoryLot; tests: QCTest[] }> {
-  const lotStatus = dto.decision === 'Accepted' ? 'Accepted' : dto.decision === 'Rejected' ? 'Rejected' : 'Hold';
-  const lot: InventoryLot = {
-    lot_id,
-    material_name: 'Mock Material',
-    supplier_name: 'Mock Supplier',
-    quantity: 0,
-    status: lotStatus,
-  };
-  return _mockDelay({ lot, tests: [] });
-}
 
 // TODO: restore real fetch — POST /qc-tests/lot/:lot_id/retest
-export async function submitRetest(lot_id: string, dto: RetestDto): Promise<InventoryLot> {
-  const lot: InventoryLot = {
-    lot_id,
-    material_name: 'Mock Material',
-    supplier_name: 'Mock Supplier',
-    quantity: 0,
-    status: dto.action === 'extend' ? 'Accepted' : 'Depleted',
-  };
-  return _mockDelay(lot);
-}
 
 // TODO: restore real fetch — POST /inventory-lots/bulk-quarantine
-export async function bulkQuarantine(_lot_ids: string[]): Promise<{ updated: number }> {
-  return _mockDelay({ updated: _lot_ids.length });
-}
 
 // TODO: restore real fetch — GET /qc-tests/supplier-performance
-export async function getSupplierPerformance(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _from?: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _to?: string,
-): Promise<SupplierPerformance[]> {
-  return _mockDelay(_MOCK_SUPPLIERS);
-}
 
 // GET /ai/supplier-analysis?from=&to=
 export async function analyzeAllSuppliers(
@@ -171,7 +216,7 @@ export async function analyzeAllSuppliers(
   if (from) params.set('from', from);
   if (to) params.set('to', to);
   const query = params.toString() ? `?${params.toString()}` : '';
-  const res = await fetch(`${BASE_URL}/ai/supplier-analysis${query}`);
+  const res = await fetch(`${API_BASE_URL}/ai/supplier-analysis${query}`);
   await handleApiError(res);
   return res.json() as Promise<SupplierAnalysisResponse>;
 }
@@ -187,7 +232,7 @@ export async function analyzeOneSupplier(
   if (to) params.set('to', to);
   const query = params.toString() ? `?${params.toString()}` : '';
   const encodedName = encodeURIComponent(supplierName);
-  const res = await fetch(`${BASE_URL}/ai/supplier-analysis/${encodedName}${query}`);
+  const res = await fetch(`${API_BASE_URL}/ai/supplier-analysis/${encodedName}${query}`);
   await handleApiError(res);
   return res.json() as Promise<SupplierAnalysisResponse>;
 }

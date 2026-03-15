@@ -16,7 +16,6 @@ import { Type } from 'class-transformer';
  * Note: batch_id is derived from the route parameter, not the request body
  */
 export class CreateBatchComponentDto {
-  @IsUUID('4', { message: 'lot_id must be a valid UUID v4' })
   @IsString()
   @IsNotEmpty({ message: 'lot_id is required' })
   @MaxLength(36, { message: 'lot_id must not exceed 36 characters' })
@@ -34,9 +33,9 @@ export class CreateBatchComponentDto {
   actual_quantity?: number;
 
   @IsString({ message: 'unit_of_measure must be a string' })
-  @IsNotEmpty({ message: 'unit_of_measure is required' })
+  @IsOptional()
   @MaxLength(10, { message: 'unit_of_measure must not exceed 10 characters' })
-  unit_of_measure: string;
+  unit_of_measure?: string;
 
   @IsDateString({}, { message: 'addition_date must be a valid ISO 8601 date string' })
   @IsOptional()

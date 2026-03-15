@@ -13,10 +13,12 @@ export interface QCTest {
   result_status: 'Pass' | 'Fail' | 'Pending';
   performed_by: string;
   verified_by?: string;
+  approved_by?: string;
   reject_reason?: string;
   label_id?: string;
   created_date: string;
   modified_date: string;
+  history?: Record<string, any>[];
 }
 
 // ── InventoryLot ─────────────────────────────────────────────────────────────

@@ -13,11 +13,16 @@ import {
   InventoryLot,
   InventoryLotSchema,
 } from '../schemas/inventory-lot.schema';
+import {
+  InventoryTransaction,
+  InventoryTransactionSchema,
+} from '../schemas/inventory-transaction.schema';
 import { ProductionBatchController } from './production-batch.controller';
 import { ProductionBatchService } from './production-batch.service';
 import { ProductionBatchRepository } from './production-batch.repository';
 import { BatchComponentService } from './batch-component.service';
 import { BatchComponentRepository } from './batch-component.repository';
+import { InventoryLotRepository } from '../inventory-lot/inventory-lot.repository';
 
 @Module({
   imports: [
@@ -27,12 +32,14 @@ import { BatchComponentRepository } from './batch-component.repository';
       // Cross-references needed by services for FK validation
       { name: Material.name, schema: MaterialSchema },
       { name: InventoryLot.name, schema: InventoryLotSchema },
+      { name: InventoryTransaction.name, schema: InventoryTransactionSchema },
     ]),
   ],
   controllers: [ProductionBatchController],
   providers: [
     ProductionBatchRepository,
     BatchComponentRepository,
+    InventoryLotRepository,
     ProductionBatchService,
     BatchComponentService,
   ],

@@ -117,7 +117,12 @@ export default function Layout() {
           {
             to: "/manager/inventory",
             icon: <Package size={20} />,
-            label: "Quản lý hàng hóa",
+            label: "Quản lý lô hàng",
+          },
+          {
+            to: "/manager/material",
+            icon: <Package size={20} />,
+            label: "Quản lý vật tư",
           },
           {
             to: "/manager/in-out",
@@ -143,6 +148,11 @@ export default function Layout() {
             to: "/manager/labels",
             icon: <Tag size={20} />,
             label: "Quản lý nhãn",
+          },
+          {
+            to: "/manager/product-creation",
+            icon: <FlaskConical size={20} />,
+            label: "Tạo sản phẩm",
           },
           {
             to: "/manager/production-batches",

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaOptions } from 'mongoose';
-import { InventoryLotStatus } from 'src/inventory-lot/inventory-lot.dto';
+import { InventoryLotStatus } from '../inventory-lot/inventory-lot.dto';
 
 export type InventoryLotDocument = InventoryLot & Document;
 
@@ -65,6 +65,21 @@ export class InventoryLot {
 
   @Prop({ type: Date, default: Date.now })
   modified_date: Date;
+
+  // Traceability & workflow fields
+  @Prop({ type: String, maxlength: 50, required: false })
+  received_by?: string;
+
+  @Prop({ type: String, maxlength: 50, required: false })
+  qc_by?: string;
+
+  @Prop({
+    type: [Object],
+    required: false,
+    default: [],
+    description: 'Lịch sử thay đổi trạng thái, traceability',
+  })
+  history?: Record<string, any>[];
 }
 
 export const InventoryLotSchema = SchemaFactory.createForClass(InventoryLot);

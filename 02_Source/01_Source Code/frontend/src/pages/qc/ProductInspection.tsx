@@ -1,23 +1,12 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { ShieldCheck, X } from 'lucide-react';
 import Toast from '../../components/Toast';
 import { createQCTest, submitLotDecision } from '../../services/qcServices';
+import { fetchProductionBatches } from '../../services/productionBatchService';
 import type { CreateQCTestDto, LotDecisionDto } from '../../types/qc';
+import type { ProductionBatch } from '../../types/production';
 
-interface ProductBatch {
-  batch_number: string;
-  material_name: string;
-  production_date: string;
-  quantity: number;
-  unit: string;
-  line: string;
-}
-
-const MOCK_BATCHES: ProductBatch[] = [
-  { batch_number: 'PB-2026-0301', material_name: 'Amoxicillin 500mg Capsules', production_date: '2026-03-01', quantity: 50000, unit: 'viên', line: 'Line A' },
-  { batch_number: 'PB-2026-0302', material_name: 'Paracetamol 500mg Tablets', production_date: '2026-03-02', quantity: 100000, unit: 'viên', line: 'Line B' },
-  { batch_number: 'PB-2026-0303', material_name: 'Vitamin C 1000mg', production_date: '2026-03-03', quantity: 30000, unit: 'viên', line: 'Line A' },
-];
 
 type DecisionValue = 'approved' | 'rejected' | 'hold';
 
@@ -44,14 +33,26 @@ const DEFAULT_FORM: InspectionForm = {
 };
 
 export default function ProductInspection() {
-  const [batches, setBatches] = useState<ProductBatch[]>(MOCK_BATCHES);
-  const [selectedBatch, setSelectedBatch] = useState<ProductBatch | null>(null);
+  const [batches, setBatches] = useState<ProductionBatch[]>([]);
+  const [selectedBatch, setSelectedBatch] = useState<ProductionBatch | null>(null);
   const [form, setForm] = useState<InspectionForm>(DEFAULT_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  function openModal(batch: ProductBatch) {
+  useEffect(() => {
+    async function loadBatches() {
+      try {
+        const response = await fetchProductionBatches();
+        setBatches(response.data);
+      } catch {
+        setToast({ message: 'Không thể tải danh sách lô sản xuất', type: 'error' });
+      }
+    }
+    loadBatches();
+  }, []);
+
+  function openModal(batch: ProductionBatch) {
     setSelectedBatch(batch);
     setForm(DEFAULT_FORM);
     setModalError(null);
@@ -137,10 +138,10 @@ export default function ProductInspection() {
                 {batches.map((batch) => (
                   <tr key={batch.batch_number} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-mono font-medium text-gray-800">{batch.batch_number}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.material_name}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-500">{new Date(batch.production_date).toLocaleDateString('vi-VN')}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.quantity.toLocaleString()} {batch.unit}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-500">{batch.line}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.product_id}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">{new Date(batch.manufacture_date).toLocaleDateString('vi-VN')}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{batch.batch_size} {batch.unit_of_measure}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">{batch.status}</td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => openModal(batch)}
@@ -166,7 +167,7 @@ export default function ProductInspection() {
                 <ShieldCheck className="w-5 h-5 text-white" />
                 <div>
                   <h2 className="text-base font-bold text-white">Kiểm định thành phẩm</h2>
-                  <p className="text-xs text-blue-200">{selectedBatch.batch_number} — {selectedBatch.material_name}</p>
+                  <p className="text-xs text-blue-200">{selectedBatch.batch_number} — {selectedBatch.product_id}</p>
                 </div>
               </div>
               <button onClick={closeModal} className="text-blue-200 hover:text-white transition p-1">
@@ -177,9 +178,9 @@ export default function ProductInspection() {
             <div className="p-5 space-y-4">
               {/* Batch info */}
               <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg text-sm">
-                <div><span className="text-gray-400">Ngày sx:</span> <span className="font-medium">{new Date(selectedBatch.production_date).toLocaleDateString('vi-VN')}</span></div>
-                <div><span className="text-gray-400">Số lượng:</span> <span className="font-medium">{selectedBatch.quantity.toLocaleString()} {selectedBatch.unit}</span></div>
-                <div><span className="text-gray-400">Dây chuyền:</span> <span className="font-medium">{selectedBatch.line}</span></div>
+                <div><span className="text-gray-400">Ngày sx:</span> <span className="font-medium">{new Date(selectedBatch.manufacture_date).toLocaleDateString('vi-VN')}</span></div>
+                <div><span className="text-gray-400">Số lượng:</span> <span className="font-medium">{selectedBatch.batch_size} {selectedBatch.unit_of_measure}</span></div>
+                <div><span className="text-gray-400">Trạng thái:</span> <span className="font-medium">{selectedBatch.status}</span></div>
               </div>
 
               {/* Test type & method */}

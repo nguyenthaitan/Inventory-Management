@@ -141,6 +141,18 @@ describe('ProductionBatchService', () => {
       await expect(service.create(mockCreateDto)).rejects.toThrow(NotFoundException);
       expect(repository.create).not.toHaveBeenCalled();
     });
+
+    describe('traceability & audit fields', () => {
+      it('should set created_by and status on create', async () => {
+        repository.findByBatchNumber.mockResolvedValue(null);
+        materialModel._exec.mockResolvedValue(mockMaterialDoc);
+        repository.create.mockResolvedValue({ ...mockBatchDoc, created_by: 'manager1', status: 'In Progress' });
+        const dto = { ...mockCreateDto, created_by: 'manager1' };
+        const result = await service.create(dto as any);
+        expect(result.created_by).toBe('manager1');
+        expect(result.status).toBe('In Progress');
+      });
+    });
   });
 
   // ─── findOne() ──────────────────────────────────────────────────────────────
@@ -236,6 +248,18 @@ describe('ProductionBatchService', () => {
       await expect(
         service.update('non-existent', { status: BatchStatus.Complete }),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    describe('traceability & audit fields', () => {
+      it('should update approved_by, completed_by, status on update', async () => {
+        const updated = { ...mockBatchDoc, approved_by: 'admin1', completed_by: 'operator1', status: 'Complete' };
+        repository.update.mockResolvedValue(updated);
+        const dto = { approved_by: 'admin1', completed_by: 'operator1', status: 'Complete' };
+        const result = await service.update(mockBatchDoc.batch_id, dto as any);
+        expect(result.approved_by).toBe('admin1');
+        expect(result.completed_by).toBe('operator1');
+        expect(result.status).toBe('Complete');
+      });
     });
   });
 

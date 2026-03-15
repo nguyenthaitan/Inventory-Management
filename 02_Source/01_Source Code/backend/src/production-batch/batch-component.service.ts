@@ -51,11 +51,26 @@ export class BatchComponentService {
     );
 
     // Validate parent batch exists
-    const batch = await this.batchRepository.findOne(batchId);
+    this.logger.debug(`Looking for batch with batch_id: "${batchId}" (type: ${typeof batchId})`);
+    const batch = await this.batchRepository.findByIdOrNumber(batchId);
+    
     if (!batch) {
+      this.logger.error(`Batch not found with batch_id: "${batchId}"`);
+      // Try to find any batch to debug
+      const allBatches = await this.batchRepository.findAll(1, 100);
+      this.logger.debug(`Available batches count: ${allBatches.data.length}`);
+      if (allBatches.data.length > 0) {
+        this.logger.debug(`First batch batch_id: "${allBatches.data[0].batch_id}"`);
+      }
       throw new NotFoundException(
         `Production batch with ID '${batchId}' not found`,
       );
+    }
+    this.logger.debug(`Batch found: ${batch.batch_id}, status: ${batch.status}`);
+    
+    // Chỉ cho phép thêm nguyên liệu khi batch ở trạng thái On Hold (pending)
+    if (batch.status !== 'On Hold') {
+      throw new BadRequestException('Chỉ được thêm nguyên liệu khi batch ở trạng thái On Hold (pending)');
     }
 
     // Validate inventory lot exists
@@ -71,10 +86,14 @@ export class BatchComponentService {
       ? createDto.addition_date
       : new Date().toISOString();
 
+    // Auto-fill unit_of_measure from inventory lot if not provided
+    const unit_of_measure = createDto.unit_of_measure || lot.unit_of_measure;
+
     const component = await this.componentRepository.create({
       ...createDto,
       batch_id: batchId,
       component_id: uuidv4(),
+      unit_of_measure,
       addition_date,
     });
 
@@ -94,7 +113,7 @@ export class BatchComponentService {
   async findByBatchId(batchId: string): Promise<BatchComponentResponseDto[]> {
     this.logger.debug(`Finding components for batch_id: ${batchId}`);
 
-    const batch = await this.batchRepository.findOne(batchId);
+    const batch = await this.batchRepository.findByIdOrNumber(batchId);
     if (!batch) {
       throw new NotFoundException(
         `Production batch with ID '${batchId}' not found`,
@@ -149,6 +168,15 @@ export class BatchComponentService {
   ): Promise<BatchComponentResponseDto> {
     this.logger.log(`Updating batch component: ${componentId}`);
 
+    const batch = await this.batchRepository.findByIdOrNumber(batchId);
+    if (!batch) {
+      throw new NotFoundException(
+        `Production batch with ID '${batchId}' not found`,
+      );
+    }
+    if (batch.status !== 'On Hold') {
+      throw new BadRequestException('Chỉ được sửa nguyên liệu khi batch ở trạng thái On Hold (pending)');
+    }
     const existing = await this.componentRepository.findOneByBatch(
       batchId,
       componentId,
@@ -193,6 +221,15 @@ export class BatchComponentService {
   ): Promise<{ message: string }> {
     this.logger.log(`Deleting batch component: ${componentId}`);
 
+    const batch = await this.batchRepository.findByIdOrNumber(batchId);
+    if (!batch) {
+      throw new NotFoundException(
+        `Production batch with ID '${batchId}' not found`,
+      );
+    }
+    if (batch.status !== 'On Hold') {
+      throw new BadRequestException('Chỉ được xóa nguyên liệu khi batch ở trạng thái On Hold (pending)');
+    }
     const existing = await this.componentRepository.findOneByBatch(
       batchId,
       componentId,
@@ -214,6 +251,9 @@ export class BatchComponentService {
    * Handles Decimal128 → string serialization for quantities
    */
   private toResponseDto(component: any): BatchComponentResponseDto {
+    if (!component) {
+      throw new Error('Component is undefined or null');
+    }
     return {
       _id: component._id?.toString() ?? '',
       component_id: component.component_id,

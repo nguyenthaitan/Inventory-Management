@@ -1,3 +1,8 @@
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../schemas/user.schema';
 import {
   Controller,
   Get,
@@ -16,16 +21,19 @@ import { UpdateQCTestDto } from './dto/update-qc-test.dto';
 import { QCDecisionDto } from './dto/qc-decision.dto';
 
 @Controller('qc-tests')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class QCTestController {
   constructor(private readonly qcTestService: QCTestService) {}
 
   // Static routes first — must come before dynamic :test_id route
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Get('dashboard')
   getDashboard() {
     return this.qcTestService.getDashboardKPI();
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Get('supplier-performance')
   getSupplierPerformance(
     @Query('from') from?: string,
@@ -34,6 +42,7 @@ export class QCTestController {
     return this.qcTestService.getSupplierPerformance({ from, to });
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Get()
   getAllTests(
     @Query('result_status') result_status?: string,
@@ -42,12 +51,14 @@ export class QCTestController {
     return this.qcTestService.getAllTests({ result_status, test_type });
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   createTest(@Body() dto: CreateQCTestDto) {
     return this.qcTestService.createTest(dto);
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Post('lot/:lot_id/decision')
   @HttpCode(HttpStatus.OK)
   submitDecision(
@@ -57,6 +68,7 @@ export class QCTestController {
     return this.qcTestService.submitDecision(lot_id, dto);
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Post('lot/:lot_id/retest')
   @HttpCode(HttpStatus.OK)
   submitRetestDecision(
@@ -74,6 +86,7 @@ export class QCTestController {
     });
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Get('lot/:lot_id')
   getTestsByLotId(@Param('lot_id') lot_id: string) {
     return this.qcTestService.getTestsByLotId(lot_id);
@@ -81,11 +94,13 @@ export class QCTestController {
 
   // Dynamic :test_id routes — must come after all static routes
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Get(':test_id')
   getTestById(@Param('test_id') test_id: string) {
     return this.qcTestService.getTestById(test_id);
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Patch(':test_id')
   updateTest(
     @Param('test_id') test_id: string,
@@ -94,6 +109,7 @@ export class QCTestController {
     return this.qcTestService.updateTest(test_id, dto);
   }
 
+  @Roles(UserRole.QC_TECHNICIAN, UserRole.MANAGER)
   @Delete(':test_id')
   deleteTest(@Param('test_id') test_id: string) {
     return this.qcTestService.deleteTest(test_id);

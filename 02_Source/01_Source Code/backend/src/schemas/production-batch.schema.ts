@@ -10,7 +10,7 @@ const options: SchemaOptions = {
 
 @Schema(options)
 export class ProductionBatch {
-  @Prop({ type: String, required: true, unique: true, maxlength: 36 })
+  @Prop({ type: String, required: true, unique: true, maxlength: 50 })
   batch_id: string;
 
   @Prop({ type: String, required: true, maxlength: 20 })
@@ -22,11 +22,11 @@ export class ProductionBatch {
   @Prop({ type: String, required: true, maxlength: 10 })
   unit_of_measure: string;
 
-  @Prop({ type: Date, required: true })
-  manufacture_date: Date;
+  @Prop({ type: Number, required: true, min: 1 })
+  shelf_life_value: number;
 
-  @Prop({ type: Date, required: true })
-  expiration_date: Date;
+  @Prop({ type: String, required: true })
+  shelf_life_unit: string;
 
   @Prop({
     type: String,
@@ -37,6 +37,16 @@ export class ProductionBatch {
 
   @Prop({ type: 'Decimal128', required: true })
   batch_size: any; // Decimal128 will be cast by Mongoose
+
+  // Traceability & audit
+  @Prop({ type: String, maxlength: 50, required: false })
+  created_by?: string;
+
+  @Prop({ type: String, maxlength: 50, required: false })
+  approved_by?: string;
+
+  @Prop({ type: String, maxlength: 50, required: false })
+  completed_by?: string;
 }
 
 export const ProductionBatchSchema =

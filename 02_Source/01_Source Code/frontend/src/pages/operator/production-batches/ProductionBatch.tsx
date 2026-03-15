@@ -16,7 +16,7 @@
  *   DELETE /production-batches/:id/components/:componentId
  */
 
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 const API = 'http://localhost:3000';
@@ -417,15 +417,18 @@ function SectionGetUpdateDelete({
 
 // ── Section: BatchComponents ──────────────────────────────────────────────────
 function SectionComponents({ batchId: propBatchId }: { batchId: string }) {
+
   const [batchId, setBatchId] = useState(propBatchId);
   const [components, setComponents] = useState<unknown[]>([]);
   const [result, setResult] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
+  const [batchStatus, setBatchStatus] = useState<string>('');
 
   if (propBatchId !== batchId && propBatchId) {
     setBatchId(propBatchId);
     setComponents([]);
     setResult(null);
+    setBatchStatus('');
   }
 
   const [newComp, setNewComp] = useState({
@@ -443,6 +446,19 @@ function SectionComponents({ batchId: propBatchId }: { batchId: string }) {
 
   const setN = (k: string, v: string) => setNewComp((p) => ({ ...p, [k]: v }));
   const setUC = (k: string, v: string) => setUpdateComp((p) => ({ ...p, [k]: v }));
+
+  // Fetch batch status when batchId changes
+  React.useEffect(() => {
+    if (!batchId) return;
+    (async () => {
+      const r = await call('GET', `/production-batches/${batchId}`);
+      if (r.ok && r.data && typeof r.data === 'object' && 'status' in r.data) {
+        setBatchStatus((r.data as any).status);
+      } else {
+        setBatchStatus('');
+      }
+    })();
+  }, [batchId]);
 
   const runListComponents = async () => {
     if (!batchId) return;
@@ -501,6 +517,13 @@ function SectionComponents({ batchId: propBatchId }: { batchId: string }) {
         <Btn label="GET components" onClick={runListComponents} loading={loading} />
       </div>
 
+      {/* Show batch status */}
+      {batchStatus && (
+        <div className="text-xs font-mono mb-2">
+          <span className="font-bold">Batch status:</span> <span className="px-2 py-0.5 rounded-full font-black text-[10px] bg-gray-100">{batchStatus}</span>
+        </div>
+      )}
+
       {/* Components table */}
       {components.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-gray-100">
@@ -526,12 +549,14 @@ function SectionComponents({ batchId: propBatchId }: { batchId: string }) {
                     <button
                       onClick={() => setUC('componentId', c.component_id)}
                       className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded font-black text-[10px] hover:bg-yellow-200"
+                      disabled={batchStatus !== 'On Hold'}
                     >
                       Select
                     </button>
                     <button
                       onClick={() => runDeleteComponent(c.component_id)}
                       className="px-2 py-1 bg-red-100 text-red-700 rounded font-black text-[10px] hover:bg-red-200"
+                      disabled={batchStatus !== 'On Hold'}
                     >
                       Delete
                     </button>

@@ -1,43 +1,54 @@
+# Luồng workflow chính (chuẩn hóa theo nghiệp vụ)
+1. Manager tạo materials (entity: Materials)
+2. Operator nhận lô hàng (entity: InventoryLots, InventoryTransactions)
+3. QC kiểm tra lô hàng (entity: QCTests, InventoryLots.status)
+4. Manager tạo Production Batch (entity: ProductionBatches)
+5. Operator thêm material vào batch (entity: BatchComponents)
+6. Manager hoàn thành batch, sinh ra thành phẩm mới (entity: ProductionBatches.status, InventoryLots thành phẩm)
+7. Mỗi thay đổi số lượng đều sinh InventoryTransaction (entity: InventoryTransactions, traceability)
+
+> Lưu ý: Mọi thay đổi trạng thái, số lượng đều phải ghi nhận transaction và audit log để đảm bảo truy vết.
 # 02_Domain Model
 
 ## Domain Knowledge
 
 ### Material Management
-Quản lý vật tư (Materials): thông tin master data cho raw materials, APIs, excipients, containers, closures, process chemicals, và testing materials. Mỗi material có part number duy nhất, material type, storage conditions, và specification document.
+Quản lý vật tư (Materials): Manager tạo mới hoặc duyệt vật tư chuẩn. Mỗi material có part number duy nhất, material type, storage conditions, và specification document. Materials là nguồn gốc cho mọi lô hàng nhập kho và batch sản xuất.
 
 ### Inventory Lot Tracking & Control
-- Mỗi lô hàng (InventoryLot) có UUID duy nhất
+- Operator nhận lô hàng, tạo InventoryLot cho material đã được Manager tạo.
+- Mỗi lô hàng (InventoryLot) có UUID duy nhất, liên kết với material_id.
 - Thông tin: manufacturer name, manufacturer lot number, supplier name, received date, expiration date
-- Lot Status: `Quarantine`, `Accepted`, `Rejected`, `Depleted`
+- Lot Status: `Quarantine`, `Accepted`, `Rejected`, `Depleted` (QC cập nhật)
 - Traceability: theo dõi nguồn gốc, lịch sử giao dịch (InventoryTransactions)
 - Hỗ trợ sample lots (`is_sample: true`) để lấy mẫu kiểm tra chất lượng
 
 ### Inventory Transactions
-Mọi thay đổi số lượng trong kho đều được ghi lại qua InventoryTransactions:
-- Receipt: nhập hàng vào kho
-- Usage: sử dụng vật tư (từ production batches)
+Mỗi thay đổi số lượng (nhận, sử dụng, hoàn thành batch, điều chỉnh, chuyển kho, v.v.) đều được ghi lại qua InventoryTransactions:
+- Receipt: nhập hàng vào kho (Operator)
+- Usage: sử dụng vật tư (Operator khi thêm vào batch, Manager khi hoàn thành batch)
 - Split: chia tách lô hàng
 - Adjustment: điều chỉnh số lượng
 - Transfer: chuyển kho
 - Disposal: hủy bỏ
+> Transaction luôn được sinh tự động khi có thay đổi để đảm bảo traceability tuyệt đối.
 
 ### Production Batch Management
-Quản lý các lô sản xuất (ProductionBatches) cho finished products:
-- Mỗi batch có batch_number duy nhất
-- Liên kết với product (Material) qua `product_id`
-- Batch status: `In Progress`, `Complete`, `On Hold`, `Cancelled`
+Manager tạo ProductionBatch mới, xác định sản phẩm đầu ra (product_id), batch size, ngày bắt đầu.
+- Mỗi batch có batch_number duy nhất, liên kết với product (Material) qua `product_id`.
+- Batch status: `In Progress`, `Complete`, `On Hold`, `Cancelled` (Manager xác nhận hoàn thành batch, sinh ra thành phẩm mới).
 - Batch size và unit of measure
 - Manufacture date và expiration date
 
 ### Batch Components Tracking
-Theo dõi các thành phần (BatchComponents) được sử dụng trong production batch:
+Operator thêm các material (InventoryLot) vào batch, nhập planned/actual quantity.
 - Liên kết ProductionBatch với InventoryLot
 - Planned quantity vs Actual quantity
 - Unit of measure
 - Addition date và người thêm vào
 
 ### Quality Control Testing
-Quản lý kiểm tra chất lượng (QCTests) cho inventory lots:
+QC kiểm tra lô hàng inventory lot, cập nhật kết quả test, xác nhận pass/fail, cập nhật status lot.
 - Test types: Identity, Potency, Microbial, Growth Promotion, Physical, Chemical
 - Test method/SOP reference
 - Test result và acceptance criteria

@@ -17,6 +17,9 @@ export interface Material {
   specification_document?: string;
   created_date: string;
   modified_date?: string;
+  created_by?: string;
+  approved_by?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
 }
 
 export interface CreateMaterialRequest {

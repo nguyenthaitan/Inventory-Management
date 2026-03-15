@@ -38,14 +38,21 @@ export default function DashboardQC() {
     void fetchData();
   }, []);
 
-  const stats = kpi
-    ? [
-        { label: 'Lô chờ kiểm định', value: String(kpi.pending_count), color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200' },
-        { label: 'Đạt chuẩn tháng này', value: String(kpi.approved_count), color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-        { label: 'Từ chối tháng này', value: String(kpi.rejected_count), color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
-        { label: 'Tỷ lệ lỗi', value: `${kpi.error_rate.toFixed(1)}%`, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-      ]
-    : null;
+  // Đảm bảo luôn có giá trị mặc định nếu backend thiếu trường nào
+  const safeKPI = {
+    pending_count: kpi?.pending_count ?? 0,
+    approved_count: kpi?.approved_count ?? 0,
+    rejected_count: kpi?.rejected_count ?? 0,
+    error_rate: kpi?.error_rate ?? 0,
+  };
+
+  // Luôn render stats với safeKPI, không phụ thuộc vào kpi
+  const stats = [
+    { label: 'Lô chờ kiểm định', value: String(safeKPI.pending_count), color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200' },
+    { label: 'Đạt chuẩn tháng này', value: String(safeKPI.approved_count), color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+    { label: 'Từ chối tháng này', value: String(safeKPI.rejected_count), color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+    { label: 'Tỷ lệ lỗi', value: `${safeKPI.error_rate.toFixed(1)}%`, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+  ];
 
   return (
     <div className="p-6 space-y-6">

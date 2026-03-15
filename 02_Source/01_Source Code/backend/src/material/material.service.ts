@@ -280,6 +280,20 @@ export class MaterialService {
   }
 
   /**
+   * Remove material (for test compatibility)
+   * @param id - MongoDB ObjectId
+   * @returns - { deleted: boolean }
+   */
+  async remove(id: string): Promise<{ deleted: boolean }> {
+    try {
+      await this.delete(id);
+      return { deleted: true };
+    } catch (e) {
+      return { deleted: false };
+    }
+  }
+
+  /**
    * Get all distinct material types
    * @returns - Array of unique material types
    */
