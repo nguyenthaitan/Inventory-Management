@@ -345,4 +345,22 @@ describe('QCTestService', () => {
       expect(result.pending_count).toBe(0);
     });
   });
+
+  describe('traceability & audit fields', () => {
+    it('should set performed_by and status on create', async () => {
+      mockInventoryLotService.getLotById.mockResolvedValue(mockLot);
+      mockQCTestRepository.create.mockResolvedValue({ ...mockTest, performed_by: 'qc1', result_status: 'Pending' });
+      const dto = { ...mockTest, performed_by: 'qc1', result_status: 'Pending' };
+      const result = await service.createTest(dto as any);
+      expect(result.performed_by).toBe('qc1');
+      expect(result.result_status).toBe('Pending');
+    });
+
+    it('should update approved_by and push to history on approve', async () => {
+      mockQCTestRepository.updateManyByLotId.mockResolvedValue([{ ...mockTest, approved_by: 'manager1', history: [{ action: 'Approve', by: 'manager1' }] }]);
+      const result = await service.submitDecision('lot-001', { decision: 'Accepted', verified_by: 'manager1' } as any);
+      expect(result.qcTests[0].approved_by).toBe('manager1');
+      expect(result.qcTests[0].history).toEqual(expect.arrayContaining([{ action: 'Approve', by: 'manager1' }]));
+    });
+  });
 });

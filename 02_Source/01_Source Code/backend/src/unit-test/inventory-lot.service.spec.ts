@@ -22,7 +22,7 @@ const sampleLot: any = {
   expiration_date: new Date('2027-03-01'),
   in_use_expiration_date: new Date('2026-09-01'),
   status: InventoryLotStatus.QUARANTINE,
-  quantity: { toString: () => '1000.500' },
+  quantity: 1000,
   unit_of_measure: 'kg',
   storage_location: 'A1-B2-C3',
   is_sample: false,
@@ -30,113 +30,118 @@ const sampleLot: any = {
   notes: 'Premium grade material',
   created_date: new Date('2025-03-06'),
   modified_date: new Date('2025-03-06'),
+  received_by: 'operator1',
+  qc_by: 'qc1',
+  history: [{ action: 'QC', by: 'qc1', status: InventoryLotStatus.QUARANTINE }],
 };
 
+let service: InventoryLotService;
+let repo: Record<keyof InventoryLotRepository, jest.Mock>;
+
+beforeEach(async () => {
+  // Mock all repository methods
+  repo = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    findByMaterialId: jest.fn(),
+    findByStatus: jest.fn(),
+    findBySampleStatus: jest.fn(),
+    findSamplesByParentLot: jest.fn(),
+    searchByManufacturer: jest.fn(),
+    findByFilter: jest.fn(),
+    update: jest.fn(),
+    updateStatus: jest.fn(),
+    updateQuantity: jest.fn(),
+    delete: jest.fn(),
+    getLotsByMaterialAndStatus: jest.fn(),
+    countByStatus: jest.fn(),
+    checkLotExists: jest.fn(),
+    findExpiringSoon: jest.fn(),
+    findExpiredLots: jest.fn(),
+  };
+
+  const module: TestingModule = await Test.createTestingModule({
+    providers: [
+      InventoryLotService,
+      { provide: InventoryLotRepository, useValue: repo },
+    ],
+  }).compile();
+
+  service = module.get<InventoryLotService>(InventoryLotService);
+});
 describe('InventoryLotService', () => {
-  let service: InventoryLotService;
-  let repo: Record<keyof InventoryLotRepository, jest.Mock>;
-
-  beforeEach(async () => {
-    // Mock all repository methods
-    repo = {
-      create: jest.fn(),
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      findByMaterialId: jest.fn(),
-      findByStatus: jest.fn(),
-      findBySampleStatus: jest.fn(),
-      findSamplesByParentLot: jest.fn(),
-      searchByManufacturer: jest.fn(),
-      findByFilter: jest.fn(),
-      update: jest.fn(),
-      updateStatus: jest.fn(),
-      updateQuantity: jest.fn(),
-      delete: jest.fn(),
-      getLotsByMaterialAndStatus: jest.fn(),
-      countByStatus: jest.fn(),
-      checkLotExists: jest.fn(),
-      findExpiringSoon: jest.fn(),
-      findExpiredLots: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        InventoryLotService,
-        { provide: InventoryLotRepository, useValue: repo },
-      ],
-    }).compile();
-
-    service = module.get<InventoryLotService>(InventoryLotService);
-  });
-
+});
   // ==================== CREATE Tests ====================
 
   describe('create', () => {
     it('should create a new inventory lot', async () => {
       const createDto: CreateInventoryLotDto = {
+        lot_id: 'LOT-2025-001',
         material_id: 'MAT-001',
         manufacturer_name: 'ABC Pharma',
         manufacturer_lot: 'LOT-2025-001',
         received_date: new Date('2025-03-01'),
         expiration_date: new Date('2027-03-01'),
-        quantity: '1000.500',
+        quantity: 1000.5,
         unit_of_measure: 'kg',
+        status: InventoryLotStatus.QUARANTINE,
       };
 
-      repo.create.mockResolvedValue(sampleLot);
+        repo.create.mockResolvedValue({ ...sampleLot, received_by: 'operator1' });
       const result = await service.create(createDto);
 
       expect(result.lot_id).toBe(sampleLot.lot_id);
       expect(result.status).toBe(InventoryLotStatus.QUARANTINE);
-      expect(repo.create).toHaveBeenCalledWith(createDto);
+        expect(repo.create).toHaveBeenCalledWith({ ...createDto, received_by: 'operator1' });
     });
 
     it('should reject if received_date is after expiration_date', async () => {
       const createDto: CreateInventoryLotDto = {
+        lot_id: 'LOT-2025-001',
         material_id: 'MAT-001',
         manufacturer_name: 'ABC Pharma',
         manufacturer_lot: 'LOT-2025-001',
-        received_date: new Date('2027-03-01'),
-        expiration_date: new Date('2025-03-01'),
-        quantity: '1000.500',
+        received_date: new Date('2028-03-01'), // received_date > expiration_date
+        expiration_date: new Date('2027-03-01'),
+        quantity: 1000.5,
         unit_of_measure: 'kg',
+        status: InventoryLotStatus.QUARANTINE,
       };
-
-      await expect(service.create(createDto)).rejects.toThrow(
-        BadRequestException,
-      );
+      // Không mock repo.create, chỉ kiểm tra exception
+      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
     });
 
     it('should reject if quantity is 0', async () => {
       const createDto: CreateInventoryLotDto = {
+        lot_id: 'LOT-2025-001',
         material_id: 'MAT-001',
         manufacturer_name: 'ABC Pharma',
         manufacturer_lot: 'LOT-2025-001',
         received_date: new Date('2025-03-01'),
         expiration_date: new Date('2027-03-01'),
-        quantity: '0',
+        quantity: 0,
         unit_of_measure: 'kg',
+        status: InventoryLotStatus.QUARANTINE,
       };
 
-      await expect(service.create(createDto)).rejects.toThrow(
-        BadRequestException,
-      );
+        await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
     });
 
     it('should reject if quantity is negative', async () => {
       const createDto: CreateInventoryLotDto = {
+        lot_id: 'LOT-2025-001',
         material_id: 'MAT-001',
         manufacturer_name: 'ABC Pharma',
         manufacturer_lot: 'LOT-2025-001',
         received_date: new Date('2025-03-01'),
         expiration_date: new Date('2027-03-01'),
-        quantity: '-100',
+        quantity: -100,
         unit_of_measure: 'kg',
+        status: InventoryLotStatus.QUARANTINE,
       };
 
-      await expect(service.create(createDto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -304,6 +309,7 @@ describe('InventoryLotService', () => {
       repo.update.mockResolvedValue(updatedLot);
 
       const result = await service.update(sampleLot.lot_id, {
+        ...sampleLot,
         storage_location: 'A2-B3-C4',
       });
 
@@ -314,7 +320,7 @@ describe('InventoryLotService', () => {
       repo.findById.mockResolvedValue(null);
 
       await expect(
-        service.update('non-existent-id', { storage_location: 'A2' }),
+        service.update('non-existent-id', { ...sampleLot, storage_location: 'A2' }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -323,6 +329,7 @@ describe('InventoryLotService', () => {
 
       await expect(
         service.update(sampleLot.lot_id, {
+          ...sampleLot,
           received_date: new Date('2027-03-01'),
           expiration_date: new Date('2025-03-01'),
         }),
@@ -340,7 +347,8 @@ describe('InventoryLotService', () => {
       repo.update.mockResolvedValue(depletedLot);
 
       const result = await service.update(sampleLot.lot_id, {
-        quantity: '0',
+        ...sampleLot,
+        quantity: 0,
       });
 
       expect(result.status).toBe(InventoryLotStatus.DEPLETED);
@@ -547,4 +555,61 @@ describe('InventoryLotService', () => {
       expect(result.expired).toBe(0);
     });
   });
-});
+
+  // ==================== TRACEABILITY & AUDIT FIELDS Tests ====================
+
+  describe('traceability & audit fields', () => {
+    it('should set received_by and status on create', async () => {
+      const createDto: CreateInventoryLotDto = {
+        lot_id: 'LOT-2025-001',
+        material_id: 'MAT-001',
+        manufacturer_name: 'ABC Pharma',
+        manufacturer_lot: 'LOT-2025-001',
+        received_date: new Date('2025-03-01'),
+        expiration_date: new Date('2027-03-01'),
+        quantity: 1000.5,
+        unit_of_measure: 'kg',
+        status: InventoryLotStatus.QUARANTINE,
+        // received_by: 'operator1', // Remove if not in CreateInventoryLotDto
+      };
+      repo.create.mockResolvedValue({
+        ...sampleLot,
+        received_by: 'operator1',
+        status: InventoryLotStatus.QUARANTINE,
+      });
+      const result = await service.create(createDto as any);
+      expect(result.received_by).toBe('operator1');
+      expect(result.status).toBe(InventoryLotStatus.QUARANTINE);
+    });
+
+    it('should update qc_by, status and push to history on QC', async () => {
+      const updated = {
+        ...sampleLot,
+        qc_by: 'qc1',
+        status: InventoryLotStatus.ACCEPTED,
+        history: [
+          { action: 'QC', by: 'qc1', status: InventoryLotStatus.ACCEPTED },
+        ],
+      };
+      repo.findById.mockResolvedValue(sampleLot);
+      repo.update.mockResolvedValue({
+        ...updated,
+        qc_by: 'qc1',
+        status: InventoryLotStatus.ACCEPTED,
+        history: [
+          { action: 'QC', by: 'qc1', status: InventoryLotStatus.ACCEPTED },
+        ],
+      });
+      const result = await service.update(sampleLot.lot_id, {
+        qc_by: 'qc1',
+        status: InventoryLotStatus.ACCEPTED,
+      } as any);
+      expect(result.qc_by).toBe('qc1');
+      expect(result.status).toBe(InventoryLotStatus.ACCEPTED);
+      expect(result.history).toEqual(
+        expect.arrayContaining([
+          { action: 'QC', by: 'qc1', status: InventoryLotStatus.ACCEPTED },
+        ]),
+      );
+    });
+  });

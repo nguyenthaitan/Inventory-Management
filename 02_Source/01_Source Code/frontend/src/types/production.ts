@@ -19,6 +19,11 @@ export interface ProductionBatch {
   batch_size: string; // Decimal128 serialized as string
   created_date: string;
   modified_date: string;
+  created_by?: string;
+  approved_by?: string;
+  completed_by?: string;
+  shelf_life_value?: number;
+  shelf_life_unit?: string;
 }
 
 export interface BatchComponent {

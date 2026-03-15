@@ -59,6 +59,18 @@ export class QCTest {
 
   @Prop({ type: String, maxlength: 20, required: false })
   label_id?: string;
+
+  // Traceability & audit
+  @Prop({ type: String, maxlength: 50, required: false })
+  approved_by?: string;
+
+  @Prop({
+    type: [Object],
+    required: false,
+    default: [],
+    description: 'Lịch sử test lại, traceability',
+  })
+  history?: Record<string, any>[];
 }
 
 export const QCTestSchema = SchemaFactory.createForClass(QCTest);

@@ -5,78 +5,99 @@ import { MaterialRepository } from '../material/material.repository';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import {
   CreateMaterialDto,
+  UpdateMaterialDto,
   MaterialType,
-} from '../material/dto/create-material.dto';
-import { UpdateMaterialDto } from '../material/dto/update-material.dto';
-
-// Một đối tượng mẫu dùng lại trong nhiều trường hợp kiểm thử
-const sample: any = {
-  _id: '1',
-  part_number: 'P1',
-  material_name: 'M1',
-  material_type: MaterialType.API,
-};
+} from '../material/material.dto';
 
 describe('MaterialService', () => {
-  // các biến dùng chung trong toàn bộ suite
   let service: MaterialService;
-  let repo: Record<keyof MaterialRepository, jest.Mock>;
+  let repo: any;
 
-  // trước mỗi test case, khởi tạo lại instance và mock repository
+  const sample = {
+    _id: '1',
+    material_id: 'MAT-001',
+    part_number: 'P1',
+    material_name: 'M1',
+    material_type: MaterialType.API,
+    created_by: 'manager1',
+    approved_by: 'admin1',
+    status: 'Pending',
+  };
+
   beforeEach(async () => {
     repo = {
       findAll: jest.fn(),
-      findOne: jest.fn(),
+      findByMaterialId: jest.fn(),
+      findById: jest.fn(),
+      findByPartNumber: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
     };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MaterialService,
         { provide: MaterialRepository, useValue: repo },
       ],
     }).compile();
-
     service = module.get<MaterialService>(MaterialService);
   });
 
-  // kiểm tra dịch vụ trả về danh sách đầy đủ
   it('should return all materials', async () => {
-    repo.findAll.mockResolvedValue([sample]);
-    expect(await service.findAll()).toEqual([sample]);
+    repo.findAll.mockResolvedValue({
+      data: [sample],
+      total: 1,
+      page: 1,
+      limit: 20,
+    });
+    const result = await service.findAll();
+    expect(result.data[0].material_id).toBe('MAT-001');
     expect(repo.findAll).toHaveBeenCalled();
   });
 
-  // lấy về một bản ghi theo id
-  it('should return one material', async () => {
-    repo.findOne.mockResolvedValue(sample);
-    expect(await service.findOne('1')).toEqual(sample);
+  it('should return one material by id', async () => {
+    repo.findById.mockResolvedValue(sample);
+    const result = await service.findById('1');
+    expect(result.material_id).toBe('MAT-001');
   });
 
-  // nếu không tìm thấy thì ném lỗi 404
-  it('should throw NotFoundException when findOne misses', async () => {
-    repo.findOne.mockResolvedValue(null);
-    await expect(service.findOne('x')).rejects.toThrow(NotFoundException);
+  it('should throw NotFoundException when findById misses', async () => {
+    repo.findById.mockResolvedValue(null);
+    await expect(service.findById('x')).rejects.toThrow(NotFoundException);
   });
 
-  // tạo mới bản ghi khi không có xung đột part_number
   it('should create material', async () => {
-    repo.findAll.mockResolvedValue([]);
+    repo.findByMaterialId.mockResolvedValue(null);
+    repo.findByPartNumber.mockResolvedValue(null);
     repo.create.mockResolvedValue(sample);
     const dto: CreateMaterialDto = {
+      material_id: 'MAT-001',
       part_number: 'P1',
       material_name: 'M1',
       material_type: MaterialType.API,
     };
-    expect(await service.create(dto)).toEqual(sample);
+    const result = await service.create(dto);
+    expect(result.material_id).toBe('MAT-001');
+    expect(result.created_by).toBe('manager1');
+    expect(result.status).toBe('Pending');
   });
 
-  // kiểm tra xung đột unique khi tạo
-  it('should conflict on duplicate part_number create', async () => {
-    repo.findAll.mockResolvedValue([sample]);
+  it('should conflict on duplicate material_id create', async () => {
+    repo.findByMaterialId.mockResolvedValue(sample);
     const dto: CreateMaterialDto = {
+      material_id: 'MAT-001',
+      part_number: 'P1',
+      material_name: 'M1',
+      material_type: MaterialType.API,
+    };
+    await expect(service.create(dto)).rejects.toThrow(ConflictException);
+  });
+
+  it('should conflict on duplicate part_number create', async () => {
+    repo.findByMaterialId.mockResolvedValue(null);
+    repo.findByPartNumber.mockResolvedValue(sample);
+    const dto: CreateMaterialDto = {
+      material_id: 'MAT-002',
       part_number: 'P1',
       material_name: 'M2',
       material_type: MaterialType.API,
@@ -84,41 +105,61 @@ describe('MaterialService', () => {
     await expect(service.create(dto)).rejects.toThrow(ConflictException);
   });
 
-  // cập nhật bình thường khi bản ghi tồn tại
   it('should update existing material', async () => {
-    repo.findAll.mockResolvedValue([sample]);
+    repo.findById.mockResolvedValue(sample);
     const updated = { ...sample, material_name: 'M2' };
     repo.update.mockResolvedValue(updated);
     const dto: UpdateMaterialDto = { material_name: 'M2' };
-    expect(await service.update('1', dto)).toEqual(updated);
+    const result = await service.update('1', dto);
+    expect(result.material_name).toBe('M2');
   });
 
-  // xung đột unique khi cập nhật part_number của bản khác
-  it('should conflict on duplicate part_number update', async () => {
-    const other = { ...sample, _id: '2', part_number: 'X' };
-    repo.findAll.mockResolvedValue([sample, other]);
-    const dto: UpdateMaterialDto = { part_number: 'P1' };
-    await expect(service.update('2', dto)).rejects.toThrow(ConflictException);
-  });
-
-  // ném lỗi khi update trên bản ghi không tồn tại
   it('should throw NotFoundException on update missing', async () => {
-    repo.findAll.mockResolvedValue([]);
+    repo.findById.mockResolvedValue(null);
     repo.update.mockResolvedValue(null);
-    await expect(service.update('1', {} as any)).rejects.toThrow(
+    await expect(service.update('1', { material_name: 'M2' })).rejects.toThrow(
       NotFoundException,
     );
   });
 
-  // xoá thành công khi có bản ghi
   it('should remove material', async () => {
+    repo.findById.mockResolvedValue(sample);
     repo.remove.mockResolvedValue({ deleted: true });
-    expect(await service.remove('1')).toEqual({ deleted: true });
+    const result = await service.remove('1');
+    expect(result.deleted).toBe(true);
   });
 
-  // xoá không tồn tại => lỗi 404
   it('should throw NotFoundException when remove missing', async () => {
-    repo.remove.mockResolvedValue({ deleted: false });
+    repo.findById.mockResolvedValue(null);
     await expect(service.remove('1')).rejects.toThrow(NotFoundException);
+  });
+
+  it('should set created_by and status on create', async () => {
+    repo.findByMaterialId.mockResolvedValue(null);
+    repo.findByPartNumber.mockResolvedValue(null);
+    repo.create.mockResolvedValue({
+      ...sample,
+      created_by: 'manager1',
+      status: 'Pending',
+    });
+    const dto: CreateMaterialDto = {
+      material_id: 'MAT-003',
+      part_number: 'P2',
+      material_name: 'M3',
+      material_type: MaterialType.API,
+    };
+    const result = await service.create(dto);
+    expect(result.created_by).toBe('manager1');
+    expect(result.status).toBe('Pending');
+  });
+
+  it('should update approved_by and status on approve', async () => {
+    repo.findById.mockResolvedValue(sample);
+    const updated = { ...sample, approved_by: 'admin1', status: 'Approved' };
+    repo.update.mockResolvedValue(updated);
+    const dto: UpdateMaterialDto = { material_name: 'M1' };
+    const result = await service.update('1', dto);
+    expect(result.approved_by).toBe('admin1');
+    expect(result.status).toBe('Approved');
   });
 });

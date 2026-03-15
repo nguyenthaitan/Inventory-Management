@@ -45,7 +45,17 @@ export default function ProductionBatchList() {
         ? await fetchProductionBatchesByStatus(statusFilter, page, LIMIT)
         : await fetchProductionBatches(page, LIMIT);
 
-      setBatches(result?.data || []);
+      // DEBUG: log object trả về từ API
+      console.log('[DEBUG] ProductionBatch API result:', result);
+      if (Array.isArray(result?.data)) {
+        setBatches(result.data.map(b => ({
+          ...b,
+          batch_id: b.batch_id || b._id
+        })));
+      } else {
+        setBatches([]);
+        console.error('[ERROR] API trả về không đúng định dạng: thiếu mảng data');
+      }
       setTotal(result?.pagination?.total || 0);
       setTotalPages(result?.pagination?.totalPages || 1);
     } catch (e: any) {
