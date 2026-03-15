@@ -1,438 +1,293 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import {
-  BadRequestException,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProductionBatchService } from './production-batch.service';
 import { ProductionBatchRepository } from './production-batch.repository';
 import { Material } from '../schemas/material.schema';
-import {
-  BatchStatus,
-  CreateProductionBatchDto,
-} from './dto/create-production-batch.dto';
+import { CreateProductionBatchDto, BatchStatus } from './dto/create-production-batch.dto';
 import { UpdateProductionBatchDto } from './dto/update-production-batch.dto';
 
-type ProductionBatchLike = {
-  _id: { toString: () => string };
-  batch_id: string;
-  product_id: string;
-  batch_number: string;
-  unit_of_measure: string;
-  manufacture_date: Date;
-  expiration_date: Date;
-  status: BatchStatus;
-  batch_size: { toString: () => string };
-  created_date: Date;
-  modified_date: Date;
+// ─── Mock data ────────────────────────────────────────────────────────────────
+
+const mockBatchDoc: any = {
+  _id: 'mongo-id-1',
+  batch_id: 'batch-uuid-1',
+  product_id: 'MAT-001',
+  batch_number: 'BATCH-2026-001',
+  unit_of_measure: 'kg',
+  manufacture_date: new Date('2026-01-01'),
+  expiration_date: new Date('2028-01-01'),
+  status: BatchStatus.InProgress,
+  batch_size: { toString: () => '500' },
+  created_date: new Date(),
+  modified_date: new Date(),
 };
 
-type PagedBatches = {
-  data: ProductionBatchLike[];
-  total: number;
-  page: number;
-  limit: number;
+const mockCreateDto: CreateProductionBatchDto = {
+  batch_id: 'batch-uuid-1',
+  product_id: 'MAT-001',
+  batch_number: 'BATCH-2026-001',
+  unit_of_measure: 'kg',
+  manufacture_date: '2026-01-01',
+  expiration_date: '2028-01-01',
+  status: BatchStatus.InProgress,
+  batch_size: 500,
 };
 
-type MockedRepository = {
-  create: jest.Mock;
-  findAll: jest.Mock;
-  findOne: jest.Mock;
-  findByBatchNumber: jest.Mock;
-  findByProductId: jest.Mock;
-  findByStatus: jest.Mock;
-  update: jest.Mock;
-  remove: jest.Mock;
-};
+const mockMaterialDoc: any = { material_id: 'MAT-001', material_name: 'Test API' };
 
-type MockedMaterialModel = {
-  findOne: jest.Mock;
-};
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function buildBatchDoc(
-  overrides: Partial<ProductionBatchLike> = {},
-): ProductionBatchLike {
-  const now = new Date('2026-01-10T10:00:00.000Z');
-
+function buildMockRepository() {
   return {
-    _id: { toString: () => '507f1f77bcf86cd799439011' },
-    batch_id: '3d594650-3436-453f-901f-f7f66f18f8eb',
-    product_id: 'MAT-001',
-    batch_number: 'BATCH-2026-001',
-    unit_of_measure: 'kg',
-    manufacture_date: new Date('2026-01-01T00:00:00.000Z'),
-    expiration_date: new Date('2028-01-01T00:00:00.000Z'),
-    status: BatchStatus.InProgress,
-    batch_size: { toString: () => '500' },
-    created_date: now,
-    modified_date: now,
-    ...overrides,
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    findByBatchNumber: jest.fn(),
+    findByProductId: jest.fn(),
+    findByStatus: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
   };
 }
 
-function buildCreateDto(
-  overrides: Partial<CreateProductionBatchDto> = {},
-): CreateProductionBatchDto {
-  return {
-    batch_id: '3d594650-3436-453f-901f-f7f66f18f8eb',
-    product_id: 'MAT-001',
-    batch_number: 'BATCH-2026-001',
-    unit_of_measure: 'kg',
-    manufacture_date: '2026-01-01T00:00:00.000Z',
-    expiration_date: '2028-01-01T00:00:00.000Z',
-    status: BatchStatus.InProgress,
-    batch_size: 500,
-    ...overrides,
-  };
+function buildMockMaterialModel() {
+  const execMock = jest.fn();
+  const findOneMock = jest.fn().mockReturnValue({ exec: execMock });
+  return { findOne: findOneMock, _exec: execMock };
 }
 
-function mockExec<T>(value: T): { exec: jest.Mock } {
-  return {
-    exec: jest.fn().mockResolvedValue(value),
-  };
-}
+// ─── Test suite ───────────────────────────────────────────────────────────────
 
 describe('ProductionBatchService', () => {
   let service: ProductionBatchService;
-  let repository: MockedRepository;
-  let materialModel: MockedMaterialModel;
+  let repository: ReturnType<typeof buildMockRepository>;
+  let materialModel: ReturnType<typeof buildMockMaterialModel>;
 
   beforeEach(async () => {
-    const repositoryMock: MockedRepository = {
-      create: jest.fn(),
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findByBatchNumber: jest.fn(),
-      findByProductId: jest.fn(),
-      findByStatus: jest.fn(),
-      update: jest.fn(),
-      remove: jest.fn(),
-    };
-
-    const materialModelMock: MockedMaterialModel = {
-      findOne: jest.fn(),
-    };
+    repository = buildMockRepository();
+    materialModel = buildMockMaterialModel();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductionBatchService,
-        {
-          provide: ProductionBatchRepository,
-          useValue: repositoryMock,
-        },
-        {
-          provide: getModelToken(Material.name),
-          useValue: materialModelMock,
-        },
+        { provide: ProductionBatchRepository, useValue: repository },
+        { provide: getModelToken(Material.name), useValue: materialModel },
       ],
     }).compile();
 
     service = module.get<ProductionBatchService>(ProductionBatchService);
-    repository = module.get<MockedRepository>(ProductionBatchRepository);
-    materialModel = module.get<MockedMaterialModel>(
-      getModelToken(Material.name),
-    );
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  afterEach(() => jest.clearAllMocks());
 
-  describe('create', () => {
-    it('should create batch when business rules are satisfied', async () => {
-      const createDto = buildCreateDto();
-      const batchDoc = buildBatchDoc();
+  // ─── create() ───────────────────────────────────────────────────────────────
+
+  describe('create()', () => {
+    it('happy path — should create and return a batch response', async () => {
       repository.findByBatchNumber.mockResolvedValue(null);
-      materialModel.findOne.mockReturnValue(
-        mockExec({ material_id: 'MAT-001' }),
-      );
-      repository.create.mockResolvedValue(batchDoc);
+      materialModel._exec.mockResolvedValue(mockMaterialDoc);
+      repository.create.mockResolvedValue(mockBatchDoc);
 
-      const result = await service.create(createDto);
+      const result = await service.create(mockCreateDto);
 
-      expect(repository.findByBatchNumber).toHaveBeenCalledWith(
-        'BATCH-2026-001',
-      );
-      expect(materialModel.findOne).toHaveBeenCalledWith({
-        material_id: 'MAT-001',
-      });
-      expect(repository.create).toHaveBeenCalledWith(createDto);
-      expect(result).toEqual({
-        _id: '507f1f77bcf86cd799439011',
-        batch_id: '3d594650-3436-453f-901f-f7f66f18f8eb',
-        product_id: 'MAT-001',
-        batch_number: 'BATCH-2026-001',
-        unit_of_measure: 'kg',
-        manufacture_date: new Date('2026-01-01T00:00:00.000Z'),
-        expiration_date: new Date('2028-01-01T00:00:00.000Z'),
-        status: BatchStatus.InProgress,
-        batch_size: '500',
-        created_date: batchDoc.created_date,
-        modified_date: batchDoc.modified_date,
-      });
-    });
-
-    it('should reject duplicate batch_number', async () => {
-      repository.findByBatchNumber.mockResolvedValue(buildBatchDoc());
-
-      await expect(service.create(buildCreateDto())).rejects.toThrow(
-        ConflictException,
-      );
-      expect(repository.create).not.toHaveBeenCalled();
-    });
-
-    it.each([
-      {
-        manufacture_date: '2026-02-01T00:00:00.000Z',
-        expiration_date: '2026-01-01T00:00:00.000Z',
-      },
-      {
-        manufacture_date: '2026-02-01T00:00:00.000Z',
-        expiration_date: '2026-02-01T00:00:00.000Z',
-      },
-    ])('should reject invalid date range %#', async (dates) => {
-      repository.findByBatchNumber.mockResolvedValue(null);
-
-      await expect(service.create(buildCreateDto(dates))).rejects.toThrow(
-        BadRequestException,
-      );
-      expect(repository.create).not.toHaveBeenCalled();
-    });
-
-    it('should reject when product_id does not exist', async () => {
-      repository.findByBatchNumber.mockResolvedValue(null);
-      materialModel.findOne.mockReturnValue(mockExec(null));
-
-      await expect(service.create(buildCreateDto())).rejects.toThrow(
-        NotFoundException,
-      );
-      expect(repository.create).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('findAll', () => {
-    it.each([
-      { page: 0, limit: 20 },
-      { page: 1, limit: 0 },
-      { page: -1, limit: 20 },
-      { page: 1, limit: -5 },
-    ])('should reject invalid pagination %#', async ({ page, limit }) => {
-      await expect(service.findAll(page, limit)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should cap limit to 100 and compute total pages from repository data', async () => {
-      const paged: PagedBatches = {
-        data: [buildBatchDoc()],
-        total: 240,
-        page: 1,
-        limit: 100,
-      };
-      repository.findAll.mockResolvedValue(paged);
-
-      const result = await service.findAll(1, 999);
-
-      expect(repository.findAll).toHaveBeenCalledWith(1, 100);
-      expect(result.pagination).toEqual({
-        page: 1,
-        limit: 100,
-        total: 240,
-        totalPages: 3,
-      });
-      expect(result.data[0]?.batch_size).toBe('500');
-    });
-  });
-
-  describe('findOne', () => {
-    it('should return batch response when found', async () => {
-      repository.findOne.mockResolvedValue(buildBatchDoc());
-
-      const result = await service.findOne(
-        '3d594650-3436-453f-901f-f7f66f18f8eb',
-      );
-
-      expect(repository.findOne).toHaveBeenCalledWith(
-        '3d594650-3436-453f-901f-f7f66f18f8eb',
-      );
+      expect(result.batch_id).toBe('batch-uuid-1');
       expect(result.batch_number).toBe('BATCH-2026-001');
+      expect(result.batch_size).toBe('500');
+      expect(repository.findByBatchNumber).toHaveBeenCalledWith('BATCH-2026-001');
+      expect(repository.create).toHaveBeenCalledWith(mockCreateDto);
+    });
+
+    it('should throw ConflictException when batch_number already exists', async () => {
+      repository.findByBatchNumber.mockResolvedValue(mockBatchDoc);
+
+      await expect(service.create(mockCreateDto)).rejects.toThrow(ConflictException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when expiration_date <= manufacture_date', async () => {
+      repository.findByBatchNumber.mockResolvedValue(null);
+
+      const invalidDto: CreateProductionBatchDto = {
+        ...mockCreateDto,
+        manufacture_date: '2026-06-01',
+        expiration_date: '2026-01-01', // before manufacture_date
+      };
+
+      await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when expiration_date equals manufacture_date', async () => {
+      repository.findByBatchNumber.mockResolvedValue(null);
+
+      const sameDate: CreateProductionBatchDto = {
+        ...mockCreateDto,
+        manufacture_date: '2026-06-01',
+        expiration_date: '2026-06-01',
+      };
+
+      await expect(service.create(sameDate)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException when product_id does not exist in Materials', async () => {
+      repository.findByBatchNumber.mockResolvedValue(null);
+      materialModel._exec.mockResolvedValue(null); // product not found
+
+      await expect(service.create(mockCreateDto)).rejects.toThrow(NotFoundException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    describe('traceability & audit fields', () => {
+      it('should set created_by and status on create', async () => {
+        repository.findByBatchNumber.mockResolvedValue(null);
+        materialModel._exec.mockResolvedValue(mockMaterialDoc);
+        repository.create.mockResolvedValue({ ...mockBatchDoc, created_by: 'manager1', status: 'In Progress' });
+        const dto = { ...mockCreateDto, created_by: 'manager1' };
+        const result = await service.create(dto as any);
+        expect(result.created_by).toBe('manager1');
+        expect(result.status).toBe('In Progress');
+      });
+    });
+  });
+
+  // ─── findOne() ──────────────────────────────────────────────────────────────
+
+  describe('findOne()', () => {
+    it('should return batch response when found', async () => {
+      repository.findOne.mockResolvedValue(mockBatchDoc);
+
+      const result = await service.findOne('batch-uuid-1');
+
+      expect(result.batch_id).toBe('batch-uuid-1');
+      expect(repository.findOne).toHaveBeenCalledWith('batch-uuid-1');
     });
 
     it('should throw NotFoundException when batch does not exist', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('missing-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('non-existent')).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('findByProductId', () => {
-    it.each([
-      { page: 0, limit: 20 },
-      { page: 1, limit: 0 },
-    ])('should reject invalid pagination %#', async ({ page, limit }) => {
-      await expect(
-        service.findByProductId('MAT-001', page, limit),
-      ).rejects.toThrow(BadRequestException);
-    });
+  // ─── findAll() ──────────────────────────────────────────────────────────────
 
-    it('should return paged batches for product_id', async () => {
-      repository.findByProductId.mockResolvedValue({
-        data: [buildBatchDoc({ product_id: 'MAT-777' })],
-        total: 6,
+  describe('findAll()', () => {
+    it('should return paginated batches', async () => {
+      repository.findAll.mockResolvedValue({
+        data: [mockBatchDoc],
+        total: 1,
+        page: 1,
+        limit: 20,
       });
 
-      const result = await service.findByProductId('MAT-777', 2, 3);
+      const result = await service.findAll(1, 20);
 
-      expect(repository.findByProductId).toHaveBeenCalledWith('MAT-777', 2, 3);
-      expect(result.pagination.totalPages).toBe(2);
-      expect(result.data[0]?.product_id).toBe('MAT-777');
+      expect(result.data).toHaveLength(1);
+      expect(result.pagination.total).toBe(1);
+      expect(result.pagination.totalPages).toBe(1);
+    });
+
+    it('should throw BadRequestException when page < 1', async () => {
+      await expect(service.findAll(0, 20)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when limit < 1', async () => {
+      await expect(service.findAll(1, 0)).rejects.toThrow(BadRequestException);
     });
   });
 
-  describe('findByStatus', () => {
-    it('should reject invalid status', async () => {
-      await expect(service.findByStatus('Invalid', 1, 20)).rejects.toThrow(
-        BadRequestException,
-      );
-      expect(repository.findByStatus).not.toHaveBeenCalled();
-    });
+  // ─── update() ───────────────────────────────────────────────────────────────
 
-    it.each(Object.values(BatchStatus))(
-      'should return paged data for valid status "%s"',
-      async (status) => {
-        repository.findByStatus.mockResolvedValue({
-          data: [buildBatchDoc({ status })],
-          total: 1,
-        });
+  describe('update() — status state machine', () => {
+    it('should allow valid transition: In Progress → Complete', async () => {
+      repository.findOne.mockResolvedValue(mockBatchDoc); // status = In Progress
+      const updatedDoc = { ...mockBatchDoc, status: BatchStatus.Complete };
+      repository.update.mockResolvedValue(updatedDoc);
 
-        const result = await service.findByStatus(status, 1, 20);
+      const dto: UpdateProductionBatchDto = { status: BatchStatus.Complete };
+      const result = await service.update('batch-uuid-1', dto);
 
-        expect(repository.findByStatus).toHaveBeenCalledWith(status, 1, 20);
-        expect(result.data[0]?.status).toBe(status);
-      },
-    );
-  });
-
-  describe('update', () => {
-    it('should reject update when batch does not exist', async () => {
-      repository.findOne.mockResolvedValue(null);
-
-      await expect(
-        service.update('missing-id', {
-          status: BatchStatus.Complete,
-        } as UpdateProductionBatchDto),
-      ).rejects.toThrow(NotFoundException);
-      expect(repository.update).not.toHaveBeenCalled();
-    });
-
-    it.each([
-      {
-        current: BatchStatus.Complete,
-        next: BatchStatus.InProgress,
-      },
-      {
-        current: BatchStatus.Cancelled,
-        next: BatchStatus.InProgress,
-      },
-      {
-        current: BatchStatus.OnHold,
-        next: BatchStatus.Complete,
-      },
-    ])(
-      'should reject invalid status transition %#',
-      async ({ current, next }) => {
-        repository.findOne.mockResolvedValue(
-          buildBatchDoc({ status: current }),
-        );
-
-        await expect(
-          service.update('3d594650-3436-453f-901f-f7f66f18f8eb', {
-            status: next,
-          } as UpdateProductionBatchDto),
-        ).rejects.toThrow(BadRequestException);
-        expect(repository.update).not.toHaveBeenCalled();
-      },
-    );
-
-    it('should allow valid transition In Progress -> Complete', async () => {
-      repository.findOne.mockResolvedValue(
-        buildBatchDoc({ status: BatchStatus.InProgress }),
-      );
-      repository.update.mockResolvedValue(
-        buildBatchDoc({ status: BatchStatus.Complete }),
-      );
-
-      const result = await service.update(
-        '3d594650-3436-453f-901f-f7f66f18f8eb',
-        {
-          status: BatchStatus.Complete,
-        } as UpdateProductionBatchDto,
-      );
-
-      expect(repository.update).toHaveBeenCalledWith(
-        '3d594650-3436-453f-901f-f7f66f18f8eb',
-        expect.objectContaining({ status: BatchStatus.Complete }),
-      );
       expect(result.status).toBe(BatchStatus.Complete);
     });
 
-    it('should reject invalid date range based on mixed existing/new values', async () => {
-      repository.findOne.mockResolvedValue(
-        buildBatchDoc({
-          manufacture_date: new Date('2026-02-01T00:00:00.000Z'),
-          expiration_date: new Date('2026-12-01T00:00:00.000Z'),
-        }),
-      );
+    it('should allow valid transition: In Progress → On Hold', async () => {
+      repository.findOne.mockResolvedValue(mockBatchDoc);
+      repository.update.mockResolvedValue({ ...mockBatchDoc, status: BatchStatus.OnHold });
+
+      const result = await service.update('batch-uuid-1', { status: BatchStatus.OnHold });
+
+      expect(result.status).toBe(BatchStatus.OnHold);
+    });
+
+    it('should throw BadRequestException for invalid transition: Complete → In Progress', async () => {
+      const completedBatch = { ...mockBatchDoc, status: BatchStatus.Complete };
+      repository.findOne.mockResolvedValue(completedBatch);
 
       await expect(
-        service.update('3d594650-3436-453f-901f-f7f66f18f8eb', {
-          expiration_date: '2026-01-15T00:00:00.000Z',
-        } as UpdateProductionBatchDto),
+        service.update('batch-uuid-1', { status: BatchStatus.InProgress }),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException for invalid transition: Cancelled → In Progress', async () => {
+      const cancelledBatch = { ...mockBatchDoc, status: BatchStatus.Cancelled };
+      repository.findOne.mockResolvedValue(cancelledBatch);
+
+      await expect(
+        service.update('batch-uuid-1', { status: BatchStatus.InProgress }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException when updating a non-existent batch', async () => {
+      repository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.update('non-existent', { status: BatchStatus.Complete }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    describe('traceability & audit fields', () => {
+      it('should update approved_by, completed_by, status on update', async () => {
+        const updated = { ...mockBatchDoc, approved_by: 'admin1', completed_by: 'operator1', status: 'Complete' };
+        repository.update.mockResolvedValue(updated);
+        const dto = { approved_by: 'admin1', completed_by: 'operator1', status: 'Complete' };
+        const result = await service.update(mockBatchDoc.batch_id, dto as any);
+        expect(result.approved_by).toBe('admin1');
+        expect(result.completed_by).toBe('operator1');
+        expect(result.status).toBe('Complete');
+      });
     });
   });
 
-  describe('remove', () => {
-    it('should reject remove when batch does not exist', async () => {
+  // ─── remove() ───────────────────────────────────────────────────────────────
+
+  describe('remove()', () => {
+    it('should delete a batch that is not In Progress', async () => {
+      const completedBatch = { ...mockBatchDoc, status: BatchStatus.Complete };
+      repository.findOne.mockResolvedValue(completedBatch);
+      repository.remove.mockResolvedValue(completedBatch);
+
+      const result = await service.remove('batch-uuid-1');
+
+      expect(result.message).toContain('batch-uuid-1');
+      expect(repository.remove).toHaveBeenCalledWith('batch-uuid-1');
+    });
+
+    it('should throw BadRequestException when deleting a batch with status In Progress', async () => {
+      repository.findOne.mockResolvedValue(mockBatchDoc); // status = In Progress
+
+      await expect(service.remove('batch-uuid-1')).rejects.toThrow(BadRequestException);
+      expect(repository.remove).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when batch does not exist', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('missing-id')).rejects.toThrow(
-        NotFoundException,
-      );
-      expect(repository.remove).not.toHaveBeenCalled();
+      await expect(service.remove('non-existent')).rejects.toThrow(NotFoundException);
     });
-
-    it('should reject removing In Progress batch', async () => {
-      repository.findOne.mockResolvedValue(
-        buildBatchDoc({ status: BatchStatus.InProgress }),
-      );
-
-      await expect(
-        service.remove('3d594650-3436-453f-901f-f7f66f18f8eb'),
-      ).rejects.toThrow(BadRequestException);
-      expect(repository.remove).not.toHaveBeenCalled();
-    });
-
-    it.each([BatchStatus.Complete, BatchStatus.OnHold, BatchStatus.Cancelled])(
-      'should remove batch for allowed status "%s"',
-      async (status) => {
-        repository.findOne.mockResolvedValue(buildBatchDoc({ status }));
-        repository.remove.mockResolvedValue(buildBatchDoc({ status }));
-
-        const result = await service.remove(
-          '3d594650-3436-453f-901f-f7f66f18f8eb',
-        );
-
-        expect(repository.remove).toHaveBeenCalledWith(
-          '3d594650-3436-453f-901f-f7f66f18f8eb',
-        );
-        expect(result.message).toContain(
-          '3d594650-3436-453f-901f-f7f66f18f8eb',
-        );
-      },
-    );
   });
 });

@@ -1021,7 +1021,13 @@ export default function ProductionBatches() {
       const result = statusFilter
         ? await fetchProductionBatchesByStatus(statusFilter, page, LIMIT)
         : await fetchProductionBatches(page, LIMIT);
-      setBatches(result.data);
+      console.log('[DEBUG] ProductionBatch API result:', result);
+      // Đảm bảo batch nào cũng có batch_id (fallback sang _id)
+      const mapped = (result.data || []).map(b => ({
+        ...b,
+        batch_id: b.batch_id || b._id
+      }));
+      setBatches(mapped);
       setTotal(result.pagination.total);
       setTotalPages(result.pagination.totalPages || 1);
     } catch (e: any) {

@@ -1,3 +1,16 @@
+# Workflow chính: Quản lý sản xuất & tồn kho
+
+## Luồng tổng quan chuẩn (theo nghiệp vụ thực tế)
+1. **Manager tạo materials**: Manager tạo mới hoặc duyệt vật tư/materials chuẩn cho sản xuất.
+2. **Operator nhận lô hàng (inventory lot) của material**: Operator tiếp nhận, nhập kho, tạo lô hàng inventory lot cho material đã được Manager tạo.
+3. **QC kiểm tra lô hàng**: QC thực hiện kiểm tra chất lượng lô hàng, cập nhật trạng thái (Accepted/Rejected/Quarantine).
+4. **Manager tạo Production Batch**: Manager khởi tạo batch sản xuất mới, xác định sản phẩm đầu ra.
+5. **Operator thêm các material với số lượng cần dùng vào production batch**: Operator chọn các lô material, nhập số lượng sử dụng cho batch.
+6. **Manager thay đổi trạng thái production batch để tạo ra sản phẩm (material)**: Manager xác nhận hoàn thành batch, hệ thống sinh ra sản phẩm mới (material/lô thành phẩm).
+7. **Inventory Transaction luôn được tạo khi có thay đổi (nhận, sử dụng, hoàn thành, điều chỉnh, chuyển kho, v.v.)**: Mỗi thay đổi số lượng đều sinh transaction để đảm bảo traceability.
+
+> Lưu ý: Mỗi bước đều phải ghi nhận vào bảng transaction/audit log để đảm bảo truy vết và minh bạch.
+
 # Workflow chi tiết (theo schema)
 
 Mục tiêu: Dựa trên schema (Materials → InventoryLots → InventoryTransactions → QCTests / ProductionBatches → BatchComponents → Labels), mô tả chi tiết từng bước workflow, liệt kê các bảng và trường liên quan, và chỉ rõ giá trị nào thay đổi (before → after) trong mỗi bước. Kèm ví dụ thực tế ngành dược: Ascorbic Acid (Vitamin C) dùng cho viên 500 mg.
@@ -41,7 +54,7 @@ Giá trị mẫu sẽ dùng xuyên suốt:
 
 ## 4. Quy trình chi tiết — từng bước và thay đổi bảng
 
-### A. Tạo Material (setup)
+### A. Tạo Material (Manager tạo vật tư chuẩn)
 Mục tiêu: tạo bản ghi vật tư/sản phẩm.
 - Vai trò chính: Manager (creates/approves canonical materials)
 - Vai trò phụ: Operator (may create draft), IT Administrator (manages default label templates)
@@ -65,7 +78,7 @@ Kết quả: bảng `materials` thêm bản ghi mới.
 
 ---
 
-### B. Nhận nguyên liệu (Receipt) → Tạo InventoryLot + InventoryTransaction + Label
+### B. Operator nhận lô hàng (InventoryLot) → Tạo InventoryLot + InventoryTransaction + Label
 Mục tiêu: ghi nhận lô nhập, sinh transaction và in nhãn raw material.
 - Vai trò chính: Operator (thực hiện nhận, tạo lot, tạo transaction, in nhãn ban đầu)
 - Vai trò phụ: Quality Control Technician (QC) (được kích hoạt để test), Manager (xem xét/duyệt các trường hợp ngoại lệ), IT Administrator (quản lý template/in cấu hình in)
@@ -107,7 +120,60 @@ Ghi chú:
 
 ---
 
-### C. Kiểm nghiệm chất lượng (QCTests)
+### C. QC kiểm tra lô hàng (QCTests)
+### D. Manager tạo Production Batch
+Mục tiêu: Manager khởi tạo batch sản xuất mới, xác định sản phẩm đầu ra.
+- Vai trò chính: Manager (tạo batch, xác định sản phẩm, batch size)
+- Vai trò phụ: Operator (có thể đề xuất batch draft)
+
+Hành động & trách nhiệm:
+- Tạo record production_batches (INSERT): Manager
+- Gán product_id, planned_qty, unit, ngày bắt đầu, trạng thái ban đầu = 'In Progress'
+- Ghi nhận audit_logs
+
+GHI:
+- production_batches: INSERT
+- audit_logs: INSERT
+
+Ví dụ:
+- production_batches: batch_code=batch-TBL-1001, product_id=MAT-VC-500, planned_qty=100000, status='In Progress'
+### E. Operator thêm material vào Production Batch (BatchComponents)
+Mục tiêu: Operator chọn các lô material, nhập số lượng sử dụng cho batch.
+- Vai trò chính: Operator (chọn lô, nhập số lượng)
+- Vai trò phụ: Manager (duyệt/kiểm tra)
+
+Hành động & trách nhiệm:
+- Tạo record batch_components (INSERT): Operator
+- Gán inventory_lot_id, planned_quantity, actual_quantity (nếu có)
+- Ghi nhận audit_logs
+
+GHI:
+- batch_components: INSERT
+- audit_logs: INSERT
+
+Ví dụ:
+- batch_components: production_batch_id=batch-TBL-1001, inventory_lot_id=lot-VC-20260115, planned_quantity=50.0
+### F. Manager thay đổi trạng thái Production Batch để tạo ra sản phẩm (material)
+Mục tiêu: Manager xác nhận hoàn thành batch, hệ thống sinh ra sản phẩm mới (material/lô thành phẩm).
+- Vai trò chính: Manager (xác nhận hoàn thành, chuyển trạng thái batch)
+- Vai trò phụ: Operator (cập nhật số lượng thực tế)
+
+Hành động & trách nhiệm:
+- Cập nhật production_batches.status = 'Complete', produced_qty = actual
+- Tạo inventory_lots mới cho thành phẩm
+- Sinh inventory_transactions loại 'Usage' (trừ nguyên liệu) và 'Receipt' (nhập thành phẩm)
+- Ghi nhận audit_logs
+
+GHI/CẬP NHẬT:
+- production_batches: UPDATE status, produced_qty
+- inventory_lots: INSERT (thành phẩm)
+- inventory_transactions: INSERT (Usage, Receipt)
+- audit_logs: INSERT
+
+Ví dụ:
+- production_batches: status='Complete', produced_qty=100000
+- inventory_lots: lot_code=lot-TBL-20260314, material_id=MAT-TBL-500, quantity=100000
+- inventory_transactions: type='Usage', quantity=-50.0 (nguyên liệu); type='Receipt', quantity=100000 (thành phẩm)
 Mục tiêu: thực hiện các phép thử trên `InventoryLot`; thay đổi trạng thái lot theo kết quả.
 - Vai trò chính: Quality Control Technician (thực hiện test, verify kết quả, set status)
 - Vai trò phụ: Manager (xem/duyệt các quyết định ngoại lệ), Operator (cung cấp mẫu / ghi nhận)

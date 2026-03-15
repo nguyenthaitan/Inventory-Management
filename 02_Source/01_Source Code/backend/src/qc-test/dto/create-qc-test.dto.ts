@@ -56,4 +56,31 @@ export class CreateQCTestDto {
   @IsString()
   @MaxLength(20)
   label_id?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  approved_by?: string;
+
+  @IsOptional()
+  history?: Record<string, any>[];
+}
+
+export class QCTestResponseDto {
+  test_id: string;
+  lot_id: string;
+  test_type: string;
+  test_method: string;
+  test_date: string;
+  test_result: string;
+  acceptance_criteria?: string;
+  result_status: string;
+  performed_by: string;
+  verified_by?: string;
+  approved_by?: string;
+  reject_reason?: string;
+  label_id?: string;
+  created_date?: string;
+  modified_date?: string;
+  history?: Record<string, any>[];
 }

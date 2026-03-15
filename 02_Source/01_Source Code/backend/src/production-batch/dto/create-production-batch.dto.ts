@@ -2,11 +2,9 @@ import {
   IsString,
   IsNotEmpty,
   IsEnum,
-  IsDateString,
   IsNumber,
   IsPositive,
   MaxLength,
-  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -22,10 +20,9 @@ export enum BatchStatus {
  * Used for POST /production-batches endpoint
  */
 export class CreateProductionBatchDto {
-  @IsUUID('4', { message: 'batch_id must be a valid UUID v4' })
-  @IsString()
+  @IsString({ message: 'batch_id must be a string' })
   @IsNotEmpty({ message: 'batch_id is required' })
-  @MaxLength(36, { message: 'batch_id must not exceed 36 characters' })
+  @MaxLength(50, { message: 'batch_id must not exceed 50 characters' })
   batch_id: string;
 
   @IsString({ message: 'product_id must be a string' })
@@ -43,11 +40,15 @@ export class CreateProductionBatchDto {
   @MaxLength(10, { message: 'unit_of_measure must not exceed 10 characters' })
   unit_of_measure: string;
 
-  @IsDateString({}, { message: 'manufacture_date must be a valid ISO 8601 date string' })
-  manufacture_date: string;
+  // Shelf life fields
+  @IsNumber({}, { message: 'shelf_life_value must be a number' })
+  @IsPositive({ message: 'shelf_life_value must be positive' })
+  @IsNotEmpty({ message: 'shelf_life_value is required' })
+  shelf_life_value: number;
 
-  @IsDateString({}, { message: 'expiration_date must be a valid ISO 8601 date string' })
-  expiration_date: string;
+  @IsString({ message: 'shelf_life_unit must be a string' })
+  @IsNotEmpty({ message: 'shelf_life_unit is required' })
+  shelf_life_unit: string;
 
   @IsEnum(BatchStatus, {
     message: `status must be one of: ${Object.values(BatchStatus).join(', ')}`,

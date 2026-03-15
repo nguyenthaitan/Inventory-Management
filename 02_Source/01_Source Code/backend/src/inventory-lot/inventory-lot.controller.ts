@@ -27,18 +27,26 @@ export class InventoryLotController {
   constructor(private readonly inventoryLotService: InventoryLotService) {}
 
   // ==================== CRUD Operations ====================
-  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER, UserRole.QC_TECHNICIAN)
   @Post()
   async create(@Body(ValidationPipe) dto: CreateInventoryLotDto) {
     return await this.inventoryLotService.create(dto);
   }
 
-  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER, UserRole.QC_TECHNICIAN)
   @Get()
   async findAll(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('status') status?: string,
   ) {
+    if (status) {
+      return await this.inventoryLotService.findByStatus(
+        status,
+        parseInt(page, 10),
+        parseInt(limit, 10),
+      );
+    }
     return await this.inventoryLotService.findAll(
       parseInt(page, 10),
       parseInt(limit, 10),
@@ -122,18 +130,7 @@ export class InventoryLotController {
     );
   }
 
-  @Get('status/:status')
-  async findByStatus(
-    @Param('status') status: string,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
-    return await this.inventoryLotService.findByStatus(
-      status as InventoryLotStatus,
-      parseInt(page, 10),
-      parseInt(limit, 10),
-    );
-  }
+
 
   @Get('samples/:parent_lot_id')
   async findSamplesByParentLot(@Param('parent_lot_id') parent_lot_id: string) {

@@ -1,30 +1,41 @@
-export type LotStatus = 'Quarantine' | 'Accepted' | 'Rejected' | 'Depleted';
+export type LotStatus = 'Pending' | 'Received' | 'QC_Pending' | 'QC_Passed' | 'QC_Failed' | 'In_Use' | 'Consumed' | 'Disposed' | 'Quarantine' | 'Accepted' | 'Rejected' | 'Depleted' | 'Hold';
 
 export interface InventoryLot {
   _id: string;
+  lot_id: string;
   material_id: string;
-  lot_code: string;
-  mfr_name: string;
-  mfr_lot: string;
+  manufacturer_name: string;
+  manufacturer_lot: string;
+  supplier_name?: string;
+  received_date: string;
+  expiration_date: string;
+  in_use_expiration_date?: string;
   status: LotStatus;
   quantity: number;
-  uom: string;
-  expiration_date: string;
-  parent_lot_id?: string;
+  unit_of_measure: string;
+  storage_location?: string;
   is_sample: boolean;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
+  parent_lot_id?: string;
+  notes?: string;
+  created_date: string;
+  modified_date: string;
+  received_by?: string;
+  qc_by?: string;
+  history?: Record<string, any>[];
 }
 
-export type TransactionType = 'receipt' | 'usage' | 'split' | 'transfer' | 'adjustment';
+export type TransactionType = 'Receipt' | 'Usage' | 'Split' | 'Adjustment' | 'Transfer' | 'Disposal';
 
 export interface InventoryTransaction {
   _id: string;
+  transaction_id: string;
   lot_id: string;
-  type: TransactionType;
+  related_lot_id?: string;
+  transaction_type: TransactionType;
   quantity: number;
-  performed_by: string;
+  unit_of_measure: string;
   transaction_date: string;
-  note?: string;
+  reference_number?: string;
+  performed_by: string;
+  notes?: string;
 }

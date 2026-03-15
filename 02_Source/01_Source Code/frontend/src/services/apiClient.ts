@@ -13,7 +13,7 @@ import {
 
 // API config từ environment
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 const API_TIMEOUT = 30000;
 
 // ───── Token & Auth Utilities ─────────────────────────────────────────────────
@@ -147,19 +147,11 @@ class ApiClient {
           window.location.href = "/login";
         }
 
-        // Nếu forbidden (role không phù hợp), redirect to dashboard
+        // Nếu forbidden (role không phù hợp), chỉ log lỗi, KHÔNG redirect (tránh vòng lặp reload)
         if (error.response?.status === 403) {
           console.error(`[API] 403 Forbidden - Insufficient role`);
           console.error(`[API] Response:`, error.response?.data);
-          const userRole = getCurrentUserRole();
-          const dashboardMap: Record<string, string> = {
-            manager: "/manager/dashboard",
-            operator: "/operator/dashboard",
-            "quality-control": "/qc/dashboard",
-            it_admin: "/admin/dashboard",
-          };
-          const redirectUrl = userRole ? dashboardMap[userRole] || "/" : "/login";
-          window.location.href = redirectUrl;
+          // Không redirect, chỉ log lỗi
         }
 
         return Promise.reject(error);
@@ -246,8 +238,11 @@ class ApiClient {
         timeout: options?.timeout,
       });
 
+      // Nếu response.data.data không tồn tại, trả về response.data (hỗ trợ cả 2 kiểu API)
       return {
-        data: response.data.data as T,
+        data: (response.data && typeof response.data === 'object' && 'data' in response.data)
+          ? response.data.data as T
+          : response.data as T,
         error: null,
       };
     } catch (error) {
@@ -269,7 +264,7 @@ class ApiClient {
     { data: T; error: null } | { data: null; error: ApiErrorResponse }
   > {
     try {
-      const response = await this.axiosInstance.post<ApiResponse<T>>(
+      const response = await this.axiosInstance.post<ApiResponse<T> | T>(
         url,
         payload,
         {
@@ -279,8 +274,10 @@ class ApiClient {
         },
       );
 
+      // Handle both wrapped response {data: {...}} and direct response {...}
+      const responseData = (response.data as any).data ?? response.data;
       return {
-        data: response.data.data as T,
+        data: responseData as T,
         error: null,
       };
     } catch (error) {
@@ -302,7 +299,7 @@ class ApiClient {
     { data: T; error: null } | { data: null; error: ApiErrorResponse }
   > {
     try {
-      const response = await this.axiosInstance.put<ApiResponse<T>>(
+      const response = await this.axiosInstance.put<ApiResponse<T> | T>(
         url,
         payload,
         {
@@ -312,8 +309,10 @@ class ApiClient {
         },
       );
 
+      // Handle both wrapped response {data: {...}} and direct response {...}
+      const responseData = (response.data as any).data ?? response.data;
       return {
-        data: response.data.data as T,
+        data: responseData as T,
         error: null,
       };
     } catch (error) {

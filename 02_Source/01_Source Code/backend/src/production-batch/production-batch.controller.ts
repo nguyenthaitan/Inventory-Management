@@ -40,14 +40,15 @@ export class ProductionBatchController {
    * List all production batches with pagination
    * Query params: page (default: 1), limit (default: 20)
    */
-  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER, UserRole.QC_TECHNICIAN)
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 20,
   ) {
-    return this.productionBatchService.findAll(page, limit);
+    // Trả về trực tiếp object phân trang, không bọc thêm { data: ... }
+    return await this.productionBatchService.findAll(page, limit);
   }
 
   /**
@@ -63,7 +64,7 @@ export class ProductionBatchController {
     @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 20,
   ) {
-    return this.productionBatchService.findByProductId(productId, page, limit);
+    return await this.productionBatchService.findByProductId(productId, page, limit);
   }
 
   /**
@@ -79,7 +80,7 @@ export class ProductionBatchController {
     @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 20,
   ) {
-    return this.productionBatchService.findByStatus(status, page, limit);
+    return await this.productionBatchService.findByStatus(status, page, limit);
   }
 
   /**
@@ -97,8 +98,9 @@ export class ProductionBatchController {
    * POST /production-batches
    * Create a new production batch
    * Body: CreateProductionBatchDto
+   * Cho phép cả Operator và Manager tạo batch
    */
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -112,8 +114,9 @@ export class ProductionBatchController {
    * PATCH /production-batches/:id
    * Update a production batch (partial update)
    * Body: UpdateProductionBatchDto
+   * Cho phép cả Operator và Manager cập nhật batch
    */
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
@@ -167,8 +170,9 @@ export class ProductionBatchController {
    * POST /production-batches/:id/components
    * Add a component (inventory lot) to a production batch
    * Body: CreateBatchComponentDto
+   * Cho phép cả Operator và Manager thêm nguyên liệu khi batch ở trạng thái pending
    */
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Post(':id/components')
   @HttpCode(HttpStatus.CREATED)
   async createComponent(
@@ -176,6 +180,9 @@ export class ProductionBatchController {
     @Body(new ValidationPipe({ transform: true }))
     createDto: CreateBatchComponentDto,
   ) {
+    console.log(`[Controller] POST /production-batches/${batchId}/components`);
+    console.log(`[Controller] Body:`, createDto);
+    console.log(`[Controller] Calling service.create(${batchId}, ...)`);
     return this.batchComponentService.create(batchId, createDto);
   }
 
@@ -183,8 +190,9 @@ export class ProductionBatchController {
    * PATCH /production-batches/:id/components/:componentId
    * Update a batch component (partial update)
    * Body: UpdateBatchComponentDto
+   * Cho phép cả Operator và Manager cập nhật nguyên liệu khi batch ở trạng thái pending
    */
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Patch(':id/components/:componentId')
   @HttpCode(HttpStatus.OK)
   async updateComponent(
@@ -199,8 +207,9 @@ export class ProductionBatchController {
   /**
    * DELETE /production-batches/:id/components/:componentId
    * Remove a component from a production batch
+   * Cho phép cả Operator và Manager xóa nguyên liệu khi batch ở trạng thái pending
    */
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
   @Delete(':id/components/:componentId')
   @HttpCode(HttpStatus.OK)
   async removeComponent(

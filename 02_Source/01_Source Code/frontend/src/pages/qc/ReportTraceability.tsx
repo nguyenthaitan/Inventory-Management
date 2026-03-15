@@ -40,14 +40,14 @@ export default function ReportTraceability() {
   const loadSuppliers = useCallback(async () => {
     setLoadingSuppliers(true);
     try {
-      const data = await getSupplierPerformance(dateFrom || undefined, dateTo || undefined);
+      const data = await getSupplierPerformance();
       setSuppliers(data);
     } catch {
       setToast({ message: 'Không thể tải báo cáo nhà cung cấp', type: 'error' });
     } finally {
       setLoadingSuppliers(false);
     }
-  }, [dateFrom, dateTo]);
+  }, []);
 
   useEffect(() => {
     void loadSuppliers();

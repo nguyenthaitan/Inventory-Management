@@ -42,6 +42,21 @@ export class Material {
 
   @Prop({ type: String, maxlength: 50, default: null })
   specification_document?: string;
+
+  // Traceability & workflow fields
+  @Prop({ type: String, maxlength: 50, required: false })
+  created_by?: string;
+
+  @Prop({ type: String, maxlength: 50, required: false })
+  approved_by?: string;
+
+  @Prop({
+    type: String,
+    enum: ['Pending', 'Approved', 'Rejected'],
+    default: 'Pending',
+    required: true,
+  })
+  status: string;
 }
 
 export const MaterialSchema = SchemaFactory.createForClass(Material);

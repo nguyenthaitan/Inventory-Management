@@ -378,12 +378,10 @@ export class KeycloakService {
    */
   async findKeycloakUserByUsername(username: string): Promise<KeycloakUserRepresentation | null> {
     const token = await this.getAdminToken();
-    console.log(`Token for find user: ${token}`);
 
     const res = await fetch(`${this.adminBaseUrl}/users?username=${encodeURIComponent(username)}&exact=true`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    console.log(`Response status for find user: ${res.status}`, res);
 
     if (!res.ok) return null;
 

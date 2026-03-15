@@ -18,6 +18,7 @@ import ReportsManager from "../pages/manager/Reports";
 import TransactionManagementManager from "../pages/manager/TransactionManagement";
 import UserManagementManager from "../pages/manager/UserManagement";
 import LabelManagement from '../pages/manager/LabelManagement';
+import ProductCreationManager from '../pages/manager/ProductCreation';
 import DashboardOperator from "../pages/operator/DashboardOperator";
 import InventoryAuditOperator from "../pages/operator/InventoryAudit";
 import MaterialManagementOperator from "../pages/operator/MaterialManagement";
@@ -209,6 +210,7 @@ export const router = createBrowserRouter([
       { path: "/manager/stock", element: requireManagerAuth(<StockManagement />) },
       { path: "/manager/users", element: requireManagerAuth(<UserManagementManager />) },
       { path: 'manager/labels', element: requireManagerAuth(<LabelManagement />) },
+      { path: 'manager/product-creation', element: requireManagerAuth(<ProductCreationManager />) },
       { path: 'manager/production-batches', element: requireManagerAuth(<ProductionBatchList />) },
       { path: 'manager/production-batches/create', element: requireManagerAuth(<ProductionBatchForm />) },
       { path: 'manager/production-batches/:id', element: requireManagerAuth(<ProductionBatchDetail />) },
