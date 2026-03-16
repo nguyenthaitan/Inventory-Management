@@ -27,7 +27,7 @@ import { AppService } from "./app.service";
     InventoryLotModule,
     ProductionBatchModule,
     QCTestModule,
-    // AiModule,
+    AiModule,
     LabelTemplateModule,
   ],
   controllers: [AppController],

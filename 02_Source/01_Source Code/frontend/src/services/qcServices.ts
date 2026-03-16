@@ -169,9 +169,17 @@ export async function submitRetest(lot_id: string, payload: RetestDto): Promise<
 // POST /inventory-lots/bulk-quarantine
 export async function bulkQuarantine(lot_ids: string[]): Promise<any> {
   try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (!token) {
+      throw new Error('Token không tồn tại. Vui lòng đăng nhập lại');
+    }
+    
     const res = await fetch(`${API_BASE_URL}/inventory-lots/bulk-quarantine`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({ lot_ids }),
     });
     await handleApiError(res);
@@ -184,7 +192,15 @@ export async function bulkQuarantine(lot_ids: string[]): Promise<any> {
 // GET /qc-tests/supplier-performance
 export async function getSupplierPerformance(): Promise<SupplierPerformance[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/qc-tests/supplier-performance`);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (!token) {
+      throw new Error('Token không tồn tại. Vui lòng đăng nhập lại');
+    }
+    const res = await fetch(`${API_BASE_URL}/qc-tests/supplier-performance`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
     await handleApiError(res);
     return await res.json();
   } catch (e) {
@@ -212,11 +228,19 @@ export async function analyzeAllSuppliers(
   from?: string,
   to?: string,
 ): Promise<SupplierAnalysisResponse> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  if (!token) {
+    throw new Error('Token không tồn tại. Vui lòng đăng nhập lại');
+  }
   const params = new URLSearchParams();
   if (from) params.set('from', from);
   if (to) params.set('to', to);
   const query = params.toString() ? `?${params.toString()}` : '';
-  const res = await fetch(`${API_BASE_URL}/ai/supplier-analysis${query}`);
+  const res = await fetch(`${API_BASE_URL}/ai/supplier-analysis${query}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
   await handleApiError(res);
   return res.json() as Promise<SupplierAnalysisResponse>;
 }
@@ -227,12 +251,20 @@ export async function analyzeOneSupplier(
   from?: string,
   to?: string,
 ): Promise<SupplierAnalysisResponse> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  if (!token) {
+    throw new Error('Token không tồn tại. Vui lòng đăng nhập lại');
+  }
   const params = new URLSearchParams();
   if (from) params.set('from', from);
   if (to) params.set('to', to);
   const query = params.toString() ? `?${params.toString()}` : '';
   const encodedName = encodeURIComponent(supplierName);
-  const res = await fetch(`${API_BASE_URL}/ai/supplier-analysis/${encodedName}${query}`);
+  const res = await fetch(`${API_BASE_URL}/ai/supplier-analysis/${encodedName}${query}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
   await handleApiError(res);
   return res.json() as Promise<SupplierAnalysisResponse>;
 }
