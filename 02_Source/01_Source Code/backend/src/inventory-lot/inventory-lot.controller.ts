@@ -7,7 +7,8 @@ import {
   Put,
   Delete,
   Query,
-  ValidationPipe, UseGuards,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { InventoryLotService } from './inventory-lot.service';
 import {
@@ -136,8 +137,6 @@ export class InventoryLotController {
       parseInt(limit, 10),
     );
   }
-
-
 
   @Get('samples/:parent_lot_id')
   async findSamplesByParentLot(@Param('parent_lot_id') parent_lot_id: string) {

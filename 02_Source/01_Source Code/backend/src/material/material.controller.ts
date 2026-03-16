@@ -11,14 +11,15 @@ import {
   HttpStatus,
   ParseIntPipe,
   BadRequestException,
-  ValidationPipe, UseGuards,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { MaterialService } from './material.service';
 import { CreateMaterialDto, UpdateMaterialDto } from './material.dto';
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import {Roles} from "../auth/decorators/roles.decorator";
-import {UserRole} from "../schemas/user.schema";
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../schemas/user.schema';
 
 /**
  * Material Controller
@@ -41,11 +42,14 @@ export class MaterialController {
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new ParseIntPipe({ optional: true }))
-    page: number = 1,
+    page?: number,
     @Query('limit', new ParseIntPipe({ optional: true }))
-    limit: number = 20,
+    limit?: number,
   ) {
-    return this.materialService.findAll(page, limit);
+    if (page && limit) {
+      return this.materialService.findAllWithPagination(page, limit);
+    }
+    return this.materialService.findAllWithoutPagination();
   }
 
   /**
