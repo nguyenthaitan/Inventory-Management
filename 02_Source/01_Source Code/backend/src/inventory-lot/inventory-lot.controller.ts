@@ -7,7 +7,8 @@ import {
   Put,
   Delete,
   Query,
-  ValidationPipe, UseGuards,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { InventoryLotService } from './inventory-lot.service';
 import {
@@ -16,10 +17,10 @@ import {
   InventoryLotSearchParams,
   InventoryLotStatus,
 } from './inventory-lot.dto';
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import {Roles} from "../auth/decorators/roles.decorator";
-import {UserRole} from "../schemas/user.schema";
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../schemas/user.schema';
 
 @Controller('inventory-lots')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -129,8 +130,6 @@ export class InventoryLotController {
       parseInt(limit, 10),
     );
   }
-
-
 
   @Get('samples/:parent_lot_id')
   async findSamplesByParentLot(@Param('parent_lot_id') parent_lot_id: string) {

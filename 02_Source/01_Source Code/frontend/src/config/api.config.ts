@@ -4,7 +4,7 @@
  */
 
 // Use environment variable or default to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export const apiConfig = {
   baseURL: API_BASE_URL,
@@ -31,5 +31,6 @@ export const API_ENDPOINTS = {
   LABEL_TEMPLATES_DETAIL: (id: string) => `/label-templates/${id}`,
   LABEL_TEMPLATES_UPDATE: (id: string) => `/label-templates/${id}`,
   LABEL_TEMPLATES_DELETE: (id: string) => `/label-templates/${id}`,
-  LABEL_TEMPLATES_FILTER_TYPE: (type: string) => `/label-templates/type/${encodeURIComponent(type)}`,
+  LABEL_TEMPLATES_FILTER_TYPE: (type: string) =>
+    `/label-templates/type/${encodeURIComponent(type)}`,
 };

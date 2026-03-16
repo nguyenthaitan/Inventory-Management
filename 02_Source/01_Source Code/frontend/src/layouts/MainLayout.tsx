@@ -47,7 +47,7 @@ const UserProfileSection = ({
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-black text-gray-900 truncate tracking-tight">
-          {user.username}
+          {user?.username || "Unknown User"}
         </div>
         <div className="text-[10px] font-black text-blue-600 bg-blue-100 px-2 py-0.5 rounded uppercase tracking-widest mt-1">
           {getDisplayNameFromUsername(user?.username)}
@@ -70,7 +70,7 @@ export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Lấy user từ localStorage
-  const userStr = localStorage.getItem('user');
+  const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
 
   // Hàm hiển thị tên vai trò trên giao diện
@@ -186,7 +186,7 @@ export default function Layout() {
             to: "/qc/inspection",
             icon: <FileText size={20} />,
             label: "Kiểm định sản phẩm",
-          }
+          },
         ];
       case "operator":
         return [
@@ -268,10 +268,10 @@ export default function Layout() {
 
   // Thêm handleLogout
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    navigate('/login', { replace: true });
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
   };
 
   return (
