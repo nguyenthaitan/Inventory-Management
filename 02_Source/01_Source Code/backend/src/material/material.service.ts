@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   ConflictException,
@@ -67,13 +72,22 @@ export class MaterialService {
   }
 
   /**
+   * Get all materials without pagination
+   * @returns - List of all material responses
+   */
+  async findAllWithoutPagination(): Promise<MaterialResponseDto[]> {
+    const materials = await this.repository.findAllWithoutPagination();
+    return materials.map((m) => this.toResponseDto(m));
+  }
+
+  /**
    * Get all materials with pagination
    * @param page - Page number (1-indexed)
    * @param limit - Records per page
    * @returns - Paginated materials response
    * @throws BadRequestException - If page or limit is invalid
    */
-  async findAll(
+  async findAllWithPagination(
     page: number = 1,
     limit: number = 20,
   ): Promise<PaginatedMaterialResponseDto> {
@@ -91,7 +105,7 @@ export class MaterialService {
 
     this.logger.debug(`Finding all materials - page: ${page}, limit: ${limit}`);
 
-    const result = await this.repository.findAll(page, limit);
+    const result = await this.repository.findAllWithPagination(page, limit);
 
     return {
       data: result.data.map((m) => this.toResponseDto(m)),

@@ -1,4 +1,8 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -14,6 +18,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext) {
+    // DEVELOPMENT MODE: Tạm thời bỏ qua JWT auth
+    const isDevelopmentMode = false; // Set to false để enable JWT auth
+    if (isDevelopmentMode) return true;
+
     // Kiểm tra xem route có được đánh dấu @Public() không
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -27,7 +35,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   handleRequest<TUser>(err: Error, user: TUser): TUser {
     if (err || !user) {
-      throw err ?? new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
+      throw (
+        err ?? new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn')
+      );
     }
     return user;
   }
