@@ -78,4 +78,8 @@ export class InventoryTransactionRepository {
   async remove(id: string) {
     return this.model.findByIdAndDelete(id).exec();
   }
+
+  async deleteByLotId(lot_id: string) {
+    return this.model.deleteMany({ lot_id }).exec();
+  }
 }

@@ -54,6 +54,10 @@ export class InventoryTransactionService {
     return this.repo.remove(id);
   }
 
+  async deleteByLotId(lot_id: string) {
+    return this.repo.deleteByLotId(lot_id);
+  }
+
   /**
    * Tạo hàng loạt transactions. Các DTO sẽ được xử lý theo cùng quy trình
    * như `create()` để đảm bảo validation & publication.

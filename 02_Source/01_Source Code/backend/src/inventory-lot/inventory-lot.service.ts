@@ -347,15 +347,27 @@ export class InventoryLotService {
       throw new NotFoundException(`Inventory lot ${lot_id} not found`);
     }
 
-    // Cannot delete lots that have been used in production or have transactions
-    // Prevent deletion if any inventory transactions exist for this lot.
-    const { total: transactionCount } =
+    // Only allow delete when:
+    //  1) there are no related transactions at all
+    //  2) OR the only transaction is the initial receipt created when the lot was created
+    const { items: transactions, total } =
       await this.inventoryTransactionService.getAll(
         { lot_id },
-        { page: 1, limit: 1 },
+        { page: 1, limit: 2 },
       );
 
-    if (transactionCount > 0) {
+    if (total > 1) {
+      throw new ConflictException(
+        `Cannot delete inventory lot ${lot_id} because it has related transactions.`,
+      );
+    }
+
+    const isInitialReceipt =
+      total === 1 &&
+      transactions[0].transaction_type === TransactionType.Receipt &&
+      transactions[0].reference_number === `lot-create:${lot_id}`;
+
+    if (total === 1 && !isInitialReceipt) {
       throw new ConflictException(
         `Cannot delete inventory lot ${lot_id} because it has related transactions.`,
       );
@@ -365,6 +377,11 @@ export class InventoryLotService {
       throw new ConflictException(
         `Cannot delete inventory lot with status ${lot.status}. Only Quarantine lots can be deleted.`,
       );
+    }
+
+    // Remove the auto-created receipt transaction when deleting the lot
+    if (isInitialReceipt) {
+      await this.inventoryTransactionService.deleteByLotId(lot_id);
     }
 
     await this.inventoryLotRepository.delete(lot_id);

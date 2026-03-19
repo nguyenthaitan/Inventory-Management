@@ -65,7 +65,8 @@ beforeEach(async () => {
 
   transactionService = {
     create: jest.fn(),
-    getAll: jest.fn().mockResolvedValue({ total: 0 }),
+    getAll: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+    deleteByLotId: jest.fn(),
   };
 
   const module: TestingModule = await Test.createTestingModule({
@@ -445,14 +446,47 @@ describe('updateStatus', () => {
 // ==================== DELETE Tests ====================
 
 describe('delete', () => {
-  it('should delete a Quarantine lot', async () => {
+  it('should delete a Quarantine lot when only the initial Receipt transaction exists', async () => {
     repo.findById.mockResolvedValue(sampleLot);
     repo.delete.mockResolvedValue(sampleLot);
+    transactionService.getAll.mockResolvedValue({
+      items: [
+        {
+          transaction_type: 'Receipt',
+          reference_number: `lot-create:${sampleLot.lot_id}`,
+        },
+      ],
+      total: 1,
+    });
 
     const result = await service.delete(sampleLot.lot_id);
 
     expect(result.success).toBe(true);
+    expect(transactionService.deleteByLotId).toHaveBeenCalledWith(
+      sampleLot.lot_id,
+    );
     expect(repo.delete).toHaveBeenCalledWith(sampleLot.lot_id);
+  });
+
+  it('should reject deletion when there are additional transactions', async () => {
+    repo.findById.mockResolvedValue(sampleLot);
+    transactionService.getAll.mockResolvedValue({
+      items: [
+        {
+          transaction_type: 'Receipt',
+          reference_number: `lot-create:${sampleLot.lot_id}`,
+        },
+        {
+          transaction_type: 'Usage',
+          reference_number: `lot-update:${sampleLot.lot_id}`,
+        },
+      ],
+      total: 2,
+    });
+
+    await expect(service.delete(sampleLot.lot_id)).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('should throw NotFoundException when lot does not exist', async () => {
