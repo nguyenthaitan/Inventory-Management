@@ -329,7 +329,19 @@ export class InventoryLotService {
     }
 
     // Cannot delete lots that have been used in production or have transactions
-    // This would require InventoryTransaction repository check (future enhancement)
+    // Prevent deletion if any inventory transactions exist for this lot.
+    const { total: transactionCount } =
+      await this.inventoryTransactionService.getAll(
+        { lot_id },
+        { page: 1, limit: 1 },
+      );
+
+    if (transactionCount > 0) {
+      throw new ConflictException(
+        `Cannot delete inventory lot ${lot_id} because it has related transactions.`,
+      );
+    }
+
     if (lot.status !== InventoryLotStatus.QUARANTINE) {
       throw new ConflictException(
         `Cannot delete inventory lot with status ${lot.status}. Only Quarantine lots can be deleted.`,
