@@ -1,6 +1,5 @@
 import { type InventoryTransaction } from "../types/inventoryTransaction";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { apiClient } from "./apiClient";
 
 function normalize(t: any): InventoryTransaction {
   return {
@@ -32,50 +31,78 @@ export interface FetchTransactionsResult {
 export async function fetchTransactions(
   params: Record<string, any> = {},
 ): Promise<FetchTransactionsResult> {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(
-    ([k, v]) => v !== undefined && query.append(k, String(v)),
+  const requestParams = { ...params };
+
+  const { data, error } = await apiClient.get<{ items: any[]; total: number }>(
+    "/transactions",
+    { params: requestParams },
   );
-  const res = await fetch(`${API_BASE}/transactions?${query.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch transactions");
-  const data = await res.json();
-  if (Array.isArray(data.items)) {
-    return { items: data.items.map(normalize), total: data.total || 0 };
+
+  if (error) {
+    throw new Error(error.message || "Failed to fetch transactions");
   }
+
+  const payload = data ?? { items: [], total: 0 };
+  if (Array.isArray(payload.items)) {
+    return { items: payload.items.map(normalize), total: payload.total || 0 };
+  }
+
   // fallback when API returns plain array
-  return { items: Array.isArray(data) ? data.map(normalize) : [], total: 0 };
+  return {
+    items: Array.isArray(payload) ? payload.map(normalize) : [],
+    total: 0,
+  };
 }
 
 export async function fetchTransaction(
   id: string,
 ): Promise<InventoryTransaction> {
-  const res = await fetch(`${API_BASE}/transactions/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch transaction");
-  return normalize(await res.json());
+  const { data, error } = await apiClient.get<InventoryTransaction>(
+    `/transactions/${id}`,
+  );
+
+  if (error) {
+    throw new Error(error.message || "Failed to fetch transaction");
+  }
+
+  if (!data) {
+    throw new Error("Failed to fetch transaction");
+  }
+
+  return normalize(data);
 }
 
 export async function createTransaction(
   payload: Partial<InventoryTransaction>,
 ) {
-  const res = await fetch(`${API_BASE}/transactions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error("Failed to create transaction");
-  return normalize(await res.json());
+  const { data, error } = await apiClient.post<InventoryTransaction>(
+    "/transactions",
+    payload,
+  );
+
+  if (error) {
+    throw new Error(error.message || "Failed to create transaction");
+  }
+
+  if (!data) {
+    throw new Error("Failed to create transaction");
+  }
+
+  return normalize(data);
 }
 
 export async function createTransactionsBulk(
   payloads: Partial<InventoryTransaction>[],
 ) {
-  const res = await fetch(`${API_BASE}/transactions/bulk`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payloads),
-  });
-  if (!res.ok) throw new Error("Failed to bulk create transactions");
-  const data = await res.json();
+  const { data, error } = await apiClient.post<InventoryTransaction[]>(
+    "/transactions/bulk",
+    payloads,
+  );
+
+  if (error) {
+    throw new Error(error.message || "Failed to bulk create transactions");
+  }
+
   return Array.isArray(data) ? data.map(normalize) : [];
 }
 
@@ -83,21 +110,30 @@ export async function updateTransaction(
   id: string,
   payload: Partial<InventoryTransaction>,
 ) {
-  const res = await fetch(`${API_BASE}/transactions/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error("Failed to update transaction");
-  return normalize(await res.json());
+  const { data, error } = await apiClient.patch<InventoryTransaction>(
+    `/transactions/${id}`,
+    payload,
+  );
+
+  if (error) {
+    throw new Error(error.message || "Failed to update transaction");
+  }
+
+  if (!data) {
+    throw new Error("Failed to update transaction");
+  }
+
+  return normalize(data);
 }
 
 export async function removeTransaction(id: string) {
-  const res = await fetch(`${API_BASE}/transactions/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete transaction");
-  return await res.json();
+  const { data, error } = await apiClient.delete<void>(`/transactions/${id}`);
+
+  if (error) {
+    throw new Error(error.message || "Failed to delete transaction");
+  }
+
+  return data;
 }
 
 export default {

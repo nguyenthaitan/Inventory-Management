@@ -234,7 +234,7 @@ export const router = createBrowserRouter([
         element: requireManagerAuth(<InventoryLot />),
       },
       {
-        path: "/manager/material",
+        path: "/manager/materials",
         element: requireManagerAuth(<MaterialManagementManager />),
       },
       {
@@ -285,7 +285,10 @@ export const router = createBrowserRouter([
         path: "manager/production-batches/:id/edit",
         element: requireManagerAuth(<ProductionBatchForm />),
       },
-
+      {
+        path: "manager/inventory-transactions",
+        element: requireManagerAuth(<InventoryTransactionListManager />),
+      },
       // Operator - Chỉ allow role 'operator'
       {
         path: "/operator/dashboard",
