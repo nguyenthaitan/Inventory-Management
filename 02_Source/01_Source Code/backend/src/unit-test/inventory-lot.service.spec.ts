@@ -38,7 +38,11 @@ const sampleLot: any = {
 
 let service: InventoryLotService;
 let repo: Record<keyof InventoryLotRepository, jest.Mock>;
-let transactionService: { create: jest.Mock; getAll: jest.Mock };
+let transactionService: {
+  create: jest.Mock;
+  getAll: jest.Mock;
+  deleteByLotId: jest.Mock;
+};
 
 beforeEach(async () => {
   // Mock all repository methods
