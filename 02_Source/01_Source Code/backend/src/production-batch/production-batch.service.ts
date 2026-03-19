@@ -63,8 +63,8 @@ export class ProductionBatchService {
     private readonly materialModel: Model<MaterialDocument>,
     @InjectModel(InventoryLot.name)
     private readonly inventoryLotModel: Model<InventoryLotDocument>,
-    @InjectModel(InventoryTransaction.name)
-    private readonly inventoryTransactionModel: Model<InventoryTransactionDocument>,
+    // @InjectModel(InventoryTransaction.name)
+    // private readonly inventoryTransactionModel: Model<InventoryTransactionDocument>,
   ) {}
 
   /**
