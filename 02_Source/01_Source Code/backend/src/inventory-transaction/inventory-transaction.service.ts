@@ -1,7 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InventoryTransactionRepository } from './inventory-transaction.repository';
 import { MaterialRepository } from '../material/material.repository';
-import { KafkaService } from '../event-bus/kafka.service';
 import {
   CreateInventoryTransactionDto,
   TransactionType,
@@ -11,10 +10,7 @@ import { UpdateInventoryTransactionDto } from './dto/update-inventory-transactio
 
 @Injectable()
 export class InventoryTransactionService {
-  constructor(
-    private readonly repo: InventoryTransactionRepository,
-    private readonly kafka: KafkaService,
-  ) {}
+  constructor(private readonly repo: InventoryTransactionRepository) {}
 
   async create(transactionDto: CreateInventoryTransactionDto) {
     // tiền xử lý chung: gán ngày giao dịch nếu chưa có, tạo transaction_id
@@ -82,9 +78,6 @@ export class InventoryTransactionService {
     }
     // tăng số lượng của lô được chỉ định
     const created = await this.repo.create(dto);
-    await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: { type: dto.transaction_type, payload: created } },
-    ]);
     return created;
   }
 
@@ -98,9 +91,6 @@ export class InventoryTransactionService {
     // đảm bảo không âm tồn
     // đơn giản: chỉ lưu bản ghi
     const created = await this.repo.create(dto);
-    await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: { type: dto.transaction_type, payload: created } },
-    ]);
     return created;
   }
 
@@ -112,9 +102,6 @@ export class InventoryTransactionService {
     // tạo giao dịch split và lô con mới
     const created = await this.repo.create(dto);
     // bỏ qua phần tạo lô bổ sung
-    await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: { type: dto.transaction_type, payload: created } },
-    ]);
     return created;
   }
 
@@ -125,9 +112,6 @@ export class InventoryTransactionService {
     }
     // điều chỉnh +/- số lượng kèm lý do
     const created = await this.repo.create(dto);
-    await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: { type: dto.transaction_type, payload: created } },
-    ]);
     return created;
   }
 
@@ -138,9 +122,6 @@ export class InventoryTransactionService {
     }
     // có thể gọi handleUsage + handleReceipt hoặc dùng một bản ghi transfer
     const created = await this.repo.create(dto);
-    await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: { type: dto.transaction_type, payload: created } },
-    ]);
     return created;
   }
 
@@ -151,9 +132,6 @@ export class InventoryTransactionService {
       throw new BadRequestException('disposal quantity must be negative');
     }
     const created = await this.repo.create(dto);
-    await this.kafka.publish(Topics.InventoryTransactions, [
-      { value: { type: dto.transaction_type, payload: created } },
-    ]);
     return created;
   }
 }
