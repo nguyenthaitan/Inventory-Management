@@ -173,7 +173,7 @@ export class InventoryLotRepository {
 
   async update(
     lot_id: string,
-    updateDto: UpdateInventoryLotDto,
+    updateDto: Partial<UpdateInventoryLotDto>,
   ): Promise<InventoryLotDocument | null> {
     return this.inventoryLotModel
       .findOneAndUpdate({ lot_id }, updateDto, { new: true })
