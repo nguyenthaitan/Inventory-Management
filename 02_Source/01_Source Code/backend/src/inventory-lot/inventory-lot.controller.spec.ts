@@ -326,7 +326,7 @@ describe('InventoryLotController', () => {
       expect(result.total).toBe(1);
     });
 
-    it('should call findByStatus with parsed paging', async () => {
+    it('should call findByStatus via findAll when status query is provided', async () => {
       service.findByStatus.mockResolvedValue({
         data: [sampleResponse],
         total: 1,
@@ -334,7 +334,7 @@ describe('InventoryLotController', () => {
         limit: 10,
       });
 
-      await controller.findByStatus(InventoryLotStatus.ACCEPTED, '2', '3');
+      await controller.findAll('2', '3', InventoryLotStatus.ACCEPTED);
 
       expect(service.findByStatus).toHaveBeenCalledWith(
         InventoryLotStatus.ACCEPTED,

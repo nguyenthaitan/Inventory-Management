@@ -1,7 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { InventoryTransactionService } from './inventory-transaction.service';
 import { InventoryTransactionRepository } from './inventory-transaction.repository';
-import { KafkaService } from '../event-bus/kafka.service';
 import {
   CreateInventoryTransactionDto,
   TransactionType,
@@ -28,7 +27,6 @@ function makeDto(
 describe('InventoryTransactionService', () => {
   let svc: InventoryTransactionService;
   let repo: Partial<InventoryTransactionRepository>;
-  let kafka: Partial<KafkaService>;
 
   beforeEach(() => {
     repo = {
@@ -40,10 +38,7 @@ describe('InventoryTransactionService', () => {
       update: jest.fn().mockResolvedValue(null),
       remove: jest.fn().mockResolvedValue(null),
     };
-    kafka = {
-      publish: jest.fn().mockResolvedValue([]),
-    };
-    svc = new InventoryTransactionService(repo as any, kafka as any);
+    svc = new InventoryTransactionService(repo as any);
   });
 
   describe('basic delegation', () => {
@@ -72,17 +67,13 @@ describe('InventoryTransactionService', () => {
   });
 
   describe('create()', () => {
-    it('routes to receipt handler and publishes event', async () => {
+    it('routes to receipt handler', async () => {
       const dto = makeDto({
         transaction_type: TransactionType.Receipt,
         quantity: 5,
       });
       const created = await svc.create(dto);
       expect(created).toHaveProperty('_id');
-      expect(kafka.publish).toHaveBeenCalled();
-      const args = (kafka.publish as jest.Mock).mock.calls[0];
-      expect(args[0]).toBeDefined();
-      expect(args[1][0].value).toHaveProperty('type', TransactionType.Receipt);
     });
 
     it('throws when receipt quantity <=0', async () => {
