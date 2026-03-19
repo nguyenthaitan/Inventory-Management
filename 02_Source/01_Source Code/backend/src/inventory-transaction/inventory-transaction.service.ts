@@ -5,7 +5,6 @@ import {
   CreateInventoryTransactionDto,
   TransactionType,
 } from './dto/create-inventory-transaction.dto';
-import { Topics } from '../event-bus/topics.enum';
 import { UpdateInventoryTransactionDto } from './dto/update-inventory-transaction.dto';
 
 @Injectable()

@@ -9,7 +9,6 @@ import { UserModule } from './user/user.module';
 import { MaterialModule } from './material/material.module';
 import { InventoryLotModule } from './inventory-lot/inventory-lot.module';
 import { ProductionBatchModule } from './production-batch/production-batch.module';
-import { KafkaModule } from './event-bus/kafka.module';
 import { InventoryTransactionModule } from './inventory-transaction/inventory-transaction.module';
 import { QCTestModule } from './qc-test/qc-test.module';
 import { AiModule } from './ai/ai.module';
@@ -22,7 +21,6 @@ import { AppService } from './app.service';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
-    KafkaModule,
     KeycloakModule,
     AuthModule,
     UserModule,

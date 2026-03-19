@@ -3,6 +3,7 @@ import { getModelToken, MongooseModule } from '@nestjs/mongoose';
 import { MODULE_METADATA } from '@nestjs/common/constants';
 import { InventoryLotController } from './inventory-lot.controller';
 import { InventoryLotModule } from './inventory-lot.module';
+import { InventoryTransactionModule } from '../inventory-transaction/inventory-transaction.module';
 import { InventoryLotRepository } from './inventory-lot.repository';
 import { InventoryLotService } from './inventory-lot.service';
 import { InventoryLot } from '../schemas/inventory-lot.schema';
@@ -78,14 +79,19 @@ describe('InventoryLotModule', () => {
   });
 
   it('should register mongoose feature import for InventoryLot schema', () => {
-    expect(imports).toHaveLength(1);
-    expect(imports[0]).toEqual(
-      expect.objectContaining({
-        module: MongooseModule,
-      }),
+    expect(imports).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          module: MongooseModule,
+        }),
+        InventoryTransactionModule,
+      ]),
     );
 
-    const providerTokens = getProviderTokens(imports[0]?.providers);
+    const mongooseImport = imports.find(
+      (imp) => (imp as any)?.module === MongooseModule,
+    );
+    const providerTokens = getProviderTokens(mongooseImport?.providers);
     expect(providerTokens).toContain(getModelToken(InventoryLot.name));
   });
 });

@@ -5,7 +5,6 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { KafkaService } from 'src/event-bus/kafka.service';
 import { InventoryLotRepository } from './inventory-lot.repository';
 import type {
   CreateInventoryLotDto,
@@ -16,13 +15,14 @@ import type {
 } from './inventory-lot.dto';
 import { InventoryLotStatus } from './inventory-lot.dto';
 import { TransactionType } from '../inventory-transaction/dto/create-inventory-transaction.dto';
+import { InventoryTransactionService } from '../inventory-transaction/inventory-transaction.service';
 import { InventoryLot } from 'src/schemas/inventory-lot.schema';
 
 @Injectable()
 export class InventoryLotService {
   constructor(
     private readonly inventoryLotRepository: InventoryLotRepository,
-    private readonly kafkaService: KafkaService,
+    private readonly inventoryTransactionService: InventoryTransactionService,
   ) {}
 
   async create(
@@ -54,6 +54,19 @@ export class InventoryLotService {
       received_by: createDto['received_by'] || 'operator1',
     };
     const createdLot = await this.inventoryLotRepository.create(lotToCreate);
+
+    // Create a corresponding receipt transaction for the newly created lot
+    await this.inventoryTransactionService.create({
+      lot_id: createdLot.lot_id,
+      transaction_type: TransactionType.Receipt,
+      quantity: createdLot.quantity,
+      unit_of_measure: createdLot.unit_of_measure,
+      performed_by: lotToCreate.received_by || 'system',
+      reference_number: `lot-create:${createdLot.lot_id}`,
+      notes: 'Auto-created receipt transaction for new lot.',
+      transaction_date: new Date().toISOString(),
+    });
+
     return this.convertToResponse(createdLot);
   }
 
@@ -269,24 +282,6 @@ export class InventoryLotService {
     // Publish a Kafka event for quantity adjustments so downstream systems can
     // create corresponding InventoryTransaction records.
     if (quantityChanged) {
-      await this.kafkaService.publish('inventory-transactions', [
-        {
-          key: lot_id,
-          value: {
-            type: 'InventoryLotChange',
-            payload: {
-              lot_id,
-              transaction_type: TransactionType.Adjustment,
-              quantity: quantityDelta,
-              unit_of_measure:
-                updateDto.unit_of_measure || existingLot.unit_of_measure,
-              performed_by: 'system',
-              notes: `Quantity changed from ${existingLot.quantity} to ${updateDto.quantity}`,
-              reference_number: `lot-update:${lot_id}`,
-            },
-          },
-        },
-      ]);
     }
 
     return this.convertToResponse(updatedLot);
