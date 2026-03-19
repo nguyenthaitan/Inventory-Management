@@ -12,8 +12,8 @@ type CreatePayload = {
   product_id: string;
   batch_number: string;
   unit_of_measure: string;
-  manufacture_date: string;
-  expiration_date: string;
+  shelf_life_value: number;
+  shelf_life_unit: string;
   status: BatchStatus;
   batch_size: number;
 };
@@ -24,8 +24,8 @@ function buildValidPayload(): CreatePayload {
     product_id: 'MAT-001',
     batch_number: 'BATCH-2026-001',
     unit_of_measure: 'kg',
-    manufacture_date: '2026-01-01T00:00:00.000Z',
-    expiration_date: '2028-01-01T00:00:00.000Z',
+    shelf_life_value: 24,
+    shelf_life_unit: 'month',
     status: BatchStatus.InProgress,
     batch_size: 500,
   };
@@ -59,8 +59,8 @@ describe('CreateProductionBatchDto Validation', () => {
     'product_id',
     'batch_number',
     'unit_of_measure',
-    'manufacture_date',
-    'expiration_date',
+    'shelf_life_value',
+    'shelf_life_unit',
     'status',
     'batch_size',
   ])('should reject missing required field %s', async (field) => {
@@ -104,15 +104,28 @@ describe('CreateProductionBatchDto Validation', () => {
     },
   );
 
-  it('should reject invalid date string fields', async () => {
+  it('should reject non-positive shelf_life_value', async () => {
     const dto = plainToInstance(CreateProductionBatchDto, {
       ...buildValidPayload(),
-      manufacture_date: 'not-a-date',
+      shelf_life_value: 0,
     });
 
     const errors = await validate(dto);
 
-    expect(errors.some((error) => error.property === 'manufacture_date')).toBe(
+    expect(errors.some((error) => error.property === 'shelf_life_value')).toBe(
+      true,
+    );
+  });
+
+  it('should reject missing shelf_life_unit', async () => {
+    const dto = plainToInstance(CreateProductionBatchDto, {
+      ...buildValidPayload(),
+      shelf_life_unit: undefined,
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.some((error) => error.property === 'shelf_life_unit')).toBe(
       true,
     );
   });
