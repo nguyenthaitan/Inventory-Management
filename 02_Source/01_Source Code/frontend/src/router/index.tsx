@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/error-boundaries */
+/* eslint-disable react-refresh/only-export-components */
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import DashboardIT from "../pages/admin/DashboardIT";
@@ -23,6 +26,7 @@ import UserManagementManager from "../pages/manager/UserManagement";
 import InventoryTransactionListManager from "../pages/manager/InventoryTransactionListManager";
 import InventoryTransactionListOperator from "../pages/operator/InventoryTransactionListOperator";
 import LabelManagement from "../pages/manager/LabelManagement";
+import ProductCreationManager from "../pages/manager/ProductCreation";
 import DashboardOperator from "../pages/operator/DashboardOperator";
 import InventoryAuditOperator from "../pages/operator/InventoryAudit";
 import MaterialManagementOperator from "../pages/operator/MaterialManagement";
@@ -83,6 +87,12 @@ function ProtectedRoute({
   element: JSX.Element;
   requiredRoles?: string[];
 }) {
+  // DEVELOPMENT MODE: Bypass authentication
+  const isDevelopmentMode = false; // Set to false để enable authentication
+  if (isDevelopmentMode) {
+    return element;
+  }
+
   const token =
     typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
   const userRole = getUserRole();
@@ -176,7 +186,7 @@ function HomeRedirect() {
       case "quality-control":
         return <Navigate to="/qc/dashboard" replace />;
       case "it_admin":
-        return <Navigate to="/it-admin/dashboard" replace />;
+        return <Navigate to="/admin/dashboard" replace />;
       default:
         return <Navigate to="/login" replace />;
     }
@@ -214,42 +224,66 @@ export const router = createBrowserRouter([
         element: requireQCAuth(<ReportTraceability />),
       },
 
-      // Manager
+      // Manager - Chỉ allow role 'manager'
       {
         path: "/manager/dashboard",
-        element: requireAuth(<DashboardManager />),
+        element: requireManagerAuth(<DashboardManager />),
       },
-      { path: "/manager/inventory", element: requireAuth(<InventoryLot />) },
+      {
+        path: "/manager/inventory",
+        element: requireManagerAuth(<InventoryLot />),
+      },
       {
         path: "/manager/material",
-        element: requireAuth(<MaterialManagementManager />),
+        element: requireManagerAuth(<MaterialManagementManager />),
       },
       {
         path: "/manager/product",
-        element: requireAuth(<ProductManagementManager />),
+        element: requireManagerAuth(<ProductManagementManager />),
       },
-      { path: "/manager/reports", element: requireAuth(<ReportsManager />) },
+      {
+        path: "/manager/reports",
+        element: requireManagerAuth(<ReportsManager />),
+      },
       {
         path: "/manager/transaction",
         element: requireManagerAuth(<TransactionManagementManager />),
       },
       {
-        path: "/manager/user",
-        element: requireAuth(<UserManagementManager />),
-      },
-      { path: "/manager/labels", element: <LabelManagement /> },
-      { path: "/manager/production-batches", element: <ProductionBatchList /> },
-      {
-        path: "/manager/production-batches/create",
-        element: <ProductionBatchForm />,
+        path: "/manager/in-out",
+        element: requireManagerAuth(<StockManagement />),
       },
       {
-        path: "/manager/production-batches/:id",
-        element: <ProductionBatchDetail />,
+        path: "/manager/stock",
+        element: requireManagerAuth(<StockManagement />),
       },
       {
-        path: "/manager/production-batches/:id/edit",
-        element: <ProductionBatchForm />,
+        path: "/manager/users",
+        element: requireManagerAuth(<UserManagementManager />),
+      },
+      {
+        path: "manager/labels",
+        element: requireManagerAuth(<LabelManagement />),
+      },
+      {
+        path: "manager/product-creation",
+        element: requireManagerAuth(<ProductCreationManager />),
+      },
+      {
+        path: "manager/production-batches",
+        element: requireManagerAuth(<ProductionBatchList />),
+      },
+      {
+        path: "manager/production-batches/create",
+        element: requireManagerAuth(<ProductionBatchForm />),
+      },
+      {
+        path: "manager/production-batches/:id",
+        element: requireManagerAuth(<ProductionBatchDetail />),
+      },
+      {
+        path: "manager/production-batches/:id/edit",
+        element: requireManagerAuth(<ProductionBatchForm />),
       },
 
       // Operator - Chỉ allow role 'operator'
@@ -264,22 +298,6 @@ export const router = createBrowserRouter([
       {
         path: "/operator/material",
         element: requireOperatorAuth(<MaterialManagementOperator />),
-      },
-      {
-        path: "/operator/materials",
-        element: requireOperatorAuth(<OperatorMaterialList />),
-      },
-      {
-        path: "/operator/materials/create",
-        element: requireOperatorAuth(<OperatorMaterialForm />),
-      },
-      {
-        path: "/operator/materials/:id",
-        element: requireOperatorAuth(<OperatorMaterialDetail />),
-      },
-      {
-        path: "/operator/materials/:id/edit",
-        element: requireOperatorAuth(<OperatorMaterialForm />),
       },
       {
         path: "/operator/product",
@@ -298,29 +316,26 @@ export const router = createBrowserRouter([
         element: requireOperatorAuth(<TransactionHistoryOperator />),
       },
       {
-        path: "/operator/labels",
+        path: "operator/labels",
         element: requireOperatorAuth(<LabelPrintOperator />),
       },
       {
-        path: "/operator/production-batches",
+        path: "operator/production-batches",
         element: requireOperatorAuth(<OperatorProductionBatchList />),
       },
       {
-        path: "/operator/production-batches/create",
+        path: "operator/production-batches/create",
         element: requireOperatorAuth(<OperatorProductionBatchForm />),
       },
       {
-        path: "/operator/production-batches/:id",
+        path: "operator/production-batches/:id",
         element: requireOperatorAuth(<OperatorProductionBatchDetail />),
       },
       {
-        path: "/operator/production-batches/:id/edit",
+        path: "operator/production-batches/:id/edit",
         element: requireOperatorAuth(<OperatorProductionBatchForm />),
       },
-      {
-        path: "/operator/inventory-transactions",
-        element: requireOperatorAuth(<InventoryTransactionListOperator />),
-      },
+
       // Catch-all placeholder
       {
         path: "*",

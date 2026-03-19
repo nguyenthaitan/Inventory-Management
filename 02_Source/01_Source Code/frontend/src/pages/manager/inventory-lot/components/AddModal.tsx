@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { type EditFormValues, INPUT_CLS, INPUT_ERR_CLS } from "../utils";
 import { FormField } from "./FormField";
+import { useMaterials } from "../hooks/useMaterials";
 
 interface AddModalProps {
   isOpen: boolean;
@@ -26,6 +27,11 @@ export function AddModal({
   onSubmit,
   submitError,
 }: AddModalProps) {
+  const {
+    materials,
+    loading: materialsLoading,
+    error: materialsError,
+  } = useMaterials();
   const {
     register,
     handleSubmit: checkOnSubmit,
@@ -108,13 +114,36 @@ export function AddModal({
                   label="Mã vật tư *"
                   error={errors.material_id?.message}
                 >
-                  <input
-                    {...register("material_id", {
-                      required: "Bắt buộc nhập",
-                    })}
-                    className={errors.material_id ? INPUT_ERR_CLS : INPUT_CLS}
-                    placeholder="MAT-001"
-                  />
+                  {materialsLoading ? (
+                    <div className="flex items-center justify-center py-2">
+                      <Loader
+                        size={16}
+                        className="animate-spin text-gray-400"
+                      />
+                      <span className="text-sm text-gray-500 ml-2">
+                        Đang tải...
+                      </span>
+                    </div>
+                  ) : materialsError ? (
+                    <div className="flex items-center gap-2 p-2 bg-red-50 text-red-600 rounded text-sm">
+                      <AlertCircle size={14} />
+                      Lỗi: {materialsError}
+                    </div>
+                  ) : (
+                    <select
+                      {...register("material_id", {
+                        required: "Bắt buộc chọn",
+                      })}
+                      className={errors.material_id ? INPUT_ERR_CLS : INPUT_CLS}
+                    >
+                      <option value="">-- Chọn vật tư --</option>
+                      {materials.map((material) => (
+                        <option key={material._id} value={material.material_id}>
+                          {material.material_id} - {material.material_name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </FormField>
                 <FormField label="Là mẫu QC">
                   <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
@@ -285,8 +314,12 @@ export function AddModal({
                 >
                   <input
                     type="date"
-                    {...register("in_use_expiration_date")}
-                    className={INPUT_CLS}
+                    {...register("in_use_expiration_date", {
+                      required: "Bắt buộc nhập",
+                    })}
+                    className={
+                      errors.in_use_expiration_date ? INPUT_ERR_CLS : INPUT_CLS
+                    }
                   />
                 </FormField>
               </div>

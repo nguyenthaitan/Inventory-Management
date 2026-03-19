@@ -1,4 +1,9 @@
-import { Injectable, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { CanActivate } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
@@ -16,10 +21,14 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    // DEVELOPMENT MODE: Tạm thời bỏ qua roles check
+    const isDevelopmentMode = false; // Set to false để enable roles check
+    if (isDevelopmentMode) return true;
+
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // Nếu route không yêu cầu role cụ thể → cho phép
     if (!requiredRoles || requiredRoles.length === 0) {
@@ -27,7 +36,9 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<{ user?: AuthenticatedUser }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<{ user?: AuthenticatedUser }>();
     const user = request.user;
 
     if (!user) {
@@ -35,17 +46,23 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Không có thông tin xác thực');
     }
 
-    this.logger.debug(`[RolesGuard] Checking role - User: ${user.username}, Role: ${user.role}, Required: ${requiredRoles.join(', ')}`);
+    this.logger.debug(
+      `[RolesGuard] Checking role - User: ${user.username}, Role: ${user.role}, Required: ${requiredRoles.join(', ')}`,
+    );
 
     const hasRole = requiredRoles.includes(user.role);
     if (!hasRole) {
-      this.logger.warn(`[RolesGuard] Role mismatch - User role '${user.role}' not in required roles [${requiredRoles.join(', ')}]`);
+      this.logger.warn(
+        `[RolesGuard] Role mismatch - User role '${user.role}' not in required roles [${requiredRoles.join(', ')}]`,
+      );
       throw new ForbiddenException(
         `Vai trò '${user.role}' không có quyền truy cập endpoint này`,
       );
     }
 
-    this.logger.debug(`[RolesGuard] Role check passed for user ${user.username}`);
+    this.logger.debug(
+      `[RolesGuard] Role check passed for user ${user.username}`,
+    );
     return true;
   }
 }

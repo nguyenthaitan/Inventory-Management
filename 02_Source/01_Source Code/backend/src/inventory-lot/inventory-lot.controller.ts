@@ -7,7 +7,8 @@ import {
   Put,
   Delete,
   Query,
-  ValidationPipe, UseGuards,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { InventoryLotService } from './inventory-lot.service';
 import {
@@ -16,10 +17,10 @@ import {
   InventoryLotSearchParams,
   InventoryLotStatus,
 } from './inventory-lot.dto';
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import {Roles} from "../auth/decorators/roles.decorator";
-import {UserRole} from "../schemas/user.schema";
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../schemas/user.schema';
 
 @Controller('inventory-lots')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,18 +28,26 @@ export class InventoryLotController {
   constructor(private readonly inventoryLotService: InventoryLotService) {}
 
   // ==================== CRUD Operations ====================
-  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER, UserRole.QC_TECHNICIAN)
   @Post()
   async create(@Body(ValidationPipe) dto: CreateInventoryLotDto) {
     return await this.inventoryLotService.create(dto);
   }
 
-  @Roles(UserRole.OPERATOR, UserRole.MANAGER)
+  @Roles(UserRole.OPERATOR, UserRole.MANAGER, UserRole.QC_TECHNICIAN)
   @Get()
   async findAll(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('status') status?: string,
   ) {
+    if (status) {
+      return await this.inventoryLotService.findByStatus(
+        status,
+        parseInt(page, 10),
+        parseInt(limit, 10),
+      );
+    }
     return await this.inventoryLotService.findAll(
       parseInt(page, 10),
       parseInt(limit, 10),
@@ -117,19 +126,6 @@ export class InventoryLotController {
   ) {
     return await this.inventoryLotService.findByMaterialId(
       material_id,
-      parseInt(page, 10),
-      parseInt(limit, 10),
-    );
-  }
-
-  @Get('status/:status')
-  async findByStatus(
-    @Param('status') status: string,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
-    return await this.inventoryLotService.findByStatus(
-      status as InventoryLotStatus,
       parseInt(page, 10),
       parseInt(limit, 10),
     );

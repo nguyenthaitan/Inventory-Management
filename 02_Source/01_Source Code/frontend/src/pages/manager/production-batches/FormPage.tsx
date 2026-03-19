@@ -19,6 +19,8 @@ interface FormState {
   expiration_date: string;
   status: BatchStatus;
   batch_size: string;
+  shelf_life_value: string | number;
+  shelf_life_unit: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -30,9 +32,15 @@ const EMPTY_FORM: FormState = {
   expiration_date: '',
   status: 'In Progress',
   batch_size: '',
+  shelf_life_value: '',
+  shelf_life_unit: 'month',
 };
 
+// Giả định có hook hoặc context xác định role
+import { useAuth } from '../../../hooks/useAuth';
+
 export default function ProductionBatchForm() {
+  const { isManager } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
@@ -60,6 +68,8 @@ export default function ProductionBatchForm() {
             : '',
           status: b.status,
           batch_size: b.batch_size,
+          shelf_life_value: b.shelf_life_value || '',
+          shelf_life_unit: b.shelf_life_unit || 'month',
         });
       })
       .catch((e) => setError(e.message))
@@ -70,6 +80,22 @@ export default function ProductionBatchForm() {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
   };
 
+  // Tính expiration_date từ manufacture_date + shelf_life
+  useEffect(() => {
+    if (!form.manufacture_date || !form.shelf_life_value) return;
+    let date = new Date(form.manufacture_date);
+    const value = Number(form.shelf_life_value);
+    if (isNaN(value) || value <= 0) return;
+    if (form.shelf_life_unit === 'month') {
+      date.setMonth(date.getMonth() + value);
+    } else if (form.shelf_life_unit === 'year') {
+      date.setFullYear(date.getFullYear() + value);
+    } else if (form.shelf_life_unit === 'day') {
+      date.setDate(date.getDate() + value);
+    }
+    setForm((prev) => ({ ...prev, expiration_date: date.toISOString().slice(0, 10) }));
+  }, [form.manufacture_date, form.shelf_life_value, form.shelf_life_unit]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -78,10 +104,13 @@ export default function ProductionBatchForm() {
       const payload = {
         ...form,
         batch_size: parseFloat(form.batch_size) as any,
+        shelf_life_value: Number(form.shelf_life_value),
+        shelf_life_unit: form.shelf_life_unit,
       };
       if (isEdit && id) {
         await updateProductionBatch(id, payload);
       } else {
+        payload.status = 'On Hold'; // Khi tạo mới luôn là On Hold
         await createProductionBatch(payload);
       }
       navigate('/manager/production-batches');
@@ -143,6 +172,32 @@ export default function ProductionBatchForm() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Shelf Life */}
+          <div className="col-span-2">
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1">
+              Thời hạn sử dụng (Shelf Life) *
+            </label>
+            <div className="flex gap-2">
+              <input
+                required
+                type="number"
+                min="1"
+                value={form.shelf_life_value}
+                onChange={set('shelf_life_value')}
+                className="w-32 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="12"
+              />
+              <select
+                value={form.shelf_life_unit}
+                onChange={set('shelf_life_unit')}
+                className="w-28 px-2 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="day">Ngày</option>
+                <option value="month">Tháng</option>
+                <option value="year">Năm</option>
+              </select>
+            </div>
+          </div>
           {/* Batch Number */}
           <div>
             <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1">
@@ -243,6 +298,7 @@ export default function ProductionBatchForm() {
               value={form.status}
               onChange={set('status')}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              disabled={!isManager}
             >
               {BATCH_STATUS_LIST.map((s) => (
                 <option key={s} value={s}>
@@ -250,6 +306,9 @@ export default function ProductionBatchForm() {
                 </option>
               ))}
             </select>
+            {!isManager && (
+              <div className="text-xs text-gray-400 mt-1">Chỉ manager mới được đổi trạng thái</div>
+            )}
           </div>
         </div>
 

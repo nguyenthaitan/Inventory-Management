@@ -21,6 +21,10 @@ export class InventoryTransaction {
   @Prop({ type: String, required: true, maxlength: 36 })
   lot_id: string;
 
+  // Traceability: liên kết lô liên quan (chuyển lô, split, transfer...)
+  @Prop({ type: String, maxlength: 36, required: false })
+  related_lot_id?: string;
+
   @Prop({
     type: String,
     enum: ['Receipt', 'Usage', 'Split', 'Adjustment', 'Transfer', 'Disposal'],

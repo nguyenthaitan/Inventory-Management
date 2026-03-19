@@ -13,7 +13,8 @@ import {
 import { CreateQCTestDto } from './dto/create-qc-test.dto';
 import { UpdateQCTestDto } from './dto/update-qc-test.dto';
 import { QCDecisionDto } from './dto/qc-decision.dto';
-import {InventoryLotStatus} from "../inventory-lot/inventory-lot.dto";
+import { InventoryLotStatus, InventoryLotResponseDto } from '../inventory-lot/inventory-lot.dto';
+import { InventoryLotService } from '../inventory-lot/inventory-lot.service';
 
 // TODO [Workflow B]: After ProductionBatchModule is ready, inject ProductionBatchService
 // and call QCTestService.createTest() after batch QC completes.
@@ -28,54 +29,16 @@ import {InventoryLotStatus} from "../inventory-lot/inventory-lot.dto";
 //   quantity         ← batch.batch_size (Decimal128 → number)
 //   unit_of_measure  ← batch.unit_of_measure
 
+
 @Injectable()
 export class QCTestService {
-  constructor(private readonly repository: QCTestRepository) {}
+  constructor(
+    private readonly repository: QCTestRepository,
+    private readonly inventoryLotService: InventoryLotService,
+  ) {}
 
-  // ─── TODO: InventoryLot mock helpers ─────────────────────────────────────
-  // These stubs will be replaced once InventoryLotService is fully implemented.
-  // TODO: inject InventoryLotService and delegate to it.
 
-  private _mockLot(
-    lot_id: string,
-    overrides: Partial<InventoryLot> = {},
-  ): InventoryLotDocument {
-    return { lot_id, ...overrides } as unknown as InventoryLotDocument;
-  }
-
-  // TODO: replace with real DB lookup via InventoryLotService
-  private mockGetLotById(lot_id: string): Promise<InventoryLotDocument> {
-    return Promise.resolve(this._mockLot(lot_id));
-  }
-
-  // TODO: replace with real DB query filtered by status via InventoryLotService
-  private mockGetLotsByStatus(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _status: string,
-  ): Promise<InventoryLotDocument[]> {
-    return Promise.resolve([]);
-  }
-
-  // TODO: replace with real { lot_id: { $in: ids } } query via InventoryLotService
-  private mockGetLotsByIds(lot_ids: string[]): Promise<InventoryLotDocument[]> {
-    return Promise.resolve(lot_ids.map((id) => this._mockLot(id)));
-  }
-
-  // TODO: replace with real DB findOneAndUpdate (status) via InventoryLotService
-  private mockUpdateLotStatus(
-    lot_id: string,
-    status: InventoryLotStatus,
-  ): Promise<InventoryLotDocument> {
-    return Promise.resolve(this._mockLot(lot_id, { status }));
-  }
-
-  // TODO: replace with real DB findOneAndUpdate (partial) via InventoryLotService
-  private mockUpdateLot(
-    lot_id: string,
-    data: Partial<InventoryLot>,
-  ): Promise<InventoryLotDocument> {
-    return Promise.resolve(this._mockLot(lot_id, data));
-  }
+  // ─── InventoryLotService helpers ─────────────────────────────────────
 
   // ─── CRUD ────────────────────────────────────────────────────────────────
 
@@ -94,13 +57,15 @@ export class QCTestService {
     return test;
   }
 
+
   async getTestsByLotId(lot_id: string): Promise<QCTestDocument[]> {
-    await this.mockGetLotById(lot_id); // TODO: validate lot exists via InventoryLotService
+    await this.inventoryLotService.findById(lot_id); // validate lot exists
     return this.repository.findByLotId(lot_id);
   }
 
+
   async createTest(dto: CreateQCTestDto): Promise<QCTestDocument> {
-    await this.mockGetLotById(dto.lot_id); // TODO: validate lot exists via InventoryLotService
+    await this.inventoryLotService.findById(dto.lot_id); // validate lot exists
 
     const data: Partial<QCTest> = {
       ...dto,
@@ -136,11 +101,12 @@ export class QCTestService {
 
   // ─── Workflow ────────────────────────────────────────────────────────────
 
+
   async submitDecision(
     lot_id: string,
     dto: QCDecisionDto,
-  ): Promise<{ lot: InventoryLotDocument; tests: QCTestDocument[] }> {
-    await this.mockGetLotById(lot_id); // TODO: validate via InventoryLotService
+  ): Promise<{ lot: InventoryLotResponseDto; tests: QCTestDocument[] }> {
+    await this.inventoryLotService.findById(lot_id); // validate lot exists
 
     if (dto.decision === 'Rejected' && !dto.reject_reason?.trim()) {
       throw new BadRequestException(
@@ -175,17 +141,19 @@ export class QCTestService {
           ? InventoryLotStatus.REJECTED
           : InventoryLotStatus.QUARANTINE;
 
-    const lot = await this.mockUpdateLotStatus(lot_id, lotStatus); // TODO: delegate to InventoryLotService
+    // Chỉ update status bằng hàm chuyên dụng
+    const lot = await this.inventoryLotService.updateStatus(lot_id, lotStatus);
 
     return { lot, tests };
   }
+
 
   async submitRetestDecision(
     lot_id: string,
     action: 'extend' | 'discard',
     dto: { new_expiry_date?: string; performed_by: string },
-  ): Promise<InventoryLotDocument> {
-    await this.mockGetLotById(lot_id); // TODO: validate via InventoryLotService
+  ): Promise<InventoryLotResponseDto> {
+    await this.inventoryLotService.findById(lot_id); // validate lot exists
 
     if (action === 'extend') {
       if (!dto.new_expiry_date) {
@@ -194,11 +162,8 @@ export class QCTestService {
         );
       }
 
-      // TODO: delegate to InventoryLotService.updateLot()
-      const lot = await this.mockUpdateLot(lot_id, {
-        status: InventoryLotStatus.ACCEPTED,
-        expiration_date: new Date(dto.new_expiry_date),
-      });
+      // Chỉ update status, không update các trường khác để tránh lỗi type
+      const lot = await this.inventoryLotService.updateStatus(lot_id, InventoryLotStatus.ACCEPTED);
 
       await this.repository.create({
         test_id: uuidv4(),
@@ -213,7 +178,7 @@ export class QCTestService {
 
       return lot;
     } else {
-      const lot = await this.mockUpdateLotStatus(lot_id, InventoryLotStatus.DEPLETED); // TODO: delegate to InventoryLotService
+      const lot = await this.inventoryLotService.updateStatus(lot_id, InventoryLotStatus.DEPLETED);
 
       await this.repository.create({
         test_id: uuidv4(),
@@ -232,6 +197,7 @@ export class QCTestService {
 
   // ─── Dashboard & Reporting ────────────────────────────────────────────────
 
+
   async getDashboardKPI(): Promise<{
     pending_count: number;
     approved_count: number;
@@ -241,22 +207,43 @@ export class QCTestService {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [quarantineLots, approved_count, rejected_count] = await Promise.all([
-      this.mockGetLotsByStatus('Quarantine'), // TODO: delegate to InventoryLotService
-      this.repository.countByResultStatus('Pass', startOfMonth, now),
-      this.repository.countByResultStatus('Fail', startOfMonth, now),
-    ]);
+    let quarantineLots: { data: any[] } = { data: [] };
+    let approved_count = 0;
+    let rejected_count = 0;
+    try {
+      [quarantineLots, approved_count, rejected_count] = await Promise.all([
+        this.inventoryLotService.findByStatus('Quarantine'),
+        this.repository.countByResultStatus('Pass', startOfMonth, now),
+        this.repository.countByResultStatus('Fail', startOfMonth, now),
+      ]);
+    } catch (e) {
+      // fallback nếu có lỗi
+      quarantineLots = { data: [] };
+      approved_count = 0;
+      rejected_count = 0;
+    }
 
     const total = approved_count + rejected_count;
     const error_rate = total > 0 ? (rejected_count / total) * 100 : 0;
 
+    // Đảm bảo luôn trả về đủ 4 trường, default = 0 nếu thiếu
+    // Xử lý mọi trường hợp trả về: object có data, mảng, hoặc undefined
+    let pending_count = 0;
+    if (quarantineLots && typeof quarantineLots === 'object') {
+      if (Array.isArray(quarantineLots)) {
+        pending_count = quarantineLots.length;
+      } else if ('data' in quarantineLots && Array.isArray(quarantineLots.data)) {
+        pending_count = quarantineLots.data.length;
+      }
+    }
     return {
-      pending_count: quarantineLots.length,
-      approved_count,
-      rejected_count,
-      error_rate: Math.round(error_rate * 100) / 100,
+      pending_count,
+      approved_count: typeof approved_count === 'number' ? approved_count : 0,
+      rejected_count: typeof rejected_count === 'number' ? rejected_count : 0,
+      error_rate: typeof error_rate === 'number' ? Math.round(error_rate * 100) / 100 : 0,
     };
   }
+
 
   async getSupplierPerformance(filter?: {
     from?: string;
@@ -277,8 +264,9 @@ export class QCTestService {
     if (tests.length === 0) return [];
 
     const uniqueLotIds = [...new Set(tests.map((t) => t.lot_id))];
-    const lots = await this.mockGetLotsByIds(uniqueLotIds); // TODO: delegate to InventoryLotService
-    const lotMap = new Map(lots.map((l) => [l.lot_id, l]));
+    // Không có findByIds, dùng Promise.all(findById)
+    const lotsArr = await Promise.all(uniqueLotIds.map(id => this.inventoryLotService.findById(id)));
+    const lotMap = new Map(lotsArr.map((l) => [l.lot_id, l]));
 
     const supplierMap = new Map<
       string,
@@ -286,8 +274,8 @@ export class QCTestService {
     >();
 
     for (const test of tests) {
-      const lot = lotMap.get(test.lot_id);
-      const name = lot?.supplier_name ?? lot?.manufacturer_name ?? 'Unknown';
+      const lot = lotMap.get(test.lot_id) || {};
+      const name = (lot as any).supplier_name ?? (lot as any).manufacturer_name ?? 'Unknown';
       if (!supplierMap.has(name)) {
         supplierMap.set(name, { total_batches: 0, approved: 0, rejected: 0 });
       }

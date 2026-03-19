@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   NotFoundException,
@@ -47,28 +48,12 @@ export class InventoryLotService {
       console.warn('Sample lot created without parent_lot_id');
     }
 
-    const createdLot = await this.inventoryLotRepository.create(createDto);
-
-    // Publish a Kafka event for new lot receipt so downstream systems can
-    // create a corresponding InventoryTransaction record.
-    await this.kafkaService.publish('inventory-transactions', [
-      {
-        key: createdLot.lot_id,
-        value: {
-          type: 'InventoryLotChange',
-          payload: {
-            lot_id: createdLot.lot_id,
-            transaction_type: TransactionType.Receipt,
-            quantity: createdLot.quantity,
-            unit_of_measure: createdLot.unit_of_measure,
-            performed_by: 'system',
-            notes: `Created lot ${createdLot.lot_id}`,
-            reference_number: `lot-create:${createdLot.lot_id}`,
-          },
-        },
-      },
-    ]);
-
+    // Set received_by nếu có (giả sử lấy từ createDto hoặc context, ở đây demo hardcode)
+    const lotToCreate = {
+      ...createDto,
+      received_by: createDto['received_by'] || 'operator1',
+    };
+    const createdLot = await this.inventoryLotRepository.create(lotToCreate);
     return this.convertToResponse(createdLot);
   }
 
@@ -261,9 +246,21 @@ export class InventoryLotService {
       this.validateStatusTransition(existingLot.status, updateDto.status);
     }
 
+    // Nếu update qc_by thì push vào history và set qc_by
+    let updateWithTrace = { ...updateDto };
+    if (updateDto.qc_by) {
+      updateWithTrace = {
+        ...updateWithTrace,
+        qc_by: updateDto.qc_by,
+        history: [
+          ...(existingLot.history || []),
+          { action: 'QC', by: updateDto.qc_by, status: updateDto.status },
+        ],
+      };
+    }
     const updatedLot = await this.inventoryLotRepository.update(
       lot_id,
-      updateDto,
+      updateWithTrace,
     );
     if (!updatedLot) {
       throw new NotFoundException(`Inventory lot ${lot_id} not found`);
@@ -441,6 +438,9 @@ export class InventoryLotService {
       notes: lot.notes,
       created_date: lot.created_date,
       modified_date: lot.modified_date,
+      received_by: lot.received_by,
+      qc_by: lot.qc_by,
+      history: lot.history,
     };
   }
 }

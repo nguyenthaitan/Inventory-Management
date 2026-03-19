@@ -53,7 +53,7 @@ const UserProfileSection = ({
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-black text-gray-900 truncate tracking-tight">
-          {user.username}
+          {user?.username || "Unknown User"}
         </div>
         <div className="text-[10px] font-black text-blue-600 bg-blue-100 px-2 py-0.5 rounded uppercase tracking-widest mt-1">
           {getDisplayNameFromUsername(user?.username)}
@@ -75,19 +75,9 @@ export default function Layout() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const stored = localStorage.getItem("currentUser");
-  const user: { username: string; role: string; label?: string } | null = stored
-    ? JSON.parse(stored)
-    : null;
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // const handleLogout = () => {
-  //   localStorage.removeItem("currentUser");
-  //   navigate("/login");
-  // };
+  // Lấy user từ localStorage
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
 
   // Hàm hiển thị tên vai trò trên giao diện
   const getDisplayNameFromUsername = (_username?: string) => {
@@ -158,6 +148,11 @@ export default function Layout() {
             to: "/manager/labels",
             icon: <Tag size={20} />,
             label: "Quản lý nhãn",
+          },
+          {
+            to: "/manager/product-creation",
+            icon: <FlaskConical size={20} />,
+            label: "Tạo sản phẩm",
           },
           {
             to: "/manager/production-batches",

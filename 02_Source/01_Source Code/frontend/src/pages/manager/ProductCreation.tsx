@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Eye, FlaskConical, Package, Plus } from 'lucide-react';
+import { X, Search, Eye, FlaskConical, Package, Plus, ArrowRight } from 'lucide-react';
 import { updateProductionBatch, fetchProductionBatches, createProductionBatch } from '../../services/productionBatchService';
 import { fetchMaterials } from '../../services/materialService';
 import { fetchInventoryLots } from '../../services/inventoryLotService';
 import { apiClient } from '../../services/apiClient';
 import type { Material } from '../../types/Material';
-import type { ProductionBatch } from '../../types/production';
+import type { ProductionBatch, BatchStatus } from '../../types/production';
 import type { InventoryLot } from '../../types/inventory';
+
+const BATCH_STATUS_LIST: BatchStatus[] = ['In Progress', 'Complete', 'On Hold', 'Cancelled'];
 
 function statusLabel(status: string) {
   switch (status) {
@@ -16,18 +18,23 @@ function statusLabel(status: string) {
       return { label: 'Đang xử lý', cls: 'bg-blue-100 text-blue-700' };
     case 'Complete':
       return { label: 'Hoàn thành', cls: 'bg-green-100 text-green-700' };
+    case 'Cancelled':
+      return { label: 'Hủy', cls: 'bg-red-100 text-red-700' };
     default:
       return { label: status, cls: 'bg-gray-100 text-gray-500' };
   }
 }
 
+// ─── MANAGER DETAIL MODAL with Status Transition ─────────────────────────────
+
 interface ProductionBatchDetailModalProps {
   batch: ProductionBatch;
   onClose: () => void;
   onUpdated: () => void;
+  isManager?: boolean;
 }
 
-function ProductionBatchDetailModal({ batch, onClose, onUpdated }: ProductionBatchDetailModalProps) {
+function ProductionBatchDetailModal({ batch, onClose, onUpdated, isManager }: ProductionBatchDetailModalProps) {
   const [form, setForm] = useState<any>({ ...batch });
   const [batchComponents, setBatchComponents] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -36,6 +43,9 @@ function ProductionBatchDetailModal({ batch, onClose, onUpdated }: ProductionBat
   const [inventoryLots, setInventoryLots] = useState<InventoryLot[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [newComponents, setNewComponents] = useState<any[]>([{ lot_id: '', planned_quantity: '' }]);
+  const [showStatusTransition, setShowStatusTransition] = useState(false);
+  const [newStatus, setNewStatus] = useState<BatchStatus | ''>(batch.status);
+  const [transitionError, setTransitionError] = useState('');
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev: any) => ({ ...prev, [key]: e.target.value }));
@@ -102,6 +112,26 @@ function ProductionBatchDetailModal({ batch, onClose, onUpdated }: ProductionBat
     }
   };
 
+  const handleStatusTransition = async () => {
+    if (!newStatus || newStatus === batch.status) {
+      setTransitionError('Vui lòng chọn trạng thái khác');
+      return;
+    }
+
+    setSaving(true);
+    setTransitionError('');
+    try {
+      await updateProductionBatch(batch.batch_id, { status: newStatus as any });
+      setShowStatusTransition(false);
+      onUpdated();
+      onClose();
+    } catch (e: any) {
+      setTransitionError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const canEdit = batch.status === 'On Hold';
 
   return (
@@ -110,6 +140,58 @@ function ProductionBatchDetailModal({ batch, onClose, onUpdated }: ProductionBat
         <button onClick={onClose} className="absolute top-3 right-3 p-1 hover:bg-gray-100 rounded-lg">
           <X size={20} />
         </button>
+        
+        {/* Status Transition Modal (for Manager) */}
+        {isManager && showStatusTransition && (
+          <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center z-10">
+            <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm mx-4">
+              <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+                <ArrowRight size={20} className="text-blue-600" />
+                Chuyển Trạng Thái
+              </h4>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-600 mb-2">Trạng thái hiện tại:</p>
+                  <span className={`inline-block px-3 py-1 rounded text-sm font-bold ${statusLabel(batch.status).cls}`}>
+                    {statusLabel(batch.status).label}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-600 mb-2">Chuyển sang:</label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value as BatchStatus)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                  >
+                    <option value="">-- Chọn trạng thái --</option>
+                    {BATCH_STATUS_LIST.map((s) => (
+                      <option key={s} value={s} disabled={s === batch.status}>
+                        {statusLabel(s).label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {transitionError && <p className="text-sm text-red-600 font-bold">{transitionError}</p>}
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowStatusTransition(false)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg font-bold text-sm hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleStatusTransition}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {saving ? 'Đang chuyển...' : 'Chuyển'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <h3 className="text-xl font-black text-gray-900 mb-4">Chi tiết Production Batch</h3>
         <form onSubmit={handleSave} className="space-y-4 max-h-96 overflow-y-auto">
           {error && <div className="p-3 bg-red-50 text-red-700 rounded-xl text-sm font-bold">{error}</div>}
@@ -259,6 +341,15 @@ function ProductionBatchDetailModal({ batch, onClose, onUpdated }: ProductionBat
         <div className="flex justify-end gap-2 pt-4 border-t">
           {!isEditing ? (
             <>
+              {isManager && (
+                <button
+                  type="button"
+                  onClick={() => setShowStatusTransition(true)}
+                  className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-bold hover:bg-amber-700 flex items-center gap-2"
+                >
+                  <ArrowRight size={14} /> Chuyển Trạng Thái
+                </button>
+              )}
               {canEdit && (
                 <button type="button" onClick={() => setIsEditing(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
                   ✏️ Chỉnh sửa
@@ -326,7 +417,7 @@ function TabLoThanhPham({ materials, refresh }: { materials: Material[]; refresh
   return (
     <div>
       {detailBatch && (
-        <ProductionBatchDetailModal batch={detailBatch} onClose={() => setDetailBatch(null)} onUpdated={load} />
+        <ProductionBatchDetailModal batch={detailBatch} onClose={() => setDetailBatch(null)} onUpdated={load} isManager={true} />
       )}
       <div className="flex gap-2 mb-4">
         <div className="relative flex-1">
@@ -347,6 +438,7 @@ function TabLoThanhPham({ materials, refresh }: { materials: Material[]; refresh
           <option value="On Hold">Chờ xử lý</option>
           <option value="In Progress">Đang xử lý</option>
           <option value="Complete">Hoàn thành</option>
+          <option value="Cancelled">Hủy</option>
         </select>
       </div>
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -457,9 +549,6 @@ function TabBaoCao({ materials, onCreated }: { materials: Material[]; onCreated:
         throw new Error('Vui lòng điền đầy đủ thông tin');
       }
       
-      console.log('📋 Components before validation:', components);
-      console.log('✅ Valid components:', components.filter(c => c.lot_id && c.planned_quantity));
-      
       if (!components.some(comp => comp.lot_id && comp.planned_quantity)) {
         throw new Error('Vui lòng thêm ít nhất 1 nguyên liệu');
       }
@@ -475,34 +564,23 @@ function TabBaoCao({ materials, onCreated }: { materials: Material[]; onCreated:
         shelf_life_unit: form.shelf_life_unit,
         status: form.status,
       } as any);
-      console.log('🔍 CREATE BATCH RESPONSE:', result);
       
       // Get batch_id from response
       const batchId = (result as any).batch_id || form.batch_number;
-      console.log('✅ Batch created with ID:', batchId);
-      console.log('📦 Components to add:', components);
-      console.log('🚀 Starting component loop with', components.length, 'items');
       
       // Add components
       for (const comp of components) {
-        console.log(`Loop iteration - comp:`, comp, `lot_id:${comp.lot_id}, quantity:${comp.planned_quantity}`);
         if (comp.lot_id && comp.planned_quantity) {
-          console.log(`Posting component: lot_id=${comp.lot_id}, quantity=${comp.planned_quantity}`);
           try {
-            const componentResult = await apiClient.post(`/production-batches/${batchId}/components`, {
+            await apiClient.post(`/production-batches/${batchId}/components`, {
               lot_id: comp.lot_id,
               planned_quantity: comp.planned_quantity,
             });
-            console.log(`✅ Component added:`, componentResult);
           } catch (compError: any) {
-            console.error(`❌ Error adding component:`, compError.message, compError);
             throw compError;
           }
-        } else {
-          console.warn(`⚠️ Skipping component with missing data:`, comp);
         }
       }
-      console.log('✅ All components added successfully');
       
       setSuccess('Tạo batch thành công!');
       setForm({
@@ -751,7 +829,7 @@ export default function ProductCreation() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-gray-900">Quản lý thành phẩm</h1>
+        <h1 className="text-2xl font-black text-gray-900">Quản lý Production Batch</h1>
         <div className="flex items-center gap-1 text-xs font-bold text-green-600">
           <span className="w-2 h-2 rounded-full bg-green-500" />
           ONLINE
@@ -765,7 +843,7 @@ export default function ProductCreation() {
           }`}
         >
           <Package size={14} />
-          Batch List
+          Danh Sách Batch
         </button>
         <button
           onClick={() => setTab('create')}

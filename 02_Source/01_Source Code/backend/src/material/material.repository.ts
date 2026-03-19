@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -29,12 +30,20 @@ export class MaterialRepository {
   }
 
   /**
+   * Find all materials without pagination
+   * @returns - List of all material documents
+   */
+  async findAllWithoutPagination(): Promise<MaterialDocument[]> {
+    return this.materialModel.find().exec();
+  }
+
+  /**
    * Find all materials with pagination support
    * @param page - Page number (1-indexed)
    * @param limit - Records per page
    * @returns - Paginated materials with metadata
    */
-  async findAll(
+  async findAllWithPagination(
     page: number = 1,
     limit: number = 20,
   ): Promise<{

@@ -156,6 +156,13 @@ export class UpdateInventoryLotDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsOptional()
+  qc_by?: string;
+
+  @IsOptional()
+  history?: Record<string, any>[];
 }
 
 export class InventoryLotResponseDto {
@@ -176,6 +183,9 @@ export class InventoryLotResponseDto {
   notes?: string;
   created_date: Date;
   modified_date: Date;
+  received_by?: string;
+  qc_by?: string;
+  history?: Record<string, any>[];
 }
 
 export class PaginatedInventoryLotResponse {

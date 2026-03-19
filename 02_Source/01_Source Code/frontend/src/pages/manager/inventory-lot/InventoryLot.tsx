@@ -14,14 +14,6 @@ import {
 } from "./components";
 import { type EditFormValues } from "./utils/types";
 
-async function fetchInventoryLotsData() {
-  const { inventoryLots, error: apiError } = await InventoryLotAPI.getAll(
-    1,
-    50,
-  );
-  return { inventoryLots, apiError };
-}
-
 export default function InventoryLot() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedInventoryLot, setSelectedInventoryLot] =
@@ -40,7 +32,7 @@ export default function InventoryLot() {
       setLoading(true);
       setError(null);
 
-      const { inventoryLots, apiError } = await fetchInventoryLotsData();
+      const { inventoryLots, error: apiError } = await InventoryLotAPI.getAll();
 
       if (apiError) {
         const errorMsg = "Không thể tải dữ liệu hàng hóa";
@@ -61,7 +53,7 @@ export default function InventoryLot() {
     setLoading(true);
     setError(null);
 
-    const { inventoryLots, apiError } = await fetchInventoryLotsData();
+    const { inventoryLots, error: apiError } = await InventoryLotAPI.getAll();
 
     if (apiError) {
       const errorMsg = "Không thể tải dữ liệu hàng hóa";

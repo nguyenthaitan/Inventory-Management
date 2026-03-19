@@ -77,6 +77,19 @@ export class ProductionBatchRepository {
   }
 
   /**
+   * Find a single production batch by batch_id OR batch_number
+   * Try both fields since route param could be either
+   * @param id - Batch ID or batch number
+   * @returns Batch document or null
+   */
+  async findByIdOrNumber(id: string): Promise<ProductionBatchDocument | null> {
+    this.logger.debug(`Finding production batch by id or number: ${id}`);
+    return this.batchModel.findOne({ 
+      $or: [{ batch_id: id }, { batch_number: id }] 
+    }).exec();
+  }
+
+  /**
    * Find a production batch by batch_number (unique business field)
    * @param batchNumber - Batch number string
    * @returns Batch document or null
@@ -160,10 +173,14 @@ export class ProductionBatchRepository {
   ): Promise<ProductionBatchDocument | null> {
     this.logger.debug(`Updating production batch: ${batchId}`);
     return this.batchModel
-      .findOneAndUpdate({ batch_id: batchId }, updateDto, {
-        new: true,
-        runValidators: true,
-      })
+      .findOneAndUpdate(
+        { $or: [{ batch_id: batchId }, { batch_number: batchId }] },
+        updateDto,
+        {
+          new: true,
+          runValidators: true,
+        },
+      )
       .exec();
   }
 
@@ -174,6 +191,10 @@ export class ProductionBatchRepository {
    */
   async remove(batchId: string): Promise<ProductionBatchDocument | null> {
     this.logger.debug(`Deleting production batch: ${batchId}`);
-    return this.batchModel.findOneAndDelete({ batch_id: batchId }).exec();
+    return this.batchModel
+      .findOneAndDelete({
+        $or: [{ batch_id: batchId }, { batch_number: batchId }],
+      })
+      .exec();
   }
 }
