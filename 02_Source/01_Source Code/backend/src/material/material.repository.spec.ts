@@ -140,13 +140,13 @@ describe('MaterialRepository', () => {
     });
   });
 
-  describe('findAll', () => {
+  describe('findAllWithPagination', () => {
     it('should apply pagination and newest-first sorting', async () => {
       const chain = createFindChain([materialDoc]);
       mockModel.find.mockReturnValue(chain);
       mockModel.countDocuments.mockResolvedValue(23);
 
-      const result = await repository.findAll(2, 10);
+      const result = await repository.findAllWithPagination(2, 10);
 
       expect(mockModel.find).toHaveBeenCalledWith();
       expect(chain.skip).toHaveBeenCalledWith(10);
