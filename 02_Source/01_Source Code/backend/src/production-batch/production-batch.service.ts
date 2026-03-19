@@ -8,13 +8,25 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Material, MaterialDocument } from '../schemas/material.schema';
-import { InventoryLot, InventoryLotDocument } from '../schemas/inventory-lot.schema';
-import { InventoryTransaction, InventoryTransactionDocument } from '../schemas/inventory-transaction.schema';
-import { BatchComponent, BatchComponentDocument } from '../schemas/batch-component.schema';
+import {
+  InventoryLot,
+  InventoryLotDocument,
+} from '../schemas/inventory-lot.schema';
+import {
+  InventoryTransaction,
+  InventoryTransactionDocument,
+} from '../schemas/inventory-transaction.schema';
+import {
+  BatchComponent,
+  BatchComponentDocument,
+} from '../schemas/batch-component.schema';
 import { ProductionBatchRepository } from './production-batch.repository';
 import { BatchComponentRepository } from './batch-component.repository';
 import { InventoryLotRepository } from '../inventory-lot/inventory-lot.repository';
-import { CreateProductionBatchDto, BatchStatus } from './dto/create-production-batch.dto';
+import {
+  CreateProductionBatchDto,
+  BatchStatus,
+} from './dto/create-production-batch.dto';
 import { UpdateProductionBatchDto } from './dto/update-production-batch.dto';
 import { InventoryLotStatus } from '../inventory-lot/inventory-lot.dto';
 import {
@@ -25,7 +37,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Valid status transitions: current status -> allowed next statuses
 const STATUS_TRANSITIONS: Record<string, string[]> = {
-  [BatchStatus.InProgress]: [BatchStatus.Complete, BatchStatus.OnHold, BatchStatus.Cancelled],
+  [BatchStatus.InProgress]: [
+    BatchStatus.Complete,
+    BatchStatus.OnHold,
+    BatchStatus.Cancelled,
+  ],
   [BatchStatus.OnHold]: [BatchStatus.InProgress, BatchStatus.Cancelled],
   [BatchStatus.Complete]: [],
   [BatchStatus.Cancelled]: [],
@@ -86,11 +102,13 @@ export class ProductionBatchService {
   async verifyInventoryAvailability(
     components: BatchComponentDocument[],
   ): Promise<boolean> {
-    this.logger.log(`Verifying inventory availability for ${components.length} components`);
+    this.logger.log(
+      `Verifying inventory availability for ${components.length} components`,
+    );
 
     for (const component of components) {
       const lot = await this.inventoryLotRepository.findById(component.lot_id);
-      
+
       if (!lot) {
         throw new NotFoundException(
           `Inventory lot with ID '${component.lot_id}' not found`,
@@ -104,7 +122,7 @@ export class ProductionBatchService {
       if (availableQty < plannedQty) {
         throw new BadRequestException(
           `Insufficient quantity in lot '${component.lot_id}'. ` +
-          `Available: ${availableQty}, Required: ${plannedQty}`,
+            `Available: ${availableQty}, Required: ${plannedQty}`,
         );
       }
 
@@ -145,28 +163,31 @@ export class ProductionBatchService {
       const newQty = currentQty - plannedQty;
 
       // Update inventory lot quantity (convert to string as per repository signature)
-      await this.inventoryLotRepository.updateQuantity(component.lot_id, String(-plannedQty));
+      await this.inventoryLotRepository.updateQuantity(
+        component.lot_id,
+        String(-plannedQty),
+      );
       this.logger.debug(
         `Lot ${component.lot_id} quantity updated: ${currentQty} -> ${newQty}`,
       );
 
-      // Create inventory transaction record
-      const transaction = new this.inventoryTransactionModel({
-        transaction_id: uuidv4(),
-        lot_id: component.lot_id,
-        transaction_type: 'Usage',
-        quantity: component.planned_quantity,
-        unit_of_measure: component.unit_of_measure,
-        transaction_date: new Date(),
-        reference_number: batchId,
-        performed_by: performedBy,
-        notes: `Material deduction for production batch ${batchId}`,
-      });
+      // // Create inventory transaction record
+      // const transaction = new this.inventoryTransactionModel({
+      //   transaction_id: uuidv4(),
+      //   lot_id: component.lot_id,
+      //   transaction_type: 'Usage',
+      //   quantity: component.planned_quantity,
+      //   unit_of_measure: component.unit_of_measure,
+      //   transaction_date: new Date(),
+      //   reference_number: batchId,
+      //   performed_by: performedBy,
+      //   notes: `Material deduction for production batch ${batchId}`,
+      // });
 
-      await transaction.save();
-      this.logger.debug(
-        `Transaction created for lot ${component.lot_id}: ${transaction.transaction_id}`,
-      );
+      // await transaction.save();
+      // this.logger.debug(
+      //   `Transaction created for lot ${component.lot_id}: ${transaction.transaction_id}`,
+      // );
     }
 
     this.logger.log(`Materials deducted successfully for batch ${batchId}`);
@@ -188,7 +209,9 @@ export class ProductionBatchService {
     );
 
     // Fetch material info (it's the product_id in batch)
-    const material = await this.materialModel.findOne({ material_id: batch.product_id }).exec();
+    const material = await this.materialModel
+      .findOne({ material_id: batch.product_id })
+      .exec();
     if (!material) {
       throw new NotFoundException(
         `Material/Product with ID '${batch.product_id}' not found`,
@@ -265,11 +288,15 @@ export class ProductionBatchService {
 
     // Validate shelf_life_value and shelf_life_unit
     if (createDto.shelf_life_value <= 0) {
-      throw new BadRequestException('shelf_life_value must be a positive number');
+      throw new BadRequestException(
+        'shelf_life_value must be a positive number',
+      );
     }
     const validUnits = ['day', 'month', 'year'];
     if (!validUnits.includes(createDto.shelf_life_unit)) {
-      throw new BadRequestException('shelf_life_unit must be day, month, or year');
+      throw new BadRequestException(
+        'shelf_life_unit must be day, month, or year',
+      );
     }
 
     // Prepare batch object - no manufacture_date or expiration_date
@@ -355,7 +382,11 @@ export class ProductionBatchService {
 
     this.logger.debug(`Finding batches for product_id: ${productId}`);
 
-    const result = await this.repository.findByProductId(productId, page, limit);
+    const result = await this.repository.findByProductId(
+      productId,
+      page,
+      limit,
+    );
 
     return {
       data: result.data.map((b) => this.toResponseDto(b)),
@@ -440,7 +471,8 @@ export class ProductionBatchService {
       if (updateDto.status === BatchStatus.Complete) {
         try {
           // Step 1: Get batch components
-          const components = await this.batchComponentRepository.findByBatchId(batchId);
+          const components =
+            await this.batchComponentRepository.findByBatchId(batchId);
           if (components.length === 0) {
             throw new BadRequestException(
               `Batch ${batchId} has no components. Cannot complete batch without components.`,
@@ -453,14 +485,21 @@ export class ProductionBatchService {
           // Step 3: Deduct materials from inventory and create transactions
           // Extract user from request context (assuming it's passed via request)
           const performedBy = 'system'; // TODO: Get from request.user in controller
-          await this.deductMaterialsFromInventory(batchId, components, performedBy);
+          await this.deductMaterialsFromInventory(
+            batchId,
+            components,
+            performedBy,
+          );
 
           // Step 4: Create finished product lot
-          const finishedLot = await this.createFinishedProductLot(existing, performedBy);
+          const finishedLot = await this.createFinishedProductLot(
+            existing,
+            performedBy,
+          );
 
           this.logger.log(
             `Batch ${batchId} completed successfully. ` +
-            `Materials deducted, new lot ${finishedLot.lot_id} created in Quarantine status`,
+              `Materials deducted, new lot ${finishedLot.lot_id} created in Quarantine status`,
           );
         } catch (error) {
           this.logger.error(

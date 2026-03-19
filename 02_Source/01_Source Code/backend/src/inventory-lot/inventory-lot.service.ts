@@ -279,9 +279,20 @@ export class InventoryLotService {
       throw new NotFoundException(`Inventory lot ${lot_id} not found`);
     }
 
-    // Publish a Kafka event for quantity adjustments so downstream systems can
-    // create corresponding InventoryTransaction records.
     if (quantityChanged) {
+      // Create inventory transaction for quantity change (Receipt if +, Usage if -)
+      await this.inventoryTransactionService.create({
+        lot_id,
+        transaction_type:
+          quantityDelta > 0 ? TransactionType.Receipt : TransactionType.Usage,
+        quantity: quantityDelta,
+        unit_of_measure:
+          updateDto.unit_of_measure || existingLot.unit_of_measure,
+        performed_by: updateDto.qc_by || existingLot.received_by || 'system',
+        reference_number: `lot-update:${lot_id}`,
+        notes: `Quantity changed from ${existingLot.quantity} to ${updateDto.quantity}`,
+        transaction_date: new Date().toISOString(),
+      });
     }
 
     return this.convertToResponse(updatedLot);
