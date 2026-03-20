@@ -22,16 +22,15 @@ export function useMaterials() {
     const fetchMaterials = async () => {
       try {
         setLoading(true);
-        const API_BASE_URL = import.meta.env.VITE_API_URL;
-        const { data, error } = await apiClient.get<Material[]>(
-          `${API_BASE_URL}/materials`,
-        );
+        const { data, error: apiError } = await apiClient.get<any>("/materials");
 
-        if (error) {
-          throw new Error(`Failed to fetch materials: ${error}`);
+        if (apiError) {
+          throw new Error(apiError.message || "Failed to fetch materials");
         }
 
-        setMaterials(data);
+        // Handle both direct array response and wrapped response
+        const materials = Array.isArray(data) ? data : data?.payload || data?.data || [];
+        setMaterials(materials);
         setError(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
