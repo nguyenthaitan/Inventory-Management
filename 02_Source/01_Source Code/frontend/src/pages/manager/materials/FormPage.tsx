@@ -34,9 +34,10 @@ const Page: React.FC = () => {
     <div>
       <h1>{id ? "Edit Material" : "Create Material"}</h1>
       <MaterialForm
-        initial={initial}
-        onSubmit={handleSubmit}
-        submitLabel={id ? "Update" : "Create"}
+        mode={id ? "edit" : "create"}
+        existingMaterial={initial}
+        onSuccess={() => navigate("/manager/materials")}
+        onCancel={() => navigate("/manager/materials")}
       />
     </div>
   );

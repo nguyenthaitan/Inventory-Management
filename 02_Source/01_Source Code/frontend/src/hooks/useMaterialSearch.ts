@@ -16,7 +16,7 @@ interface UseMaterialSearchReturn {
   total: number;
   loading: boolean;
   error: Error | null;
-  search: (query: string) => void;
+  search: (query?: string) => void;
   filterByType: (type: MaterialType) => void;
   clear: () => void;
   page: number;
@@ -38,7 +38,7 @@ export const useMaterialSearch = (
   const [error, setError] = useState<Error | null>(null);
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<MaterialType | null>(null);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const performSearch = useCallback(
     async (q: string, type: MaterialType | null, p: number = 1) => {
@@ -66,8 +66,8 @@ export const useMaterialSearch = (
         }
 
         setResults(response.data);
-        setTotal(response.total);
-        setPage(response.page);
+        setTotal(response.pagination.total);
+        setPage(response.pagination.page);
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Search failed");
         setError(error);
@@ -80,8 +80,9 @@ export const useMaterialSearch = (
   );
 
   const search = useCallback(
-    (q: string) => {
-      setQuery(q);
+    (q: string = "") => {
+      const normalizedQuery = q.trim();
+      setQuery(normalizedQuery);
       setPage(1);
 
       // Clear previous timer
@@ -89,9 +90,17 @@ export const useMaterialSearch = (
         clearTimeout(debounceTimer.current);
       }
 
+      // If query is too short and no filter type, clear results immediately
+      if (normalizedQuery.length < 2 && !filterType) {
+        setResults([]);
+        setTotal(0);
+        setLoading(false);
+        return;
+      }
+
       // Set new timer for debounced search
       debounceTimer.current = setTimeout(() => {
-        performSearch(q, filterType, 1);
+        performSearch(normalizedQuery, filterType, 1);
       }, debounceMs);
     },
     [filterType, debounceMs, performSearch],

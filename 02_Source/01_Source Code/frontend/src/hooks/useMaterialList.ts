@@ -42,9 +42,9 @@ export const useMaterialList = (
         const response: PaginatedMaterialResponse =
           await materialService.findAll(p, l);
         setMaterials(response.data);
-        setTotal(response.total);
-        setPage(response.page);
-        setLimitState(response.limit);
+        setTotal(response.pagination.total);
+        setPage(response.pagination.page);
+        setLimitState(response.pagination.limit);
       } catch (err) {
         const error =
           err instanceof Error ? err : new Error("Failed to fetch materials");
