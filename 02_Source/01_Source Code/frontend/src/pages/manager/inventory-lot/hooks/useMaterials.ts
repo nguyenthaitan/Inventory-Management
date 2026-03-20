@@ -22,7 +22,7 @@ export function useMaterials() {
     const fetchMaterials = async () => {
       try {
         setLoading(true);
-        const result = await materialService.findAll(1, 100); // page 1, limit 100 (có thể điều chỉnh)
+        const result = await materialService.findAll(); // page 1, limit 100 (có thể điều chỉnh)
 
         setMaterials(result.items || []);
         setError(null);
