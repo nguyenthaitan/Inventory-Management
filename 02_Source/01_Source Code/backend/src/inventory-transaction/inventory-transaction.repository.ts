@@ -29,25 +29,26 @@ export class InventoryTransactionRepository {
     filters: FilterOptions = {},
     pagination: PaginationOptions = { page: 1, limit: 20 },
   ) {
-    const query = this.model.find();
+    // Dùng thuần Mongo query object
+    const mongoQuery: any = {};
 
     if (filters.lot_id) {
-      query.where('lot_id').equals(filters.lot_id);
+      mongoQuery.lot_id = filters.lot_id;
     }
     if (filters.transaction_type) {
-      query.where('transaction_type').equals(filters.transaction_type);
+      mongoQuery.transaction_type = filters.transaction_type;
     }
     if (filters.search) {
-      query.or([
+      mongoQuery.$or = [
         { transaction_id: { $regex: filters.search, $options: 'i' } },
         { performed_by: { $regex: filters.search, $options: 'i' } },
-      ]);
+      ];
     }
+
     if (filters.from || filters.to) {
-      const range: any = {};
-      if (filters.from) range.$gte = filters.from;
-      if (filters.to) range.$lte = filters.to;
-      query.where('transaction_date').find(range);
+      mongoQuery.transaction_date = {} as any;
+      if (filters.from) mongoQuery.transaction_date.$gte = filters.from;
+      if (filters.to) mongoQuery.transaction_date.$lte = filters.to;
     }
 
     // pagination
@@ -57,9 +58,9 @@ export class InventoryTransactionRepository {
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([
-      query.skip(skip).limit(limit).exec(),
+      this.model.find(mongoQuery).skip(skip).limit(limit).exec(),
       // count filtered documents without pagination
-      this.model.countDocuments(query.getFilter()).exec(),
+      this.model.countDocuments(mongoQuery).exec(),
     ]);
 
     return { items, total };
