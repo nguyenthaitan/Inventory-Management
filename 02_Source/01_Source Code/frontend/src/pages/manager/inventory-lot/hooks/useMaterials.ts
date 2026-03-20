@@ -21,7 +21,8 @@ export function useMaterials() {
     const fetchMaterials = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:3000/materials");
+        const API_BASE_URL = import.meta.env.VITE_API_URL;
+        const response = await fetch(`${API_BASE_URL}/materials`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch materials: ${response.statusText}`);
