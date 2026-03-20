@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiClient } from "../../../../services/apiClient";
 
 export interface Material {
   _id: string;
@@ -22,14 +23,15 @@ export function useMaterials() {
       try {
         setLoading(true);
         const API_BASE_URL = import.meta.env.VITE_API_URL;
-        const response = await fetch(`${API_BASE_URL}/materials`);
+        const { data, error } = await apiClient.get<Material[]>(
+          `${API_BASE_URL}/materials`,
+        );
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch materials: ${response.statusText}`);
+        if (error) {
+          throw new Error(`Failed to fetch materials: ${error}`);
         }
 
-        const result = await response.json();
-        setMaterials(result);
+        setMaterials(data);
         setError(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * API Client
  * Wrapper tái sử dụng với error handling tổng quát
