@@ -14,6 +14,7 @@ export interface PaginationOptions {
 export interface FilterOptions {
   lot_id?: string;
   transaction_type?: string;
+  search?: string;
   from?: Date;
   to?: Date;
 }
@@ -35,6 +36,12 @@ export class InventoryTransactionRepository {
     }
     if (filters.transaction_type) {
       query.where('transaction_type').equals(filters.transaction_type);
+    }
+    if (filters.search) {
+      query.or([
+        { transaction_id: { $regex: filters.search, $options: 'i' } },
+        { performed_by: { $regex: filters.search, $options: 'i' } },
+      ]);
     }
     if (filters.from || filters.to) {
       const range: any = {};

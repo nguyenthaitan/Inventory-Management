@@ -24,6 +24,7 @@ export class InventoryTransactionController {
   async findAll(
     @Query('lot_id') lot_id?: string,
     @Query('transaction_type') transaction_type?: string,
+    @Query('search') search?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('page') page = '1',
@@ -32,6 +33,7 @@ export class InventoryTransactionController {
     const filters: any = {};
     if (lot_id) filters.lot_id = lot_id;
     if (transaction_type) filters.transaction_type = transaction_type;
+    if (search) filters.search = search;
     if (from) filters.from = new Date(from);
     if (to) filters.to = new Date(to);
 

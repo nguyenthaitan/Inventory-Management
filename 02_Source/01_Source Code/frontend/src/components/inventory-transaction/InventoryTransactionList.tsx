@@ -27,16 +27,22 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
     setPage(1);
   };
 
-  // reload whenever page or pageSize changes (backend will default perPage=20 if absent)
+  // reload whenever page/pageSize/search/fromDate/toDate changes
   React.useEffect(() => {
     async function load() {
       setLoading(true);
       setError(null);
-      console.log("Loading transactions with params:", { page, pageSize });
+      const q = {
+        limit: pageSize,
+        page,
+        ...(search ? { search } : {}),
+        ...(fromDate ? { from: fromDate } : {}),
+        ...(toDate ? { to: toDate } : {}),
+      };
+      console.log("Loading transactions with params:", q);
       try {
         const result: Awaited<ReturnType<typeof fetchTransactions>> =
-          await fetchTransactions({ limit: pageSize, page });
-        console.log("Fetched transactions:", result);
+          await fetchTransactions(q);
         setTransactions(result.items);
         setTotalCount(result.total);
       } catch (err: any) {
@@ -46,24 +52,11 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
       setLoading(false);
     }
     load();
-  }, [page, pageSize]);
-
-  const filtered = transactions.filter((t) => {
-    const term = search.toLowerCase();
-    const matchSearch =
-      t.transaction_id?.toLowerCase().includes(term) ||
-      t.performed_by.toLowerCase().includes(term);
-
-    const txDate = new Date(t.transaction_date);
-    const afterFrom = fromDate ? txDate >= new Date(fromDate) : true;
-    const beforeTo = toDate ? txDate <= new Date(toDate) : true;
-
-    return matchSearch && afterFrom && beforeTo;
-  });
+  }, [page, pageSize, search, fromDate, toDate]);
 
   // compute pages from totalCount returned by server
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
-  const paged = filtered; // we still filter the current page locally
+  const paged = transactions; // server does filtering/paging
 
   function renderBody() {
     if (loading) {
@@ -84,7 +77,7 @@ const InventoryTransactionList: React.FC<Props> = ({ title }) => {
         </tr>
       );
     }
-    if (filtered.length === 0) {
+    if (transactions.length === 0) {
       return (
         <tr>
           <td colSpan={9} className="p-16 text-center text-gray-300">
