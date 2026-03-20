@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { materialService } from "../../../../services/material.service";
 
 export interface Material {
   _id: string;
@@ -21,14 +22,9 @@ export function useMaterials() {
     const fetchMaterials = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:3000/materials");
+        const result = await materialService.findAll(1, 100); // page 1, limit 100 (có thể điều chỉnh)
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch materials: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        setMaterials(result);
+        setMaterials(result.items || []);
         setError(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
