@@ -40,12 +40,9 @@ export class InventoryLotAPI {
     // apiClient.get<T> returns response.data.data — for the inventory-lots
     // endpoint the backend returns { data: [...], total, page, limit }, so
     // response.data.data is already the lots array.
-    const { data, error } = await apiClient.get<InventoryLot[]>(
-      "/inventory-lots",
-      {
-        params: { page, limit },
-      },
-    );
+    const { data, error } = await apiClient.get("/inventory-lots", {
+      params: { page, limit },
+    });
 
     if (error) {
       console.error(
@@ -55,7 +52,7 @@ export class InventoryLotAPI {
       return { inventoryLots: [], total: 0, page, limit, error };
     }
 
-    const lots = Array.isArray(data) ? data : [];
+    const lots = Array.isArray(data.data) ? data.data : [];
     return {
       inventoryLots: lots,
       total: lots.length,

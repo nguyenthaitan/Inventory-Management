@@ -47,7 +47,11 @@ export function isTokenValid(): boolean {
 /**
  * Get current user info từ localStorage
  */
-export function getCurrentUser(): { user_id?: string; role?: string; username?: string } | null {
+export function getCurrentUser(): {
+  user_id?: string;
+  role?: string;
+  username?: string;
+} | null {
   try {
     const userStr = localStorage.getItem("user");
     if (!userStr) return null;
@@ -106,13 +110,16 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       (config) => {
         // Không require token cho auth endpoints
-        const isAuthEndpoint = config.url?.includes('/auth/');
+        const isAuthEndpoint = config.url?.includes("/auth/");
 
         // Thêm Authorization header với token (ngoại trừ auth endpoints)
         const token = localStorage.getItem("auth_token");
         if (token && !isAuthEndpoint) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log(`[API] Request to ${config.url} - Token added:`, token.substring(0, 20) + '...');
+          console.log(
+            `[API] Request to ${config.url} - Token added:`,
+            token.substring(0, 20) + "...",
+          );
         } else if (!isAuthEndpoint && !token) {
           console.warn(`[API] Request to ${config.url} - NO TOKEN FOUND!`);
         } else if (isAuthEndpoint) {
@@ -238,11 +245,9 @@ class ApiClient {
         timeout: options?.timeout,
       });
 
-      // Nếu response.data.data không tồn tại, trả về response.data (hỗ trợ cả 2 kiểu API)
+      // Giữ nguyên response.data như backend trả về
       return {
-        data: (response.data && typeof response.data === 'object' && 'data' in response.data)
-          ? response.data.data as T
-          : response.data as T,
+        data: response.data as T,
         error: null,
       };
     } catch (error) {
