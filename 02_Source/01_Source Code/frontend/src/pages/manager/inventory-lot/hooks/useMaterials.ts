@@ -1,17 +1,6 @@
 import { useEffect, useState } from "react";
 import { materialService } from "../../../../services/material.service";
-
-export interface Material {
-  _id: string;
-  material_id: string;
-  part_number: string;
-  material_name: string;
-  material_type: string;
-  storage_conditions: string;
-  specification_document: string;
-  created_date: string;
-  modified_date: string;
-}
+import type { Material } from "../../../../types/Material";
 
 export function useMaterials() {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -22,9 +11,9 @@ export function useMaterials() {
     const fetchMaterials = async () => {
       try {
         setLoading(true);
-        const result = await materialService.findAll(); // page 1, limit 100 (có thể điều chỉnh)
+        const result = await materialService.findAll();
 
-        setMaterials(result.items || []);
+        setMaterials(result.data || []);
         setError(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
