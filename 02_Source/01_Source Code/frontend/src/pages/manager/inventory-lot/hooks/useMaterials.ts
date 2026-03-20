@@ -13,7 +13,7 @@ export function useMaterials() {
         setLoading(true);
         const result = await materialService.findAll();
 
-        setMaterials(result || []);
+        setMaterials(result.data || []);
         setError(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
