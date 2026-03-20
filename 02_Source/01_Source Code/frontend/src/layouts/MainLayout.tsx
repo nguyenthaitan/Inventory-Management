@@ -140,6 +140,11 @@ export default function Layout() {
             label: "Báo cáo",
           },
           {
+            to: "/manager/transaction",
+            icon: <History size={20} />,
+            label: "Lịch sử giao dịch",
+          },
+          {
             to: "/manager/users",
             icon: <FileText size={20} />,
             label: "Quản lý Users",
