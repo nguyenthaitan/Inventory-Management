@@ -210,6 +210,40 @@ describe('MaterialController (Real Integration)', () => {
 
       expect(response.body).not.toHaveProperty('unknownField');
     });
+
+    it('should return 409 when creating material with duplicate material_id', async () => {
+      // Tạo material lần đầu
+      await request(app.getHttpServer())
+        .post('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .send(createMaterialDto)
+        .expect(HttpStatus.CREATED);
+
+      // Tạo lần hai với cùng material_id
+      const response = await request(app.getHttpServer())
+        .post('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .send({ ...createMaterialDto, part_number: 'PN-OTHER' })
+        .expect(HttpStatus.CONFLICT);
+
+      expect(response.body.message).toContain(createMaterialDto.material_id);
+    });
+
+    it('should return 409 when creating material with duplicate part_number', async () => {
+      await request(app.getHttpServer())
+        .post('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .send(createMaterialDto)
+        .expect(HttpStatus.CREATED);
+
+      const response = await request(app.getHttpServer())
+        .post('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .send({ ...createMaterialDto, material_id: 'MAT-OTHER' })
+        .expect(HttpStatus.CONFLICT);
+
+      expect(response.body.message).toContain(createMaterialDto.part_number);
+    });
   });
 
   // ─────────────────────────────────────────────
@@ -271,6 +305,16 @@ describe('MaterialController (Real Integration)', () => {
 
       expect(response.body.data).toHaveLength(0);
     });
+
+    it('should return 400 when search query is less than 2 characters', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/materials/search')
+        .set('Authorization', 'Bearer dummy_token')
+        .query({ q: 'A' })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toBeDefined();
+    });
   });
 
   // ─────────────────────────────────────────────
@@ -310,6 +354,15 @@ describe('MaterialController (Real Integration)', () => {
       response.body.data.forEach((item: any) => {
         expect(item.material_type).toBe(MaterialType.API);
       });
+    });
+
+    it('should return 400 when filter type is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/materials/type/INVALID_TYPE')
+        .set('Authorization', 'Bearer dummy_token')
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toBeDefined();
     });
   });
 
@@ -367,6 +420,36 @@ describe('MaterialController (Real Integration)', () => {
       expect(response.body).toHaveProperty('total');
       expect(response.body.total).toBeGreaterThanOrEqual(15);
     });
+
+    it('should return 400 when page is less than 1', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .query({ page: 0, limit: 10 })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toBeDefined();
+    });
+
+    it('should return 400 when limit is less than 1', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .query({ page: 1, limit: 0 })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      expect(response.body.message).toBeDefined();
+    });
+
+    it('should cap results at 100 when limit exceeds maximum', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .query({ page: 1, limit: 999 })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.data.length).toBeLessThanOrEqual(100);
+    });
   });
 
   // ─────────────────────────────────────────────
@@ -377,6 +460,72 @@ describe('MaterialController (Real Integration)', () => {
       const fakeId = '000000000000000000000001';
       await request(app.getHttpServer())
         .get(`/materials/${fakeId}`)
+        .set('Authorization', 'Bearer dummy_token')
+        .expect(HttpStatus.NOT_FOUND);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // Update
+  // ─────────────────────────────────────────────
+  describe('PUT /materials/:id', () => {
+    it('should update material fields and return updated document', async () => {
+      const createResponse = await request(app.getHttpServer())
+        .post('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .send(createMaterialDto)
+        .expect(HttpStatus.CREATED);
+
+      const materialId = createResponse.body._id;
+
+      const updateResponse = await request(app.getHttpServer())
+        .put(`/materials/${materialId}`)
+        .set('Authorization', 'Bearer dummy_token')
+        .send({ material_name: 'Updated Material Name' })
+        .expect(HttpStatus.OK);
+
+      expect(updateResponse.body.material_name).toBe('Updated Material Name');
+    });
+
+    it('should return 404 when updating non-existent material', async () => {
+      const fakeId = '000000000000000000000001';
+      await request(app.getHttpServer())
+        .put(`/materials/${fakeId}`)
+        .set('Authorization', 'Bearer dummy_token')
+        .send({ material_name: 'Ghost' })
+        .expect(HttpStatus.NOT_FOUND);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // Delete
+  // ─────────────────────────────────────────────
+  describe('DELETE /materials/:id', () => {
+    it('should delete an existing material and return 200', async () => {
+      const createResponse = await request(app.getHttpServer())
+        .post('/materials')
+        .set('Authorization', 'Bearer dummy_token')
+        .send(createMaterialDto)
+        .expect(HttpStatus.CREATED);
+
+      const materialId = createResponse.body._id;
+
+      await request(app.getHttpServer())
+        .delete(`/materials/${materialId}`)
+        .set('Authorization', 'Bearer dummy_token')
+        .expect(HttpStatus.OK);
+
+      // Xác nhận đã xóa
+      await request(app.getHttpServer())
+        .get(`/materials/${materialId}`)
+        .set('Authorization', 'Bearer dummy_token')
+        .expect(HttpStatus.NOT_FOUND);
+    });
+
+    it('should return 404 when deleting non-existent material', async () => {
+      const fakeId = '000000000000000000000001';
+      await request(app.getHttpServer())
+        .delete(`/materials/${fakeId}`)
         .set('Authorization', 'Bearer dummy_token')
         .expect(HttpStatus.NOT_FOUND);
     });
