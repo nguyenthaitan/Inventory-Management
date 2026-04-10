@@ -15,10 +15,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { LabelTemplateModule } from './label-template/label-template.module';
 import { WarehouseHierarchyModule } from './warehouse-hierarchy/warehouse-hierarchy.module';
-import { SystemMonitoringModule } from './system-monitoring/system-monitoring.module';
-import { LogModule } from './log-management/log.module';
 import { BarcodeModule } from './barcode/barcode.module';
-import { MetricsModule } from './metrics/metrics.module';
 import { AppService } from './app.service';
 import { ImportExportOrderModule } from './import-export-order/import-export-order.module';
 import { InventoryAdjustmentModule } from './inventory-adjustment/inventory-adjustment.module';
@@ -44,10 +41,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
     InventoryAdjustmentModule,
     InventoryAuditReportModule,
     WarehouseHierarchyModule,
-    SystemMonitoringModule,
-    LogModule,
     BarcodeModule,
-    MetricsModule,
     ReportsModule,
     AuditLogModule,
   ],

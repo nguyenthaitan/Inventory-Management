@@ -5,7 +5,6 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import DashboardIT from "../pages/admin/DashboardIT";
 import AuditLog from "../pages/admin/AuditLog";
-import SystemMonitoring from "../pages/admin/SystemMonitoring";
 import BackupRestore from "../pages/admin/BackupRestore";
 import ErrorLogs from "../pages/admin/ErrorLogs";
 import SystemReports from "../pages/admin/SystemReports";
@@ -203,10 +202,7 @@ export const router = createBrowserRouter([
     children: [
       // IT ADMIN - Chỉ allow role 'it_admin'
       { path: "/admin/dashboard", element: requireAdminAuth(<DashboardIT />) },
-      {
-        path: "/admin/monitoring",
-        element: requireAdminAuth(<SystemMonitoring />),
-      },
+
       { path: "/admin/backup", element: requireAdminAuth(<BackupRestore />) },
       { path: "/admin/error-logs", element: requireAdminAuth(<ErrorLogs />) },
       { path: "/admin/reports", element: requireAdminAuth(<SystemReports />) },

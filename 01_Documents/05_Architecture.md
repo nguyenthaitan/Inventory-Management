@@ -53,15 +53,15 @@ Sử dụng kiến trúc **Microservices** để tách biệt các luồng nghi�
 
 ## 3. Công Nghệ và Công Cụ Đề Xuất (Tech Stack)
 
-| Thành phần     | Công nghệ đề xuất                          |
-| :------------- | :----------------------------------------- |
-| **Backend**    | Node.js (NestJS)                           |
-| **Frontend**   | React (Typescript)                         |
-| **Database**   | MongoDB, Redis (Caching/Locking)           |
-| **DevOps**     | Docker, Kubernetes, Jenkins/GitHub Actions |
-| **Security**   | Keycloak                                   |
-| **Logging**    | ELK                                        |
-| **Monitoring** | Prometheus & Grafana                       |
+| Thành phần     | Công nghệ đề xuất                |
+| :------------- | :------------------------------- |
+| **Backend**    | Node.js (NestJS)                 |
+| **Frontend**   | React (Typescript)               |
+| **Database**   | MongoDB, Redis (Caching/Locking) |
+| **DevOps**     | Docker, Kubernetes               |
+| **Security**   | Keycloak                         |
+| **Logging**    | (removed)                        |
+| **Monitoring** | (removed)                        |
 
 ---
 
@@ -345,8 +345,7 @@ Backend và Frontend thực hiện xác thực và định danh người dùng t
 
 #### Tầng Giám sát (Observability Tier)
 
-- **ELK Stack:** Thu thập và lưu trữ Logs từ Backend, hỗ trợ IT Admin truy vết lỗi và kiểm soát vận hành.
-- **Prometheus & Grafana:** Thu thập số liệu (Metrics) từ phần cứng và ứng dụng, cung cấp cái nhìn trực quan về sức khỏe hệ thống theo thời gian thực.
+- Monitoring and centralized observability components have been removed from this repository. Documentation references to Prometheus, Grafana, ELK, and related tooling were cleaned.
 
 ### 4. Process View
 
@@ -358,7 +357,7 @@ Backend và Frontend thực hiện xác thực và định danh người dùng t
 
 - **Frontend (React):** UI Components cho Operator và QC Personnel.
 - **Backend (NestJS):** API Controller, Business Logic, Auth (Keycloak/Okta).
-- **Persistence & Infra:** MongoDB, Redis (Lock), Kafka (Events), Prometheus (Metrics).
+- **Persistence & Infra:** MongoDB, Redis (Lock), Kafka (Events).
 
 #### Các pha xử lý:
 
@@ -397,7 +396,7 @@ Backend và Frontend thực hiện xác thực và định danh người dùng t
 
 15. Mọi thay đổi trạng thái đều được đẩy sự kiện vào Kafka.
 16. Lưu Audit Log và Traceability Log cho Batch.
-17. Prometheus thu thập metrics về hiệu suất, trạng thái hệ thống.
+17. (Monitoring references removed)
 
 #### Giải thích bổ sung:
 
@@ -483,28 +482,29 @@ Hệ thống Inventory Management System (IMS) sử dụng **Keycloak** làm n�
 - **Event Types:**
   - Login Events: LOGIN, LOGOUT, LOGIN_ERROR, REFRESH_TOKEN
   - Admin Events: CREATE_USER, UPDATE_USER, DELETE_ROLE, GRANT_CONSENT
-- **Storage:**
+    -- **Storage:**
   - Development: Keycloak Database (7 days retention)
-  - Production: Forward to ELK Stack via Filebeat
-- **Log Format:** JSON structured logs
-- **Access:** Admin Console → Events → Login Events / Admin Events
+  - Production: Forward to centralized log collector (implementation removed)
+    -- **Log Format:** JSON structured logs
+    -- **Access:** Admin Console → Events → Login Events / Admin Events
 
 #### 6.2.2 Backend Audit Logs
 
-- **Captured Information:**
-  - Timestamp (ISO 8601)
-  - User ID & Username (từ JWT claims)
-  - HTTP Method & Path
-  - Request Payload (sanitized, exclude passwords)
-  - Response Status Code
-  - IP Address & User Agent
-  - Session ID
-- **Implementation:** NestJS Interceptor + Winston Logger
-- **Storage:**
-  - File: `logs/audit-{date}.log` (local development)
-  - ELK: Elasticsearch Index `audit-logs-*` (production)
-- **Retention:** 90 days (compliance requirement)
-- **Query Access:** Kibana Dashboard (IT Administrator role only)
+-- **Captured Information:**
+
+- Timestamp (ISO 8601)
+- User ID & Username (từ JWT claims)
+- HTTP Method & Path
+- Request Payload (sanitized, exclude passwords)
+- Response Status Code
+- IP Address & User Agent
+- Session ID
+  -- **Implementation:** NestJS Interceptor + Winston Logger
+  -- **Storage:**
+- File: `logs/audit-{date}.log` (local development)
+- Centralized log store (production)
+  -- **Retention:** 90 days (compliance requirement)
+  -- **Query Access:** (removed)
 
 #### 6.2.3 Security Event Monitoring
 
@@ -516,8 +516,8 @@ Hệ thống Inventory Management System (IMS) sử dụng **Keycloak** làm n�
   - Backup/Restore operations
 - **Alerting:**
   - Slack/Email notifications for critical events
-  - Prometheus AlertManager integration
-- **Dashboard:** Grafana Security Overview (realtime metrics)
+  - (Monitoring integrations removed)
+- **Dashboard:** (removed)
 
 ### 6.3 Luồng xác thực & Ủy quyền
 
@@ -573,7 +573,7 @@ Hệ thống định nghĩa 4 vai trò chính với các quyền hạn đặc th
 | **Manager**          | Tra cứu tập trung, phê duyệt phiếu nhập/xuất, điều chỉnh tồn kho, quản lý người dùng và xem Dashboard.         | US01 - US15 (Manager)  | `manager`, `user`         |
 | **Quality Control**  | Đánh giá lô hàng (QC), xử lý hàng Rejected, cách ly hàng hóa (Quarantine), truy xuất nguồn gốc (Traceability). | US01 - US06 (QC)       | `quality_control`, `user` |
 | **Operator**         | Tạo phiếu nhập/xuất điện tử, xác thực kiểm đếm thực tế (Blind count), thực hiện kiểm kê tại hiện trường.       | US01 - US05 (Operator) | `operator`, `user`        |
-| **IT Administrator** | Giám sát sức khỏe hệ thống, quản lý Log tập trung, thiết lập sao lưu và phục hồi dữ liệu (Restore).            | US01 - US06 (IT Admin) | `it_admin`, `user`        |
+| **IT Administrator** | System administration tasks: user/role administration, backup/restore and incident support.                    | US01 - US06 (IT Admin) | `it_admin`, `user`        |
 
 #### 6.4.1 Role Mapping Strategy
 
@@ -621,10 +621,10 @@ Dựa trên các yêu cầu an ninh từ User Stories, hệ thống triển khai
 - **Implementation:** NestJS Interceptor (`AuditLogInterceptor`)
 - **Storage Pipeline:**
   - Winston Logger → `logs/audit-{date}.log`
-  - Filebeat → Logstash → Elasticsearch Index `audit-logs-YYYY.MM`
-- **Read-only Protection:** Elasticsearch Index templates với `index.blocks.write: true` sau 24h
+  - File forwarding to centralized log store (implementation removed)
+- **Read-only Protection:** (removed)
 - **Compliance:** 90 days retention (đáp ứng yêu cầu kiểm toán)
-- **Access Control:** Chỉ IT Administrator có quyền query Kibana Dashboard
+- **Access Control:** (removed)
 
 #### 6.5.3 Hard-locking cho Quarantine (QC US04)
 
@@ -714,7 +714,7 @@ Dựa trên các yêu cầu an ninh từ User Stories, hệ thống triển khai
                     ┌───────┼───────┐
                     │       │       │
               ┌─────▼──┐ ┌─▼────┐ ┌▼─────────┐
-              │MongoDB │ │Redis │ │  ELK     │
+              │MongoDB │ │Redis │ │  Logging (removed)     │
               │ 27017  │ │ 6379 │ │ Stack    │
               └────────┘ └──────┘ └──────────┘
 ```
@@ -739,8 +739,8 @@ Dựa trên các yêu cầu an ninh từ User Stories, hệ thống triển khai
 | Keycloak      | `http://localhost:8080`               | HTTP     | 8080  | inventory-net  | Admin: admin/admin     |
 | MongoDB       | `mongodb://localhost:27017/inventory` | MongoDB  | 27017 | inventory-net  | No auth in dev mode    |
 | Redis         | `redis://localhost:6379`              | Redis    | 6379  | inventory-net  | No password in dev     |
-| Elasticsearch | `http://localhost:9200`               | HTTP     | 9200  | inventory-net  | ELK Stack              |
-| Kibana        | `http://localhost:5601`               | HTTP     | 5601  | inventory-net  | Log visualization      |
+| Elasticsearch | (removed)                             | HTTP     | 9200  | inventory-net  | (removed)              |
+| Kibana        | (removed)                             | HTTP     | 5601  | inventory-net  | (removed)              |
 
 #### 6.7.4 Security Headers & CORS
 

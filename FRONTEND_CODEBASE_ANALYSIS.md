@@ -1,25 +1,26 @@
 # Frontend Codebase Analysis
+
 **Project**: Inventory Management System  
 **Frontend Path**: `02_Source/01_Source Code/frontend/src`  
-**Analysis Date**: 2026-03-26  
+**Analysis Date**: 2026-03-26
 
 ---
 
 ## 📊 Feature Implementation Status
 
-| Feature | Pages | Components | API Integration | Status |
-|---------|-------|-----------|-----------------|--------|
-| **Material Management** | List, Detail, Form (manager/operator) | MaterialList component using Ant Design | ✅ Full API integration (create, read, update, delete, search, filter) | **PARTIAL** - Basic CRUD implemented, validation & error handling present |
-| **Inventory Lot** | InventoryLot (manager only) | SearchAndFilters, InventoryLotTable, DetailModal, EditModal, AddModal | ✅ API integration via InventoryLotAPI service | **PARTIAL** - Manager CRUD working, Operator views missing |
-| **QC Tests** | InventoryQC, ProductInspection, DashboardQC, InboundControl, ReportTraceability | QC components for modal/form UI | ⚠️ API calls with **MOCK DATA FALLBACK** (contains hardcoded test data) | **PARTIAL** - Backend integration incomplete, mock data as failsafe |
-| **Label Generation** | LabelPrint (operator), LabelManagement (manager) | LabelList, LabelForm, LabelDetail, LabelPrint | ✅ Full API integration with CRUD operations | **COMPLETE** - Full template CRUD + print/generate capability |
-| **Reports/Analytics** | Reports.tsx (manager), SystemReports.tsx (admin) | None | ❌ API calls missing | **MISSING** - ComingSoon stub pages only |
-| **User Management** | UserManagement.tsx (manager) | None | ❌ API calls missing | **MISSING** - ComingSoon stub page only |
-| **Dashboard** | Dashboard.tsx (manager), DashboardOperator.tsx (operator), DashboardQC.tsx (QC), DashboardIT.tsx (admin) | KPI cards, transaction tables | ⚠️ QC has partial API, others are stubs | **PARTIAL** - Only QC Dashboard has mock-backed implementation |
-| **Production Batches** | List, Detail, Form (manager/operator), ProductCreation | ProductionBatchDetailModal, status transition UI | ✅ API integration for CRUD and status transitions | **PARTIAL** - Create and status transitions work, Operator workflow incomplete |
-| **Transactions** | TransactionManagement.tsx (manager), TransactionHistory.tsx (operator) | TransactionFilters, TransactionTable (with tests) | ✅ Partial API integration | **PARTIAL** - Data display works, full workflow incomplete |
-| **Authentication** | Login, Register | Auth context in services | ✅ auth.service.ts with token validation | **PARTIAL** - Login/Register pages exist, Keycloak integration status unclear |
-| **Admin Functions** | SystemMonitoring, BackupRestore, ErrorLogs, SystemReports | None | ⚠️ Minimal/stub | **MISSING** - Admin pages exist as shells only |
+| Feature                 | Pages                                                                                                    | Components                                                            | API Integration                                                         | Status                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Material Management** | List, Detail, Form (manager/operator)                                                                    | MaterialList component using Ant Design                               | ✅ Full API integration (create, read, update, delete, search, filter)  | **PARTIAL** - Basic CRUD implemented, validation & error handling present      |
+| **Inventory Lot**       | InventoryLot (manager only)                                                                              | SearchAndFilters, InventoryLotTable, DetailModal, EditModal, AddModal | ✅ API integration via InventoryLotAPI service                          | **PARTIAL** - Manager CRUD working, Operator views missing                     |
+| **QC Tests**            | InventoryQC, ProductInspection, DashboardQC, InboundControl, ReportTraceability                          | QC components for modal/form UI                                       | ⚠️ API calls with **MOCK DATA FALLBACK** (contains hardcoded test data) | **PARTIAL** - Backend integration incomplete, mock data as failsafe            |
+| **Label Generation**    | LabelPrint (operator), LabelManagement (manager)                                                         | LabelList, LabelForm, LabelDetail, LabelPrint                         | ✅ Full API integration with CRUD operations                            | **COMPLETE** - Full template CRUD + print/generate capability                  |
+| **Reports/Analytics**   | Reports.tsx (manager), SystemReports.tsx (admin)                                                         | None                                                                  | ❌ API calls missing                                                    | **MISSING** - ComingSoon stub pages only                                       |
+| **User Management**     | UserManagement.tsx (manager)                                                                             | None                                                                  | ❌ API calls missing                                                    | **MISSING** - ComingSoon stub page only                                        |
+| **Dashboard**           | Dashboard.tsx (manager), DashboardOperator.tsx (operator), DashboardQC.tsx (QC), DashboardIT.tsx (admin) | KPI cards, transaction tables                                         | ⚠️ QC has partial API, others are stubs                                 | **PARTIAL** - Only QC Dashboard has mock-backed implementation                 |
+| **Production Batches**  | List, Detail, Form (manager/operator), ProductCreation                                                   | ProductionBatchDetailModal, status transition UI                      | ✅ API integration for CRUD and status transitions                      | **PARTIAL** - Create and status transitions work, Operator workflow incomplete |
+| **Transactions**        | TransactionManagement.tsx (manager), TransactionHistory.tsx (operator)                                   | TransactionFilters, TransactionTable (with tests)                     | ✅ Partial API integration                                              | **PARTIAL** - Data display works, full workflow incomplete                     |
+| **Authentication**      | Login, Register                                                                                          | Auth context in services                                              | ✅ auth.service.ts with token validation                                | **PARTIAL** - Login/Register pages exist, Keycloak integration status unclear  |
+| **Admin Functions**     | SystemAdmin (monitoring removed), BackupRestore, ErrorLogs, SystemReports                                | None                                                                  | ⚠️ Minimal/stub                                                         | **MISSING** - Admin pages exist as shells only                                 |
 
 ---
 
@@ -28,61 +29,67 @@
 ### Pages Structure (by Role)
 
 #### 👔 **Manager Pages** (`/pages/manager/`)
-| Page | File | Status | API Calls | Notes |
-|------|------|--------|-----------|-------|
-| Dashboard | `Dashboard.tsx` | ❌ **STUB** | None | ComingSoon placeholder |
-| Material Management | `MaterialManagement.tsx` → `materials/List.tsx` | ✅ **WORKING** | ✅ Full CRUD | Delegates to List component with search/filter |
-| Inventory | `Inventory.tsx` | ⚠️ **PARTIAL** | Limited | Likely read-only display |
-| Inventory Lot | `inventory-lot/InventoryLot.tsx` | ⚠️ **PARTIAL** | ✅ CRUD | Manager-only view, operator access missing |
-| Stock Management | `StockManagement.tsx` | ⚠️ **PARTIAL** | Unknown | Implementation incomplete |
-| Transaction Management | `TransactionManagement.tsx` | ⚠️ **PARTIAL** | ✅ Partial | Table display with filters, full workflow missing |
-| Product Creation | `ProductCreation.tsx` | ✅ **WORKING** | ✅ Full integration | Status transitions, batch components management |
-| Product Management | `ProductManagement.tsx` | ⚠️ **PARTIAL** | Unknown | Implementation status unclear |
-| Production Batches | `production-batches/` (List, Detail, Form) | ⚠️ **PARTIAL** | ✅ API integration | CRUD operations for batch management |
-| Label Management | `LabelManagement.tsx` | ✅ **WORKING** | ✅ Full CRUD | Template CRUD + print/generate capability |
-| Reports | `Reports.tsx` | ❌ **STUB** | None | ComingSoon placeholder |
-| User Management | `UserManagement.tsx` | ❌ **STUB** | None | ComingSoon placeholder |
+
+| Page                   | File                                            | Status         | API Calls           | Notes                                             |
+| ---------------------- | ----------------------------------------------- | -------------- | ------------------- | ------------------------------------------------- |
+| Dashboard              | `Dashboard.tsx`                                 | ❌ **STUB**    | None                | ComingSoon placeholder                            |
+| Material Management    | `MaterialManagement.tsx` → `materials/List.tsx` | ✅ **WORKING** | ✅ Full CRUD        | Delegates to List component with search/filter    |
+| Inventory              | `Inventory.tsx`                                 | ⚠️ **PARTIAL** | Limited             | Likely read-only display                          |
+| Inventory Lot          | `inventory-lot/InventoryLot.tsx`                | ⚠️ **PARTIAL** | ✅ CRUD             | Manager-only view, operator access missing        |
+| Stock Management       | `StockManagement.tsx`                           | ⚠️ **PARTIAL** | Unknown             | Implementation incomplete                         |
+| Transaction Management | `TransactionManagement.tsx`                     | ⚠️ **PARTIAL** | ✅ Partial          | Table display with filters, full workflow missing |
+| Product Creation       | `ProductCreation.tsx`                           | ✅ **WORKING** | ✅ Full integration | Status transitions, batch components management   |
+| Product Management     | `ProductManagement.tsx`                         | ⚠️ **PARTIAL** | Unknown             | Implementation status unclear                     |
+| Production Batches     | `production-batches/` (List, Detail, Form)      | ⚠️ **PARTIAL** | ✅ API integration  | CRUD operations for batch management              |
+| Label Management       | `LabelManagement.tsx`                           | ✅ **WORKING** | ✅ Full CRUD        | Template CRUD + print/generate capability         |
+| Reports                | `Reports.tsx`                                   | ❌ **STUB**    | None                | ComingSoon placeholder                            |
+| User Management        | `UserManagement.tsx`                            | ❌ **STUB**    | None                | ComingSoon placeholder                            |
 
 #### 👷 **Operator Pages** (`/pages/operator/`)
-| Page | File | Status | API Calls | Notes |
-|------|------|--------|-----------|-------|
-| Dashboard | `DashboardOperator.tsx` | ❌ **STUB** | None | ComingSoon placeholder |
-| Material Management | `MaterialManagement.tsx` → `materials/List.tsx` | ✅ **WORKING** | ✅ Same as manager | Read-only material list |
-| Stock In | `StockIn.tsx` | ❌ **STUB** | None | ComingSoon placeholder - crucial for receipt workflow |
-| Stock Out | `StockOut.tsx` | ❌ **STUB** | None | ComingSoon placeholder - crucial for dispatch workflow |
-| Label Print | `LabelPrint.tsx` | ✅ **WORKING** | ✅ API integration | Browse templates and print labels |
-| Inventory Audit | `InventoryAudit.tsx` | ⚠️ **PARTIAL** | Unknown | Implementation unclear |
-| Transaction History | `TransactionHistory.tsx` | ⚠️ **PARTIAL** | ✅ Partial | Personal transaction history view |
-| Production Batches | `production-batches/` (List, Detail, Form, ProductionBatch.tsx) | ⚠️ **PARTIAL** | ✅ API integration | View and manage batch components |
+
+| Page                | File                                                            | Status         | API Calls          | Notes                                                  |
+| ------------------- | --------------------------------------------------------------- | -------------- | ------------------ | ------------------------------------------------------ |
+| Dashboard           | `DashboardOperator.tsx`                                         | ❌ **STUB**    | None               | ComingSoon placeholder                                 |
+| Material Management | `MaterialManagement.tsx` → `materials/List.tsx`                 | ✅ **WORKING** | ✅ Same as manager | Read-only material list                                |
+| Stock In            | `StockIn.tsx`                                                   | ❌ **STUB**    | None               | ComingSoon placeholder - crucial for receipt workflow  |
+| Stock Out           | `StockOut.tsx`                                                  | ❌ **STUB**    | None               | ComingSoon placeholder - crucial for dispatch workflow |
+| Label Print         | `LabelPrint.tsx`                                                | ✅ **WORKING** | ✅ API integration | Browse templates and print labels                      |
+| Inventory Audit     | `InventoryAudit.tsx`                                            | ⚠️ **PARTIAL** | Unknown            | Implementation unclear                                 |
+| Transaction History | `TransactionHistory.tsx`                                        | ⚠️ **PARTIAL** | ✅ Partial         | Personal transaction history view                      |
+| Production Batches  | `production-batches/` (List, Detail, Form, ProductionBatch.tsx) | ⚠️ **PARTIAL** | ✅ API integration | View and manage batch components                       |
 
 #### 🧪 **QC Pages** (`/pages/qc/`)
-| Page | File | Status | API Calls | Notes |
-|------|------|--------|-----------|-------|
-| Dashboard | `DashboardQC.tsx` | ✅ **WORKING** | ⚠️ With mock fallback | KPI metrics + pending lots widget, uses **mock data** if backend fails |
-| Inventory QC | `InventoryQC.tsx` | ✅ **WORKING** | ⚠️ With mock fallback | Quarantine management + retest workflow, **uses mock data** |
-| Inbound Control | `InboundControl.tsx` | ⚠️ **PARTIAL** | Unknown | Implementation unclear |
-| Product Inspection | `ProductInspection.tsx` | ✅ **WORKING** | ✅ API integration | QC test creation + lot decision workflow |
-| Report Traceability | `ReportTraceability.tsx` | ⚠️ **PARTIAL** | Unknown | Implementation unclear |
+
+| Page                | File                     | Status         | API Calls             | Notes                                                                  |
+| ------------------- | ------------------------ | -------------- | --------------------- | ---------------------------------------------------------------------- |
+| Dashboard           | `DashboardQC.tsx`        | ✅ **WORKING** | ⚠️ With mock fallback | KPI metrics + pending lots widget, uses **mock data** if backend fails |
+| Inventory QC        | `InventoryQC.tsx`        | ✅ **WORKING** | ⚠️ With mock fallback | Quarantine management + retest workflow, **uses mock data**            |
+| Inbound Control     | `InboundControl.tsx`     | ⚠️ **PARTIAL** | Unknown               | Implementation unclear                                                 |
+| Product Inspection  | `ProductInspection.tsx`  | ✅ **WORKING** | ✅ API integration    | QC test creation + lot decision workflow                               |
+| Report Traceability | `ReportTraceability.tsx` | ⚠️ **PARTIAL** | Unknown               | Implementation unclear                                                 |
 
 #### 🔐 **Auth Pages** (`/pages/auth/`)
-| Page | File | Status | API Calls | Notes |
-|------|------|--------|-----------|-------|
-| Login | `Login.tsx` | ✅ **WORKING** | ✅ auth.service | Credential-based login |
+
+| Page     | File           | Status         | API Calls       | Notes                  |
+| -------- | -------------- | -------------- | --------------- | ---------------------- |
+| Login    | `Login.tsx`    | ✅ **WORKING** | ✅ auth.service | Credential-based login |
 | Register | `Register.tsx` | ✅ **WORKING** | ✅ auth.service | User registration flow |
 
 #### 👨‍💼 **Admin Pages** (`/pages/admin/`)
-| Page | File | Status | API Calls | Notes |
-|------|------|--------|-----------|-------|
-| System Monitoring | `SystemMonitoring.tsx` | ❌ **STUB/MINIMAL** | ❌ None visible | Dashboard shell only |
-| Backup Restore | `BackupRestore.tsx` | ❌ **STUB/MINIMAL** | ❌ None visible | Admin function not implemented |
-| Error Logs | `ErrorLogs.tsx` | ❌ **STUB/MINIMAL** | ❌ None visible | Logging not exposed to UI |
-| System Reports | `SystemReports.tsx` | ❌ **STUB/MINIMAL** | ❌ None visible | Reporting stub |
+
+| Page                              | File                   | Status              | API Calls       | Notes                          |
+| --------------------------------- | ---------------------- | ------------------- | --------------- | ------------------------------ |
+| System Admin (monitoring removed) | `SystemMonitoring.tsx` | ❌ **STUB/MINIMAL** | ❌ None visible | Dashboard shell only           |
+| Backup Restore                    | `BackupRestore.tsx`    | ❌ **STUB/MINIMAL** | ❌ None visible | Admin function not implemented |
+| Error Logs                        | `ErrorLogs.tsx`        | ❌ **STUB/MINIMAL** | ❌ None visible | Logging not exposed to UI      |
+| System Reports                    | `SystemReports.tsx`    | ❌ **STUB/MINIMAL** | ❌ None visible | Reporting stub                 |
 
 ---
 
 ### Components Structure
 
 #### 📦 **Label Components** (`/components/label/`)
+
 ```
 label/
 ├── index.ts                    # Exports all components
@@ -91,10 +98,12 @@ label/
 ├── LabelForm.tsx              # Create/Edit template form
 └── LabelPrint.tsx             # Preview + print capability
 ```
+
 **Status**: ✅ Complete component set with full CRUD UI  
 **API Integration**: ✅ Integrated via `labelService`
 
 #### 🎨 **Layout Components** (`/components/`)
+
 ```
 components/
 ├── Header.tsx                 # Navigation header (role-based)
@@ -105,6 +114,7 @@ components/
     ├── TransactionFilters.tsx (+ .test.tsx)  # Filter UI for transactions
     └── TransactionTable.tsx (+ .test.tsx)    # Table display for transactions
 ```
+
 **Status**: ✅ Shared layout & UI components functional  
 **Testing**: ⚠️ Only TransactionTable/Filters have tests
 
@@ -113,6 +123,7 @@ components/
 ### API Services Layer
 
 #### 📡 **Service Files** (`/services/`)
+
 ```
 services/
 ├── apiClient.ts               # 🟢 Axios wrapper with error handling, token validation
@@ -128,14 +139,17 @@ services/
 ```
 
 #### ⚠️ Critical Finding: Mock Data in QC Services
+
 **File**: `qcServices.ts`  
 **Issue**: Contains extensive hardcoded test data as fallback when API fails:
+
 - `_MOCK_LOTS`: 7 predefined inventory lots
 - `_MOCK_QC_TESTS`: 4 predefined QC test results
 - `_MOCK_SUPPLIERS`: 3 predefined supplier records
 - `_MOCK_KPI`: Hardcoded KPI metrics
 
 **Lines affected**:
+
 - Testing endpoints: `/qc-tests/dashboard`, `/inventory-lots`
 - Functions with mock fallback: `getDashboardKPI()`, `getInventoryLots()`, `getSupplierPerformance()`
 - Mock delay function: `_mockDelay()` adds 400ms artificial delay
@@ -147,6 +161,7 @@ services/
 ### 1. **Completely Missing Features** ❌
 
 #### User Management
+
 - **File**: `pages/manager/UserManagement.tsx`
 - **Status**: ComingSoon stub (single line return)
 - **Required by**: US11, US12, US13, US14 (Product Backlog - all P0/P1)
@@ -154,7 +169,8 @@ services/
 - **Backend**: Likely requires `/users` endpoint + permission model
 
 #### Reports & Analytics
-- **Files**: 
+
+- **Files**:
   - `pages/manager/Reports.tsx` (ComingSoon stub)
   - `pages/admin/SystemReports.tsx` (ComingSoon stub)
 - **Status**: Both are placeholders
@@ -163,15 +179,17 @@ services/
 - **Missing reports**: Inventory summary, supplier performance, compliance, audit trail
 
 #### Admin Dashboard Functions
-- **Files**: `pages/admin/` (SystemMonitoring, BackupRestore, ErrorLogs, SystemReports)
+
+- **Files**: `pages/admin/` (SystemAdmin (monitoring removed), BackupRestore, ErrorLogs, SystemReports)
 - **Status**: All are shell implementations
 - **Required by**: IT Admin user stories US01-US06
-- **Impact**: No system monitoring or backup management UI
+- **Impact**: No system admin or backup management UI
 
 ### 2. **Incomplete Operator Workflows** ⚠️
 
 #### Stock In / Stock Out (Critical for Receipt/Dispatch)
-- **Files**: 
+
+- **Files**:
   - `pages/operator/StockIn.tsx`
   - `pages/operator/StockOut.tsx`
 - **Status**: Both are ComingSoon stubs
@@ -180,6 +198,7 @@ services/
 - **Missing**: Receipt creation, barcode scanning UI, quantity confirmation
 
 #### Operator Dashboard
+
 - **File**: `pages/operator/DashboardOperator.tsx`
 - **Status**: ComingSoon stub
 - **Missing**: Worklist display, assigned tasks, activity summary
@@ -187,12 +206,14 @@ services/
 ### 3. **Partial/Stub Manager Features** ⚠️
 
 #### Manager Dashboard
+
 - **File**: `pages/manager/Dashboard.tsx`
 - **Status**: ComingSoon stub (not even KPI display)
 - **Expected**: KPI metrics, alerts, trending charts (per US07)
 - **Note**: QC Dashboard shows what this should look like
 
 #### Reports (Manager View)
+
 - **File**: `pages/manager/Reports.tsx`
 - **Status**: ComingSoon stub
 - **Expected**: Inventory reports, traceability, supplier analysis
@@ -200,6 +221,7 @@ services/
 ### 4. **Hardcoded Data & Mock Fallbacks** ⚠️
 
 #### QC Dashboard & Services
+
 **File**: `pages/qc/qcServices.ts`  
 **Issue**: Backend not fully integrated; mock data used as fallback
 
@@ -228,7 +250,8 @@ async function getDashboardKPI(): Promise<DashboardKPI> {
 }
 ```
 
-**Impact**: 
+**Impact**:
+
 - QC pages display demo data instead of real inventory
 - Difficult to test with real backend
 - Risk of deploying code with mock data
@@ -238,6 +261,7 @@ async function getDashboardKPI(): Promise<DashboardKPI> {
 ## 📋 API Endpoints Referenced
 
 ### Endpoints Used (from API integrations)
+
 ```
 ✅ Material Management
    GET    /materials                    (list with pagination)
@@ -292,48 +316,53 @@ async function getDashboardKPI(): Promise<DashboardKPI> {
 
 ## 🚨 Stub Pages Requiring Implementation
 
-| Path | Component | Status | Priority | Est. Complexity |
-|------|-----------|--------|----------|-----------------|
-| `pages/manager/Dashboard.tsx` | Manager KPI dashboard | ❌ STUB | P2 | Medium |
-| `pages/manager/Reports.tsx` | Manager reporting | ❌ STUB | P0 | High |
-| `pages/manager/UserManagement.tsx` | User CRUD + permissions | ❌ STUB | P0 | High |
-| `pages/operator/DashboardOperator.tsx` | Operator task dashboard | ❌ STUB | Medium | Low |
-| `pages/operator/StockIn.tsx` | Receipt workflow | ❌ STUB | P0 | **Very High** |
-| `pages/operator/StockOut.tsx` | Dispatch workflow | ❌ STUB | P0 | **Very High** |
-| `pages/admin/SystemMonitoring.tsx` | System health dashboard | ❌ STUB | P0 | High |
-| `pages/admin/BackupRestore.tsx` | Backup management | ❌ STUB | P0 | High |
-| `pages/qc/InboundControl.tsx` | Inbound QC workflow | ⚠️ PARTIAL | P0 | High |
-| `pages/qc/ReportTraceability.tsx` | Traceability report | ⚠️ PARTIAL | P1 | Medium |
+| Path                                   | Component                                   | Status     | Priority | Est. Complexity |
+| -------------------------------------- | ------------------------------------------- | ---------- | -------- | --------------- |
+| `pages/manager/Dashboard.tsx`          | Manager KPI dashboard                       | ❌ STUB    | P2       | Medium          |
+| `pages/manager/Reports.tsx`            | Manager reporting                           | ❌ STUB    | P0       | High            |
+| `pages/manager/UserManagement.tsx`     | User CRUD + permissions                     | ❌ STUB    | P0       | High            |
+| `pages/operator/DashboardOperator.tsx` | Operator task dashboard                     | ❌ STUB    | Medium   | Low             |
+| `pages/operator/StockIn.tsx`           | Receipt workflow                            | ❌ STUB    | P0       | **Very High**   |
+| `pages/operator/StockOut.tsx`          | Dispatch workflow                           | ❌ STUB    | P0       | **Very High**   |
+| `pages/admin/SystemMonitoring.tsx`     | System admin dashboard (monitoring removed) | ❌ STUB    | P0       | High            |
+| `pages/admin/BackupRestore.tsx`        | Backup management                           | ❌ STUB    | P0       | High            |
+| `pages/qc/InboundControl.tsx`          | Inbound QC workflow                         | ⚠️ PARTIAL | P0       | High            |
+| `pages/qc/ReportTraceability.tsx`      | Traceability report                         | ⚠️ PARTIAL | P1       | Medium          |
 
 ---
 
 ## ✅ Fully Implemented Features
 
 ### 1. **Material Management** ✅
+
 - **Pages**: List (search/filter), Detail, Form (create/edit)
 - **API**: Full CRUD + search + type filtering
 - **Features**: Material type filtering, status tracking, created_by audit
 - **Status**: Production-ready
 
 ### 2. **Label Generation** ✅
+
 - **Pages**: LabelManagement (manager), LabelPrint (operator)
 - **API**: Full CRUD for templates + generate capability
 - **Features**: Template versioning, multiple label types (Raw Material, Sample, Intermediate, Finished Product, API, Status)
 - **Status**: Production-ready
 
 ### 3. **Production Batch Management** ✅
+
 - **Pages**: List, Detail, Form, ProductCreation
 - **API**: Full CRUD + status transitions (In Progress → Complete → Cancelled)
 - **Features**: Batch component management, status workflow
 - **Status**: Production-ready
 
 ### 4. **QC Testing (Partial)** ⚠️
+
 - **Pages**: ProductInspection, DashboardQC, InventoryQC
 - **API**: Test creation + lot decisions + retest workflow
 - **Features**: Test type selection (Physical/Chemical/Microbial), decision tracking
 - **Status**: Partially working (mock data fallback in services)
 
 ### 5. **Authentication** ✅
+
 - **Pages**: Login, Register
 - **API**: Token-based auth with refresh
 - **Features**: JWT validation, automatic token refresh, logout
@@ -344,6 +373,7 @@ async function getDashboardKPI(): Promise<DashboardKPI> {
 ## 📊 Implementation Completeness
 
 ### By Feature
+
 ```
 Material Management        ████████░░ 80%  (Basic CRUD complete, advanced filtering pending)
 Inventory Lot             ████░░░░░░ 40%  (Manager view only, Operator receipt workflow missing)
@@ -369,10 +399,10 @@ Dashboard (IT Admin)      ░░░░░░░░░░ 0%   (Shell page only)
 ## ⚠️ Key Risks & Recommendations
 
 ### CRITICAL (Blocking Features)
+
 1. **Operator Receipt/Dispatch Workflows** - StockIn/StockOut are complete stubs
    - Recommendation: Implement immediately (blocking all warehouse operations)
    - Est. effort: 3-5 days per page
-   
 2. **QC Mock Data** - Production system using test data
    - Recommendation: Remove mock fallbacks, ensure backend stability
    - Est. effort: 1-2 days for refactoring + testing
@@ -382,15 +412,17 @@ Dashboard (IT Admin)      ░░░░░░░░░░ 0%   (Shell page only)
    - Est. effort: 3-4 days
 
 ### HIGH PRIORITY
+
 4. **Analytics/Reporting** - No reporting capability
    - Recommendation: Build report builder + export functionality
    - Est. effort: 5-7 days
 
-5. **Admin Dashboard** - No system monitoring
+5. **Admin Dashboard** - No system admin dashboard
    - Recommendation: Implement health checks + audit log UI
    - Est. effort: 3-4 days
 
 ### MEDIUM PRIORITY
+
 6. **Manager Dashboard** - No KPI display
    - Recommendation: Build KPI cards + trending charts
    - Est. effort: 2-3 days
@@ -405,11 +437,13 @@ Dashboard (IT Admin)      ░░░░░░░░░░ 0%   (Shell page only)
 ## 📝 Testing Status
 
 ### Components with Tests
+
 - ✅ `TransactionTable.tsx` (+ `.test.tsx`)
 - ✅ `TransactionFilters.tsx` (+ `.test.tsx`)
 - ✅ `TransactionManagementManager.tsx` (+ `.test.tsx`)
 
 ### Components without Tests
+
 - ❌ All label components
 - ❌ All page components
 - ❌ All services (except potentially transaction)
@@ -421,6 +455,7 @@ Dashboard (IT Admin)      ░░░░░░░░░░ 0%   (Shell page only)
 ## 🔄 Data Flow Summary
 
 ### Manager Workflow
+
 ```
 Login → Dashboard (STUB) → Material List ✅
                         → Inventory Lot ⚠️
@@ -431,6 +466,7 @@ Login → Dashboard (STUB) → Material List ✅
 ```
 
 ### Operator Workflow
+
 ```
 Login → Dashboard (STUB) → StockIn (STUB)
                         → StockOut (STUB)
@@ -440,6 +476,7 @@ Login → Dashboard (STUB) → StockIn (STUB)
 ```
 
 ### QC Workflow
+
 ```
 Login → Dashboard ⚠️ (mock data) → Inbound Control ⚠️
                                → Inventory QC ⚠️ (mock data)
@@ -452,6 +489,7 @@ Login → Dashboard ⚠️ (mock data) → Inbound Control ⚠️
 ## 📌 Summary
 
 ### What Exists
+
 - ✅ Authentication system (Login/Register/Token)
 - ✅ Material CRUD with search/filters
 - ✅ Label Template management with print capability
@@ -461,17 +499,18 @@ Login → Dashboard ⚠️ (mock data) → Inbound Control ⚠️
 - ✅ Role-based sidebar navigation
 
 ### What's Missing
+
 - ❌ Operator warehouse workflows (StockIn/StockOut) - **CRITICAL**
 - ❌ User management (create/edit/delete/permissions)
 - ❌ Reports & analytics
 - ❌ Manager & Admin dashboards
-- ❌ System admin functions (monitoring, backup, logs)
+- ❌ System admin functions (backup, logs)
 - ❌ Advanced inventory features (cycle count, reservations)
 
 ### What Needs Fixing
+
 - ⚠️ Remove QC mock data - backend integration incomplete
 - ⚠️ Complete inventory lot workflow for all roles
 - ⚠️ Consolidate duplicate service files
 - ⚠️ Add comprehensive test coverage
 - ⚠️ Implement Keycloak integration verification
-

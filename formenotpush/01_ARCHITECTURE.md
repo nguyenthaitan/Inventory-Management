@@ -8,6 +8,7 @@ Project type: Brownfield (NestJS + React + MongoDB)
 Inventory Management is a role-based web application for material and lot lifecycle management, quality control, production batch processing, traceability, and reporting.
 
 Primary roles:
+
 - Manager
 - Operator
 - Quality Control Technician
@@ -22,12 +23,14 @@ Primary roles:
 - Optional event backbone: Kafka module in backend
 
 Environment pattern:
+
 - Development: local frontend + local backend + dockerized MongoDB
 - Production intent: frontend hosted separately, backend hosted separately, external identity and database services
 
 ## 3. Main Components
 
 Backend modules (core business):
+
 - Auth
 - User
 - Material
@@ -37,13 +40,13 @@ Backend modules (core business):
 - QC Test
 - Label Template
 - Warehouse Hierarchy
-- Reports
-- System Monitoring
-- Barcode
-- Event Bus (Kafka)
-- AI Agents
+  -- Reports
+  -- Barcode
+  -- Event Bus (Kafka)
+  -- AI Agents
 
 Frontend domains:
+
 - Role-based page sets: manager, operator, qc, admin
 - Shared service layer with axios API client
 - Domain services for materials, lots, transactions, QC, labels, production
@@ -51,6 +54,7 @@ Frontend domains:
 ## 4. Data Architecture
 
 Primary collections/entities:
+
 - users
 - materials
 - inventory_lots
@@ -62,11 +66,13 @@ Primary collections/entities:
 - warehouse_locations
 
 Data lifecycle highlight:
+
 - Material definition -> Lot intake (quarantine) -> QC decision -> transactional movement -> production consumption/creation -> report/audit trail.
 
 ## 5. Integration Architecture
 
 External/system integrations:
+
 - Keycloak for token issuance/validation and admin operations
 - MongoDB for persistence
 - Kafka producer/consumer services for asynchronous event-driven patterns
@@ -76,22 +82,26 @@ External/system integrations:
 ## 6. Deployment and Environment View
 
 Observed deployment files indicate:
+
 - Dockerfiles for backend/frontend
 - Compose stacks for full app and Mongo-only scenarios
 - Different compose files expose different ports; alignment is required during local run
 
 Known local runtime alignment concern:
+
 - Mongo compose can expose 27018 while backend env can point to 27017.
 - Ensure backend MONGODB_URI matches the actual exposed Docker port.
 
 ## 7. Current Architecture Status
 
 Implemented strongly:
+
 - Core API modules and schemas exist.
 - Role-aware UI structure and service layers exist.
 - End-to-end path for core inventory entities is present.
 
 Partially implemented / inconsistent:
+
 - Several frontend pages are still placeholders (especially admin/operator/manager dashboards).
 - Some backend features contain TODO or mock fallback integration paths.
 - Documentation and runtime configs are not fully unified.

@@ -307,11 +307,7 @@ export default function Layout() {
             icon: <ShieldCheck size={20} />,
             label: "Audit Trail",
           },
-          {
-            to: "/admin/monitoring",
-            icon: <Activity size={20} />,
-            label: "Giám sát hệ thống",
-          },
+
           {
             to: "/admin/error-logs",
             icon: <Terminal size={20} />,

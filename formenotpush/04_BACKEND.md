@@ -6,12 +6,14 @@ Backend stack: NestJS + TypeScript + Mongoose
 ## 1. Technical Stack
 
 Core:
+
 - NestJS 11
 - Node.js runtime
 - TypeScript
 - MongoDB with Mongoose
 
 Major supporting libraries:
+
 - Passport JWT and JWKS for auth token verification
 - class-validator / class-transformer for input contracts
 - Kafka client support for event bus
@@ -20,6 +22,7 @@ Major supporting libraries:
 ## 2. Module Inventory
 
 Business modules:
+
 - Auth
 - User
 - Material
@@ -32,7 +35,7 @@ Business modules:
 - Reports
 
 Platform modules:
-- System Monitoring
+
 - Event Bus
 - Barcode
 - AI Agents
@@ -40,6 +43,7 @@ Platform modules:
 ## 3. API Surface (Conceptual)
 
 Key endpoint groups include:
+
 - /auth
 - /users
 - /materials
@@ -50,14 +54,15 @@ Key endpoint groups include:
 - /label-templates
 - /warehouse
 - /reports
-- /system-monitoring
 
 Note:
+
 - Route naming and docs should be normalized into one contract (OpenAPI suggested).
 
 ## 4. Data Model and Persistence
 
 Main collections:
+
 - users
 - materials
 - inventory_lots
@@ -69,6 +74,7 @@ Main collections:
 - warehouse_locations
 
 Model strengths:
+
 - Rich metadata fields for traceability
 - Domain-specific status and lifecycle fields
 - Support for transaction and QC-centric operations
@@ -76,9 +82,11 @@ Model strengths:
 ## 5. Business Logic Patterns
 
 Observed architecture pattern:
+
 - Controller -> Service -> Repository -> Schema
 
 Benefits:
+
 - Clear separation of transport, business logic, and persistence concerns
 - Testable module boundaries
 - Easier refactoring for data-source changes
@@ -86,6 +94,7 @@ Benefits:
 ## 6. Integration Dependencies
 
 Backend integration points:
+
 - Keycloak admin and token ecosystem
 - MongoDB connection and schema layer
 - Kafka producers/consumers for asynchronous events
@@ -94,10 +103,12 @@ Backend integration points:
 ## 7. Quality and Testing Snapshot
 
 Positive:
+
 - Unit test presence across several modules
 - Core transaction logic has notable test coverage
 
 Gaps:
+
 - End-to-end coverage appears limited/non-uniform
 - Cross-module integration tests need expansion
 - Test strategy doc is not centralized for the team

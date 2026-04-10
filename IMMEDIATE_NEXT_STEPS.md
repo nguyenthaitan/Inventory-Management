@@ -15,7 +15,7 @@ cd 02_Source/01_Source Code/backend
 # Install Kafka JS
 npm install kafkajs
 
-# For TypeScript support  
+# For TypeScript support
 npm install --save-dev @types/kafkajs
 ```
 
@@ -109,6 +109,7 @@ console.log(errorLogger.exportLogs());
 **Objective**: Add unit tests to 8 backend modules + User Management UI
 
 ### Backend Unit Tests (4-5 days)
+
 1. **inventory-lot.service.spec.ts** - CRUD operations (150+ test cases)
 2. **material.service.spec.ts** - Material management (120+ test cases)
 3. **user.service.spec.ts** - User CRUD (100+ test cases)
@@ -121,6 +122,7 @@ console.log(errorLogger.exportLogs());
 **Target Coverage**: 80% minimum (currently 27%)
 
 ### Frontend User Management (2-3 days)
+
 1. UserList component - Display all users
 2. UserForm component - Create/Edit user
 3. UserDetail component - View user details
@@ -128,6 +130,7 @@ console.log(errorLogger.exportLogs());
 5. API integration - UserAPI service
 
 **Pages to Create**:
+
 - `/manager/user-management` - User CRUD page
 
 ---
@@ -157,7 +160,7 @@ For code review, examine in this sequence:
 
 If you encounter issues:
 
-1. **Kafka not connecting**: 
+1. **Kafka not connecting**:
    - Check DockerCompose is running: `docker ps`
    - Verify broker URL in .env
    - Check Kafka logs: `docker logs kafka`
@@ -176,31 +179,34 @@ If you encounter issues:
 
 ## 📊 Phase 1 Impact Summary
 
-| Metric | Before | After | Impact |
-|--------|--------|-------|--------|
-| Event Bus | 0% | 100% ✅ | Event-driven architecture now functional |
-| Operator Workflows | Stub | 100% ✅ | Core warehouse operations now possible |
-| Error Logging | Silent Failures | Transparent ✅ | Debugging now possible |
-| Code Quality | Test Coverage 27% | Ready for Phase 2 ✅ | Baseline for improvements |
-| System Completeness | 50% | 55% ✅ | Moving toward full implementation |
+| Metric              | Before            | After                | Impact                                   |
+| ------------------- | ----------------- | -------------------- | ---------------------------------------- |
+| Event Bus           | 0%                | 100% ✅              | Event-driven architecture now functional |
+| Operator Workflows  | Stub              | 100% ✅              | Core warehouse operations now possible   |
+| Error Logging       | Silent Failures   | Transparent ✅       | Debugging now possible                   |
+| Code Quality        | Test Coverage 27% | Ready for Phase 2 ✅ | Baseline for improvements                |
+| System Completeness | 50%               | 55% ✅               | Moving toward full implementation        |
 
 ---
 
 ## 🛣️ Roadmap Preview
 
 ### This Month (March)
+
 - ✅ Phase 1: Critical Fixes (COMPLETE)
 - → Phase 2: Backend Tests + User Mgmt (THIS WEEK)
 
 ### April
+
 - Phase 3: Reports & Analytics
 - Phase 3: Dashboards
 
-### May  
+### May
+
 - Phase 4: Admin Functions
-- Phase 4: System Monitoring
 
 ### June (by end of month)
+
 - Phase 5: Quality & Polish
 - Production Readiness
 - Full system deployment

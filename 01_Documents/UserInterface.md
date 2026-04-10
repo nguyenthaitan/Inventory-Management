@@ -4,21 +4,21 @@
 
 UI có cả phiên bản cho web máy tính và mobile.
 
-
 **Mockdata đăng nhập cho các vai trò:**
 
-| Role                      | Username | Password |
-|---------------------------|----------|----------|
-| Manager                   | 1        | 1        |
-| Quality Control Technician| 2        | 2        |
-| Operator                  | 3        | 3        |
-| IT Administrator          | 4        | 4        |
+| Role                       | Username | Password |
+| -------------------------- | -------- | -------- |
+| Manager                    | 1        | 1        |
+| Quality Control Technician | 2        | 2        |
+| Operator                   | 3        | 3        |
+| IT Administrator           | 4        | 4        |
 
 ---
 
 Tài liệu này mô tả các màn hình giao diện người dùng của hệ thống Inventory Management, được chia theo các role chính.
 
 ## 1. Auth Screens
+
 ### 1.1 Đăng nhập hệ thống
 
 ![Login Screen](./Images/Auth/Login.png)
@@ -109,7 +109,6 @@ Khi nhấn vào "Xem chi tiết & đối chiếu" từ màn hình tồn kho, gia
 
 ---
 
-
 ### 2.10 Report Screen
 
 ![Report Screen](./Images/Manager/ReportScreen.png)
@@ -177,7 +176,6 @@ Truy cập mục "Quản lý nguyên liệu" dẫn Manager đến giao diện qu
 ![Edit Material Screen](./Images/Manager/EditMaterial.png)
 
 Khi nhấn vào biểu tượng chỉnh sửa tại danh sách nguyên liệu, giao diện modal Edit Material Screen xuất hiện để Manager cập nhật các thông tin kỹ thuật của vật tư. Màn hình cung cấp các trường dữ liệu chi tiết bao gồm tên nguyên liệu, mô tả, phân loại danh mục (Dược chất/Tá dược), đơn vị tính và các điều kiện bảo quản nghiêm ngặt. Thao tác "Cập nhật dữ liệu" giúp ghi nhận các thay đổi vào hệ thống, đảm bảo tính chính xác của dữ liệu gốc phục vụ cho các quy trình nhập kho và sản xuất tiếp theo.
-
 
 ---
 
@@ -367,7 +365,6 @@ Khi nhấn nút "Khai báo InventoryLot" tại danh sách thành phẩm, giao di
 
 ---
 
-
 ## 4. Quality Control Screens
 
 ### 4.1 Dashboard Screen
@@ -484,11 +481,9 @@ Sau khi đăng nhập với vai trò IT Administrator, hệ thống hiển thị
 
 ---
 
-### 5.2 Monitoring Screen
+### 5.2 Monitoring Screen (removed)
 
-![Monitoring Screen](./Images/ITAdministrator/MonitoringScreen.png)
-
-Khi nhấn vào mục "Giám sát hệ thống" trên thanh điều hướng, người dùng truy cập giao diện giám sát chi tiết các thông số tài nguyên máy chủ. Màn hình hiển thị trạng thái vận hành của các dịch vụ cốt lõi như Database Cluster và Auth Service kèm theo mức tải hệ thống tương ứng. Trung tâm cảnh báo phía bên phải liệt kê các sự cố hiệu năng bất thường, giúp kỹ thuật viên chủ động kiểm soát rủi ro thông qua chỉ số tin cậy Uptime Reliability.
+This section has been removed from the documentation. Monitoring UI and related visuals were deleted from the repository.
 
 ---
 

@@ -51,7 +51,7 @@
 
 - **Frontend:** Auto-scaling, global CDN, free tier included
 - **Backend:** Auto-restart on failure, environment variable management, Docker support
-- **Database:** Automatic backups, role-based access control, built-in monitoring
+  -- **Database:** Automatic backups, role-based access control
 
 ---
 
@@ -564,11 +564,8 @@ app.enableCors({
 - [ ] Network tab shows all requests returning 2xx status codes
 - [ ] Responsive design works on mobile (F12 → Toggle Device Toolbar)
 
-### Post-Deployment Monitoring
+### Post-Deployment Verification
 
-- [ ] Set up Render error notifications (optional)
-- [ ] Monitor Render logs for errors (daily check first week)
-- [ ] Monitor Vercel analytics (Dashboard → Analytics)
 - [ ] Test at least once daily for first week
 - [ ] Document any issues and resolutions
 - [ ] Inform team of production URLs
