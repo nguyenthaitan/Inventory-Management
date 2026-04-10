@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 jest.mock(
   'uuid',
   () => ({
@@ -11,15 +13,17 @@ jest.mock('../src/auth/auth.service', () => ({
 }));
 
 import { INestApplication } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
+import type { App } from 'supertest/types';
 import { AuthController } from '../src/auth/auth.controller';
 import { AuthService } from '../src/auth/auth.service';
 import { JwtAuthGuard } from '../src/auth/guards/jwt-auth.guard';
 import { UserRepository } from '../src/user/user.repository';
 
 describe('AuthController (e2e)', () => {
-  let app: INestApplication;
+  let app: INestApplication<App>;
   let authService: {
     login: jest.Mock;
     register: jest.Mock;
@@ -35,8 +39,10 @@ describe('AuthController (e2e)', () => {
   let currentUser: Record<string, unknown>;
 
   const jwtAuthGuardMock = {
-    canActivate: jest.fn((context) => {
-      context.switchToHttp().getRequest().user = currentUser;
+    canActivate: jest.fn((context: ExecutionContext) => {
+      context
+        .switchToHttp()
+        .getRequest<{ user?: Record<string, unknown> }>().user = currentUser;
       return true;
     }),
   };
