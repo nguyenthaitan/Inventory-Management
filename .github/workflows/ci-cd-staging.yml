@@ -1,0 +1,126 @@
+name: CI/CD Staging
+
+# Mô tả workflow:
+# - Job `ci`: build & test backend/frontend, sau đó upload artifacts (build outputs) để sử dụng cho deploy.
+# - Job `deploy-staging`: (ephemeral) chạy trên GitHub-hosted runner để khởi infra tạm thời và start app từ artifacts.
+# Lưu ý: runner GitHub-hosted là ephemeral — filesystem sẽ bị xoá sau khi workflow kết thúc.
+
+on:
+  push:
+    branches: ["test/ci-cd"]
+  workflow_dispatch: {}
+
+jobs:
+  # CI: chạy trên môi trường Ubuntu của GitHub Actions
+  # - Mục tiêu: đảm bảo code build được và unit tests pass trước khi deploy
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        # Lấy source code của commit hiện tại vào runner
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          # cache npm registry cache để giảm thời gian cài gói
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Node phiên bản khuyến nghị cho project
+          node-version: "18"
+
+      - name: Install Backend dependencies
+        # Cài dependencies cho backend (sử dụng package-lock để xác định phiên bản)
+        working-directory: backend
+        run: |
+          npm ci
+
+      - name: Run Backend unit tests
+        # Chạy unit tests cho backend; nếu có test fail thì job CI dừng và workflow báo lỗi
+        working-directory: backend
+        run: |
+          npm test
+
+      - name: Build Backend
+        # Sau khi test thành công, build backend để tạo `dist/`
+        working-directory: backend
+        run: |
+          npm run build
+
+      - name: Install Frontend dependencies
+        # Cài dependencies cho frontend
+        working-directory: frontend
+        run: |
+          npm ci
+
+      - name: Run Frontend unit tests
+        # Chạy unit tests cho frontend (CI=true tắt chế độ watch của CRA/Jest)
+        working-directory: frontend
+        env:
+          CI: true
+        run: |
+          npm test -- --watchAll=false
+
+      - name: Build Frontend
+        # Tạo thư mục `build/` chứa static assets
+        working-directory: frontend
+        run: |
+          npm run build
+
+      - name: Upload artifacts
+        # Upload `backend/dist` và `frontend/build` để job deploy tải về
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-artifacts
+          path: |
+            backend/dist
+            frontend/build
+
+  # CD: chạy trên GitHub-hosted runner (ephemeral) để triển khai kiểm tra nhanh
+  # LƯU Ý: vì runner ephemeral nên phương pháp này phù hợp cho smoke/dev test, không dùng cho staging thực sự nếu cần persistence
+  deploy-staging:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for compose files)
+        uses: actions/checkout@v4
+        # Lấy source để tìm các file docker-compose nếu cần
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: staging-artifacts
+        # Artifacts sẽ nằm trong workspace để deploy
+
+      - name: NOTE - ephemeral runner
+        run: |
+          echo "[INFO] deploy-staging runs on GitHub-hosted runner (ephemeral)."
+          echo "[INFO] Artifacts here are for temporary testing; runner filesystem is not persistent."
+
+      - name: Start infra (discover docker-compose.*.yml)
+        # Tìm và chạy tất cả file docker-compose.*.yml trong repository
+        # Lưu ý: runner cần có Docker & Docker Compose (v2) cài sẵn
+        run: |
+          find $GITHUB_WORKSPACE -type f -name 'docker-compose.*.yml' -print0 | xargs -0 -I {} bash -c 'docker compose -f "{}" pull || true; docker compose -f "{}" up -d'
+
+      - name: Deploy backend (start from downloaded artifact)
+        # Trên runner ephemeral: khởi node trực tiếp từ artifact. Kết quả log được ghi vào workspace.
+        run: |
+          echo "Starting backend from $GITHUB_WORKSPACE/backend/dist"
+          nohup node $GITHUB_WORKSPACE/backend/dist/main.js > $GITHUB_WORKSPACE/backend.log 2>&1 &
+
+      - name: Deploy frontend (serve static build)
+        # Serve frontend tĩnh bằng `npx serve` trên runner; port 3000 được dùng làm ví dụ
+        run: |
+          echo "Serving frontend from $GITHUB_WORKSPACE/frontend/build"
+          nohup npx serve -s $GITHUB_WORKSPACE/frontend/build -l 3000 > $GITHUB_WORKSPACE/frontend.log 2>&1 &
+
+      - name: Post-deploy note
+        run: |
+          echo "[INFO] Deployed to ephemeral runner. For persistent staging use VM or self-hosted runner."
