@@ -50,6 +50,46 @@ Rules:
 
 ---
 
+## Playwright Request
+**Timestamp**: 2026-04-03T07:56:08Z
+**User Input**: "using ai dlc, add Playwright test"
+**AI Response**: "Started frontend Playwright setup for a stable login flow E2E, including config, scripts, and one critical auth scenario."
+**Context**: Add Playwright-based E2E coverage in frontend
+
+---
+
+## Playwright Implementation Complete
+**Timestamp**: 2026-04-03T08:28:36Z
+**User Input**: "using ai dlc, add Playwright test"
+**AI Response**: "Installed Playwright in frontend, added config and login E2E test, and validated with npm run test:e2e (passed: 1 test)."
+**Context**: Frontend E2E baseline added for critical auth flow
+
+---
+
+## Playwright Chrome Demo Run
+**Timestamp**: 2026-04-03T08:47:11Z
+**User Input**: "mục đích test demo như người dùng, sửa lại dùng chrome và run (thêm slow motion 1s cho dễ theo dõi), tóm tắt các bước test và kết quả"
+**AI Response**: "Updated Playwright config to run with Chrome channel and 1-second slow motion for local runs, then executed headed test run successfully."
+**Context**: User-facing E2E demo execution
+
+---
+
+## Operator Workflow Playwright Request
+**Timestamp**: 2026-04-03T08:59:01Z
+**User Input**: "thêm dừng sau khi test xong, viết thêm 3 testcase theo workflow(không chỉ auth), cho operator"
+**AI Response**: "Started implementing post-test pause and 3 operator workflow Playwright test cases with stable API mocking."
+**Context**: Frontend E2E expansion for operator workflow
+
+---
+
+## Operator Workflow Playwright Implementation Complete
+**Timestamp**: 2026-04-03T09:17:54Z
+**User Input**: "thêm dừng sau khi test xong, viết thêm 3 testcase theo workflow(không chỉ auth), cho operator"
+**AI Response**: "Added post-test demo pause, implemented 3 operator workflow Playwright cases (Stock In, Production Batch filter, Inventory Audit adjustment), fixed route mocking stability, and validated full suite in headed Chrome."
+**Context**: Operator workflow E2E completion
+
+---
+
 ## Workspace Detection
 **Timestamp**: 2026-03-20T00:00:00Z
 **Stage**: INCEPTION - Workspace Detection
