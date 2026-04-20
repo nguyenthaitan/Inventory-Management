@@ -144,12 +144,11 @@ function downloadCsv(
 }
 
 export default function DashboardManager() {
+  // Don't apply any default date range. Keep inputs empty until user selects range.
   const now = new Date();
-  const defaultFrom = new Date(now);
-  defaultFrom.setUTCDate(defaultFrom.getUTCDate() - 30);
 
-  const [fromDate, setFromDate] = useState<string>(toDateInput(defaultFrom));
-  const [toDate, setToDate] = useState<string>(toDateInput(now));
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
   const [interval, setInterval] = useState<TrendInterval>("day");
   const [refreshToken, setRefreshToken] = useState(0);
 
@@ -199,7 +198,18 @@ export default function DashboardManager() {
       setError(null);
 
       try {
-        const range = toRangeIso(fromDate, toDate);
+        // Prefer `dateRange` (RangePicker) as authoritative source for from/to
+        // to avoid stale or misformatted string inputs in `fromDate`/`toDate`.
+        let rangeFrom: string | undefined = undefined;
+        let rangeTo: string | undefined = undefined;
+        if (dateRange && dateRange[0] && dateRange[1]) {
+          rangeFrom = dateRange[0].toISOString();
+          rangeTo = dateRange[1].toISOString();
+        } else if (fromDate && toDate) {
+          const r = toRangeIso(fromDate, toDate);
+          rangeFrom = r.from;
+          rangeTo = r.to;
+        }
         const [
           inventory,
           usage,
@@ -210,20 +220,25 @@ export default function DashboardManager() {
           qcTrendData,
           auditTrendData,
         ] = await Promise.all([
-          getInventoryStatusReport(range.from, range.to, filterWarehouse),
-          getMaterialUsageReport(range.from, range.to, filterWarehouse),
-          getQcPerformanceReport(range.from, range.to, filterWarehouse),
-          getAuditReport(range.from, range.to, filterWarehouse),
-          getInventoryTrendReport(range.from, range.to, interval, filterWarehouse),
+          getInventoryStatusReport(rangeFrom, rangeTo, filterWarehouse),
+          getMaterialUsageReport(rangeFrom, rangeTo, filterWarehouse),
+          getQcPerformanceReport(rangeFrom, rangeTo, filterWarehouse),
+          getAuditReport(rangeFrom, rangeTo, filterWarehouse),
+          getInventoryTrendReport(
+            rangeFrom,
+            rangeTo,
+            interval,
+            filterWarehouse,
+          ),
           getMaterialUsageTrendReport(
-            range.from,
-            range.to,
+            rangeFrom,
+            rangeTo,
             interval,
             8,
             filterWarehouse,
           ),
-          getQcTrendReport(range.from, range.to, interval, 8, filterWarehouse),
-          getAuditTrendReport(range.from, range.to, interval, filterWarehouse),
+          getQcTrendReport(rangeFrom, rangeTo, interval, 8, filterWarehouse),
+          getAuditTrendReport(rangeFrom, rangeTo, interval, filterWarehouse),
         ]);
 
         setInventoryStatus(inventory);
@@ -238,18 +253,18 @@ export default function DashboardManager() {
         void (async () => {
           try {
             const [dashSum, inT, outT, whs] = await Promise.all([
-              getDashboardSummary(filterWarehouse, range.from, range.to),
+              getDashboardSummary(filterWarehouse, rangeFrom, rangeTo),
               getDashboardTrends(
                 "in",
-                range.from,
-                range.to,
+                rangeFrom,
+                rangeTo,
                 interval,
                 filterWarehouse,
               ),
               getDashboardTrends(
                 "out",
-                range.from,
-                range.to,
+                rangeFrom,
+                rangeTo,
                 interval,
                 filterWarehouse,
               ),
@@ -314,14 +329,9 @@ export default function DashboardManager() {
   }
 
   async function applyRangeAndWarehouse() {
-    const now = new Date();
-    const defaultFrom = new Date(
-      now.getTime() - 7 * 24 * 3600 * 1000,
-    ).toISOString();
-    const defaultTo = now.toISOString();
-
-    const from = dateRange?.[0] ? dateRange[0].toISOString() : defaultFrom;
-    const to = dateRange?.[1] ? dateRange[1].toISOString() : defaultTo;
+    // If the user cleared the range, don't apply defaults — call APIs without dates.
+    const from = dateRange?.[0] ? dateRange[0].toISOString() : undefined;
+    const to = dateRange?.[1] ? dateRange[1].toISOString() : undefined;
     const intervalCalc = computeInterval(from, to);
     setInterval(intervalCalc);
 
@@ -346,8 +356,10 @@ export default function DashboardManager() {
       if (inResp.data) setTrendsIn(inResp.data);
       if (outResp.data) setTrendsOut(outResp.data);
       // Trigger broader dashboard refresh (inventory/material/qc/audit) as well
-      setFromDate(toDateInput(new Date(from)));
-      setToDate(toDateInput(new Date(to)));
+      if (from) setFromDate(toDateInput(new Date(from)));
+      else setFromDate("");
+      if (to) setToDate(toDateInput(new Date(to)));
+      else setToDate("");
       setRefreshToken((v) => v + 1);
     } catch (err) {
       setError(
@@ -487,7 +499,9 @@ export default function DashboardManager() {
               Interval
               <select
                 value={interval}
-                onChange={(event) => setInterval(event.target.value as TrendInterval)}
+                onChange={(event) =>
+                  setInterval(event.target.value as TrendInterval)
+                }
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               >
                 <option value="day">day</option>
@@ -740,7 +754,7 @@ export default function DashboardManager() {
           <Table
             rowKey={(record: any, index?: number) =>
               record && (record.entity || record.performed_at || record.action)
-                ? `${record.entity || 'x'}-${record.performed_at || record.timestamp || (index ?? 0)}-${record.action || 'x'}`
+                ? `${record.entity || "x"}-${record.performed_at || record.timestamp || (index ?? 0)}-${record.action || "x"}`
                 : String(index ?? 0)
             }
             pagination={{ pageSize: 8 }}
@@ -749,22 +763,38 @@ export default function DashboardManager() {
               {
                 title: "Action",
                 render: (_: any, record: any) =>
-                  record.action || record.verb || record.event || (record.details && (record.details.action as string)) || "-",
+                  record.action ||
+                  record.verb ||
+                  record.event ||
+                  (record.details && (record.details.action as string)) ||
+                  "-",
               },
               {
                 title: "Entity",
                 render: (_: any, record: any) =>
-                  record.entity || record.entity_name || record.target || (record.details && (record.details.entity as string)) || "-",
+                  record.entity ||
+                  record.entity_name ||
+                  record.target ||
+                  (record.details && (record.details.entity as string)) ||
+                  "-",
               },
               {
                 title: "By",
                 render: (_: any, record: any) =>
-                  record.performed_by || record.user || record.actor || (record.details && (record.details.user as string)) || "-",
+                  record.performed_by ||
+                  record.user ||
+                  record.actor ||
+                  (record.details && (record.details.user as string)) ||
+                  "-",
               },
               {
                 title: "At",
                 render: (_: any, record: any) =>
-                  formatDateShort(record.performed_at || record.performedAt || record.timestamp),
+                  formatDateShort(
+                    record.performed_at ||
+                      record.performedAt ||
+                      record.timestamp,
+                  ),
               },
             ]}
             size="middle"

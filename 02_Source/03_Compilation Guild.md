@@ -35,7 +35,7 @@ Thư mục code chính: `02_Source/01_Source Code`
    docker compose up --build -d
    ```
 
-   > Lưu ý: nếu chạy stack bằng `docker compose`, tạo file `.env` nằm cùng cấp với `docker-compose.yml` và thêm các biến môi trường cần thiết (xem mẫu bên dưới). Các service sẽ tham chiếu biến này khi khởi chạy.:
+   > Lưu ý: nếu chạy stack bằng `docker compose`, tạo file `.env` nằm cùng cấp với `docker-compose.yml` và thêm các biến môi trường cần thiết (xem mẫu bên dưới). Có thể tham khảo file [`env_config_guild.md`](./env_config_guild.md) và video demo ở mục 8 để biết cách lấy giá trị của các environment variables.
 
    ```text
    # .env.example — mẫu cấu hình môi trường (không chứa secret thật)

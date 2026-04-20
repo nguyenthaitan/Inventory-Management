@@ -26,7 +26,7 @@ export async function getDashboardTrends(
 }
 
 export async function getDashboardDrilldown(
-  metric?: 'in' | 'out',
+  metric?: "in" | "out",
   page = 1,
   limit = 20,
   materialId?: string,

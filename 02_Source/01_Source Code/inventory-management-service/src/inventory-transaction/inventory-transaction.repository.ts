@@ -39,10 +39,7 @@ export class InventoryTransactionRepository {
     @InjectModel(InventoryTransaction.name)
     private readonly model: Model<InventoryTransactionDocument>,
   ) {}
-  async findAll(
-    filters: FilterOptions = {},
-    pagination: PaginationOptions = { page: 1, limit: 20 },
-  ) {
+  async findAll(filters: FilterOptions = {}, pagination?: PaginationOptions) {
     // Dùng thuần Mongo query object
     const mongoQuery: any = {};
 
@@ -63,6 +60,19 @@ export class InventoryTransactionRepository {
       mongoQuery.transaction_date = {} as any;
       if (filters.from) mongoQuery.transaction_date.$gte = filters.from;
       if (filters.to) mongoQuery.transaction_date.$lte = filters.to;
+    }
+
+    // If pagination not provided => return all matching transactions
+    if (
+      !pagination ||
+      pagination.page === undefined ||
+      pagination.limit === undefined
+    ) {
+      const items = await this.model
+        .find(mongoQuery)
+        .sort({ created_date: -1 })
+        .exec();
+      return { items, total: items.length };
     }
 
     // pagination
@@ -110,6 +120,68 @@ export class InventoryTransactionRepository {
 
     const keyword = filters.keyword?.trim();
 
+    // If pagination not provided => return all matching history rows
+    if (
+      !pagination ||
+      pagination.page === undefined ||
+      pagination.limit === undefined
+    ) {
+      const keywordRegex = keyword
+        ? new RegExp(escapeRegex(keyword), 'i')
+        : null;
+
+      if (keyword) {
+        const pipeline: any[] = [
+          { $match: mongoQuery },
+          {
+            $lookup: {
+              from: 'inventory_lots',
+              localField: 'lot_id',
+              foreignField: 'lot_id',
+              as: 'lot_docs',
+            },
+          },
+          {
+            $addFields: {
+              material_id: {
+                $ifNull: [{ $arrayElemAt: ['$lot_docs.material_id', 0] }, null],
+              },
+            },
+          },
+          {
+            $match: {
+              $or: [
+                { transaction_id: keywordRegex },
+                { reference_number: keywordRegex },
+                { lot_id: keywordRegex },
+                { material_id: keywordRegex },
+              ],
+            },
+          },
+          { $sort: { transaction_date: -1 as const } },
+        ];
+
+        const [items, totalCountRows] = await Promise.all([
+          this.model.aggregate(pipeline as any).exec(),
+          this.model
+            .aggregate([{ ...pipeline[0] }, { $count: 'total' }])
+            .exec() as Promise<Array<{ total: number }>>,
+        ]);
+
+        return {
+          items,
+          total: totalCountRows[0]?.total ?? items.length,
+        };
+      }
+
+      // no keyword and no pagination
+      const items = await this.model
+        .find(mongoQuery)
+        .sort({ transaction_date: -1 })
+        .exec();
+      return { items, total: items.length };
+    }
+
     const page = pagination.page && pagination.page > 0 ? pagination.page : 1;
     const limit =
       pagination.limit && pagination.limit > 0 ? pagination.limit : 20;
@@ -118,7 +190,7 @@ export class InventoryTransactionRepository {
     if (keyword) {
       const keywordRegex = new RegExp(escapeRegex(keyword), 'i');
 
-      const pipeline = [
+      const pipeline: any[] = [
         { $match: mongoQuery },
         {
           $lookup: {
@@ -151,10 +223,10 @@ export class InventoryTransactionRepository {
         this.model
           .aggregate([
             ...pipeline,
-            { $sort: { transaction_date: -1 } },
+            { $sort: { transaction_date: -1 as const } },
             { $skip: skip },
             { $limit: limit },
-          ])
+          ] as any)
           .exec(),
         this.model
           .aggregate([...pipeline, { $count: 'total' }])
@@ -198,7 +270,9 @@ export class InventoryTransactionRepository {
   }
 
   async create(dto: any) {
-    const doc = new this.model(dto);
+    const payload = { ...dto };
+    if (!payload.unit_of_measure) payload.unit_of_measure = 'ea';
+    const doc = new this.model(payload);
     return doc.save();
   }
 

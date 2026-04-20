@@ -25,7 +25,7 @@ export class ReportsRepository {
     private readonly auditLogModel: Model<AuditLogDocument>,
   ) {}
 
-  async getInventoryStatus(): Promise<
+  async getInventoryStatus(warehouse_id?: string): Promise<
     Array<{
       material_id: string;
       lot_id: string;
@@ -34,8 +34,11 @@ export class ReportsRepository {
       expiration_date?: Date;
     }>
   > {
+    const query: any = {};
+    if (warehouse_id) query.warehouse_id = warehouse_id;
+
     const lots = await this.inventoryLotModel
-      .find({})
+      .find(query)
       .sort({ expiration_date: 1 })
       .lean()
       .exec();
@@ -52,7 +55,13 @@ export class ReportsRepository {
   async getMaterialUsage(
     from?: Date,
     to?: Date,
-  ): Promise<Array<{ material_id: string; transaction_count: number; total_quantity: number }>> {
+  ): Promise<
+    Array<{
+      material_id: string;
+      transaction_count: number;
+      total_quantity: number;
+    }>
+  > {
     const match: any = {};
     if (from || to) {
       match.transaction_date = {};
@@ -74,7 +83,9 @@ export class ReportsRepository {
       },
       {
         $addFields: {
-          material_id: { $ifNull: [{ $arrayElemAt: ['$lot_docs.material_id', 0] }, null] },
+          material_id: {
+            $ifNull: [{ $arrayElemAt: ['$lot_docs.material_id', 0] }, null],
+          },
         },
       },
       {
@@ -95,12 +106,23 @@ export class ReportsRepository {
       { $sort: { total_quantity: -1 } },
     );
 
-    const rows = await this.inventoryTransactionModel.aggregate(pipeline as any).exec();
-    return rows as Array<{ material_id: string; transaction_count: number; total_quantity: number }>;
+    const rows = await this.inventoryTransactionModel
+      .aggregate(pipeline as any)
+      .exec();
+    return rows as Array<{
+      material_id: string;
+      transaction_count: number;
+      total_quantity: number;
+    }>;
   }
 
   async getQcPerformance(): Promise<
-    Array<{ supplier_name: string; approved: number; rejected: number; quality_rate: number }>
+    Array<{
+      supplier_name: string;
+      approved: number;
+      rejected: number;
+      quality_rate: number;
+    }>
   > {
     const pipeline = [
       {
@@ -113,14 +135,23 @@ export class ReportsRepository {
       },
       {
         $addFields: {
-          supplier_name: { $ifNull: [{ $arrayElemAt: ['$lot_docs.supplier_name', 0] }, 'Unknown'] },
+          supplier_name: {
+            $ifNull: [
+              { $arrayElemAt: ['$lot_docs.supplier_name', 0] },
+              'Unknown',
+            ],
+          },
         },
       },
       {
         $group: {
           _id: '$supplier_name',
-          approved: { $sum: { $cond: [{ $eq: ['$result_status', 'Pass'] }, 1, 0] } },
-          rejected: { $sum: { $cond: [{ $eq: ['$result_status', 'Fail'] }, 1, 0] } },
+          approved: {
+            $sum: { $cond: [{ $eq: ['$result_status', 'Pass'] }, 1, 0] },
+          },
+          rejected: {
+            $sum: { $cond: [{ $eq: ['$result_status', 'Fail'] }, 1, 0] },
+          },
         },
       },
       {
@@ -132,7 +163,17 @@ export class ReportsRepository {
             $cond: [
               { $eq: [{ $add: ['$approved', '$rejected'] }, 0] },
               0,
-              { $multiply: [{ $divide: ['$approved', { $add: ['$approved', '$rejected'] }] }, 100] },
+              {
+                $multiply: [
+                  {
+                    $divide: [
+                      '$approved',
+                      { $add: ['$approved', '$rejected'] },
+                    ],
+                  },
+                  100,
+                ],
+              },
             ],
           },
           _id: 0,
@@ -142,7 +183,12 @@ export class ReportsRepository {
     ];
 
     const rows = await this.qcTestModel.aggregate(pipeline as any).exec();
-    return rows as Array<{ supplier_name: string; approved: number; rejected: number; quality_rate: number }>;
+    return rows as Array<{
+      supplier_name: string;
+      approved: number;
+      rejected: number;
+      quality_rate: number;
+    }>;
   }
 
   async getAuditTrail(): Promise<
@@ -154,11 +200,20 @@ export class ReportsRepository {
       details?: Record<string, unknown>;
     }>
   > {
-    const docs = await this.auditLogModel.find({}).sort({ timestamp: -1 }).limit(200).lean().exec();
+    const docs = await this.auditLogModel
+      .find({})
+      .sort({ timestamp: -1 })
+      .limit(200)
+      .lean()
+      .exec();
 
     return docs.map((d: any) => ({
       action: d.action,
-      entity: d.details?.entity || d.details?.lot_id || d.details?.transaction_id || '',
+      entity:
+        d.details?.entity ||
+        d.details?.lot_id ||
+        d.details?.transaction_id ||
+        '',
       performed_by: d.username,
       performed_at: d.timestamp,
       details: d.details,

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 // Schema imports chỉ để biểu diễn kiểu và giúp hiểu domain
 import { InventoryTransaction } from '../schemas/inventory-transaction.schema';
 import { InventoryLot } from '../schemas/inventory-lot.schema';
@@ -10,6 +10,7 @@ import { WarehouseSlipRepository } from '../warehouse-slip/warehouse-slip.reposi
 
 @Injectable()
 export class DashboardService {
+  private readonly logger = new Logger(DashboardService.name);
   /**
    * DashboardService dùng các Repository để tách trách nhiệm DB ra khỏi logic báo cáo.
    * - `txRepo`  : thao tác trên collection `inventory_transactions`.
@@ -44,178 +45,126 @@ export class DashboardService {
   async getSummary(
     filters: { warehouseId?: string; from?: string; to?: string } = {},
   ) {
-    // Chuẩn bị điều kiện match cho pipeline
-    const match: any = {};
-    if (filters.warehouseId) match.warehouse_id = filters.warehouseId; // nếu truyền warehouseId thì lọc
+    // Simple implementation: fetch relevant lots and slips via repository helpers,
+    // then compute aggregation in memory. This is easier to read but may be
+    // inefficient for very large datasets — consider pre-aggregation if needed.
 
-    // Pipeline aggregation trên collection `inventory_lots`
-    // Mục tiêu: với mỗi lot tính `lot_value` dựa trên các dòng trong `warehouse_slips.lines`
-    // Giải thích các trường/operator quan trọng:
-    // - `$match`: lọc document trong `inventory_lots` theo điều kiện (ví dụ `warehouse_id`).
-    //   + Ở đây `match` có thể chứa `{ warehouse_id: 'WH-001' }` để giới hạn lô thuộc kho đó.
-    // - `$lookup`: join sang collection `warehouse_slips` để truy xuất các `lines` liên quan tới `lot_id`.
-    // - `$unwind: '$lines'`: tách mảng `lines` thành nhiều document con, mỗi document chứa 1 dòng `lines`.
-    // - `$expr`: cho phép dùng expression trong $match của lookup; `$and`, `$eq`, `$ne` là các toán tử logic/so sánh.
-    //   + `{ $eq: ['$lines.lot_id', '$$lotId'] }` so sánh trường `lines.lot_id` của slip với biến `$$lotId` (từ let).
-    //   + `{ $ne: ['$lines.unit_price', null] }` đảm bảo chỉ tính các dòng có `unit_price` hợp lệ.
-    // - Trong lookup pipeline dùng `$group` để tính `line_value_sum = SUM(lines.quantity * lines.unit_price)` cho từng lot.
-    // - `$arrayElemAt`: lấy phần tử đầu của mảng kết quả lookup (`line_aggregates[0].line_value_sum`).
-    // - `$ifNull`: nếu giá trị lookup không tồn tại thì fallback về 0.
-    // - Cuối cùng `$group` bên ngoài nhóm theo `material_id` để tổng hợp `total_quantity` và `total_value`.
-    // Lưu ý vận hành: các tên trường dùng trong pipeline (ví dụ `lot_id`, `quantity`, `unit_price`, `material_id`) là
-    // tên trường trong schema `InventoryLot` và `WarehouseSlip.lines`.
-    // Thay đổi chính: tính `lot_value` là tổng của các (lines.quantity * lines.unit_price) thay vì lấy latest unit_price.
-    const pipeline = [
-      { $match: match },
-      {
-        $lookup: {
-          from: 'warehouse_slips',
-          let: { lotId: '$lot_id' },
-          pipeline: [
-            {
-              $match: (function () {
-                const m: any = { status: 'CONFIRMED' };
-                if (filters.from || filters.to) {
-                  m.confirmed_at = {};
-                  if (filters.from)
-                    m.confirmed_at.$gte = new Date(filters.from);
-                  if (filters.to) m.confirmed_at.$lte = new Date(filters.to);
-                }
-                return m;
-              })(),
-            },
-            { $unwind: '$lines' },
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$lines.lot_id', '$$lotId'] },
-                    { $ne: ['$lines.unit_price', null] },
-                  ],
-                },
-              },
-            },
-            {
-              $group: {
-                _id: null,
-                line_value_sum: {
-                  $sum: { $multiply: ['$lines.quantity', '$lines.unit_price'] },
-                },
-                line_quantity_sum: { $sum: '$lines.quantity' },
-              },
-            },
-            { $project: { _id: 0, line_value_sum: 1, line_quantity_sum: 1 } },
-          ],
-          as: 'line_aggregates',
-        },
-      },
-      {
-        $addFields: {
-          lot_value: {
-            $ifNull: [
-              { $arrayElemAt: ['$line_aggregates.line_value_sum', 0] },
-              0,
-            ],
-          },
-        },
-      },
-      {
-        $group: {
-          _id: '$material_id',
-          total_quantity: { $sum: '$quantity' },
-          total_value: { $sum: '$lot_value' },
-        },
-      },
-      {
-        $lookup: {
-          from: 'materials',
-          localField: '_id',
-          foreignField: 'material_id',
-          as: 'material_docs',
-        },
-      },
-      {
-        $addFields: {
-          material_name: { $arrayElemAt: ['$material_docs.material_name', 0] },
-        },
-      },
-      { $project: { material_docs: 0 } },
-    ];
-
-    // Chạy aggregation qua repository nhằm tách concerns
-    const rows = await this.lotRepo.aggregate(pipeline);
-
-    // Tính tổng quantity & value toàn hệ thống từ kết quả nhóm theo material
-    const total_quantity = rows.reduce(
-      (s, r) => s + (r.total_quantity || 0),
-      0,
-    );
-    const total_value = rows.reduce((s, r) => s + (r.total_value || 0), 0);
-
-    // Lấy top materials dựa trên transactions trong khoảng from/to (nếu có)
-    // Vì `inventory_lots` thể hiện snapshot hiện tại, Top Materials theo hoạt động
-    // (receipts/usages) nên ta tổng hợp từ `inventory_transactions` để phản ánh khoảng thời gian.
-    const txMatch: any = {};
-    if (filters.from || filters.to) txMatch.transaction_date = {};
-    if (filters.from) txMatch.transaction_date.$gte = new Date(filters.from);
-    if (filters.to) txMatch.transaction_date.$lte = new Date(filters.to);
-
-    const txPipeline: any[] = [];
-    if (Object.keys(txMatch).length) txPipeline.push({ $match: txMatch });
-
-    // Join inventory_lots to get material_id and (optionally) filter by warehouse
-    txPipeline.push({
-      $lookup: {
-        from: 'inventory_lots',
-        localField: 'lot_id',
-        foreignField: 'lot_id',
-        as: 'lot_docs',
-      },
+    // 1) Fetch lots for the warehouse (unpaginated by using a large limit)
+    const lotRes = await this.lotRepo.findOptions({
+      warehouse_id: filters.warehouseId,
     });
-    txPipeline.push({ $unwind: '$lot_docs' });
-    if (filters.warehouseId) {
-      txPipeline.push({
-        $match: { 'lot_docs.warehouse_id': filters.warehouseId },
-      });
+    const lots: InventoryLot[] = (lotRes.data || []) as InventoryLot[];
+
+    if (lots.length === 0) {
+      return { total_quantity: 0, total_value: 0, top_materials: [] };
     }
 
-    txPipeline.push({
-      $group: {
-        _id: '$lot_docs.material_id',
-        total_quantity: { $sum: '$quantity' },
-      },
-    });
-    txPipeline.push({ $sort: { total_quantity: -1 } });
-    txPipeline.push({ $limit: 10 });
-    txPipeline.push({
-      $lookup: {
-        from: 'materials',
-        localField: '_id',
-        foreignField: 'material_id',
-        as: 'material_docs',
-      },
-    });
-    txPipeline.push({
-      $addFields: {
-        material_name: { $arrayElemAt: ['$material_docs.material_name', 0] },
-      },
-    });
-    txPipeline.push({ $project: { material_docs: 0 } });
+    const lotById = new Map<string, any>();
+    for (const l of lots) {
+      const lid = (l as any).lot_id;
+      if (typeof lid !== 'string') continue;
+      lotById.set(lid, l);
+    }
 
-    const topTxRows = await this.txRepo.aggregate(txPipeline);
+    // 2) Fetch confirmed slips in the date range for the warehouse
+    const slipFilters: any = { status: 'CONFIRMED' };
+    if (filters.warehouseId) slipFilters.warehouse_id = filters.warehouseId;
+    if (filters.from) slipFilters.from = new Date(filters.from);
+    if (filters.to) slipFilters.to = new Date(filters.to);
+    const slipRes = await this.slipRepo.findAll(slipFilters);
+    const slips: WarehouseSlip[] = (slipRes.items || []) as WarehouseSlip[];
 
-    const topMaterials = (topTxRows || []).map((r: any) => ({
-      material_id: r._id,
-      material_name: r.material_name || r._id,
-      total_quantity: r.total_quantity,
-    }));
+    // 3) Accumulate lot values from slip.lines (unit_price * qty)
+    const lotValues = new Map<string, { value: number; qty: number }>();
+    for (const slip of slips) {
+      for (const line of slip.lines || []) {
+        if (!line.unit_price) continue;
+        const lid = line.lot_id;
+        if (typeof lid !== 'string') continue;
+        if (!lotById.has(lid)) continue; // only care about lots in scope
+        const cur = lotValues.get(lid) ?? { value: 0, qty: 0 };
+        cur.value += (line.quantity || 0) * (line.unit_price || 0);
+        cur.qty += line.quantity || 0;
+        lotValues.set(lid, cur);
+      }
+    }
 
-    // Trả về object summary cho frontend
-    return {
-      total_quantity,
-      total_value,
-      top_materials: topMaterials,
-    };
+    // Fetch transactions in the date range (if provided). We will use
+    // transactions to determine which lots are "in-scope" when a date
+    // range is provided because transactions are time-based and align with
+    // reporting expectations.
+    const txFilters: any = {};
+    if (filters.from) txFilters.from = new Date(filters.from);
+    if (filters.to) txFilters.to = new Date(filters.to);
+    const txRes = await this.txRepo.findAll(txFilters);
+    const txs: InventoryTransaction[] = (txRes.items ||
+      []) as InventoryTransaction[];
+
+    // Determine which lots are in-scope for this summary.
+    // If a date range was provided, include lots that appear in transactions
+    // within that range; otherwise include all fetched lots (full snapshot).
+    const includedLotIds = new Set<string>();
+    if (filters.from || filters.to) {
+      for (const t of txs) {
+        const lid = t.lot_id;
+        if (typeof lid === 'string' && lotById.has(lid))
+          includedLotIds.add(lid);
+      }
+    } else {
+      for (const lid of lotById.keys()) includedLotIds.add(lid);
+    }
+
+    // Compute total_value per material from lotValues (slip lines), only for included lots
+    const materialValueAgg = new Map<string, number>();
+    for (const lot of lots) {
+      const lid = (lot as any).lot_id;
+      if (typeof lid !== 'string') continue;
+      if (!includedLotIds.has(lid)) continue;
+      const lv = lotValues.get(lid) ?? { value: 0, qty: 0 };
+      const mid = lot.material_id as string;
+      materialValueAgg.set(
+        mid,
+        (materialValueAgg.get(mid) || 0) + (lv.value || 0),
+      );
+    }
+
+    // Compute transaction-based totals per material (for top_materials)
+    const materialTxAgg = new Map<string, number>();
+    for (const t of txs) {
+      const lid = t.lot_id;
+      if (typeof lid !== 'string') continue;
+      if (!includedLotIds.has(lid)) continue; // only consider lots in current scope
+      const lot = lotById.get(lid);
+      const mid = lot.material_id as string;
+      materialTxAgg.set(mid, (materialTxAgg.get(mid) || 0) + (t.quantity || 0));
+    }
+
+    const top_materials = Array.from(materialTxAgg.entries())
+      .map(([material_id, total_quantity]) => ({
+        material_id,
+        material_name: material_id,
+        total_quantity,
+        total_value: materialValueAgg.get(material_id) || 0,
+      }))
+      .sort((a, b) => b.total_quantity - a.total_quantity)
+      .slice(0, 10);
+
+    const total_quantity = Array.from(lots).reduce((s, lot) => {
+      const lid = (lot as any).lot_id;
+      if (typeof lid !== 'string') return s;
+      if (!includedLotIds.has(lid)) return s;
+      return s + (lot.quantity || 0);
+    }, 0);
+
+    const total_value = Array.from(materialValueAgg.values()).reduce(
+      (s, v) => s + v,
+      0,
+    );
+
+    this.logger.debug(
+      `getSummary filters=${JSON.stringify(filters)} lots=${lots.length} slips=${slips.length} txs=${txs.length} included=${includedLotIds.size} total_quantity=${total_quantity} total_value=${total_value}`,
+    );
+    return { total_quantity, total_value, top_materials };
   }
 
   // trends: time-series of in/out quantities
@@ -226,70 +175,97 @@ export class DashboardService {
     interval?: 'day' | 'week' | 'month';
     warehouseId?: string;
   }) {
+    /**
+     * Mục đích:
+     * - Sinh dữ liệu dạng chuỗi thời gian (time-series) cho biểu đồ: lượng nhập/xuất theo khoảng thời gian.
+     * Dành cho ai:
+     * - Người tạo báo cáo hoặc biểu đồ trên giao diện muốn xem biến động theo ngày/tuần/tháng.
+     * Tham số:
+     * - `metric`: 'in' = nhập hàng, 'out' = xuất/hủy
+     * - `from` / `to`: khoảng thời gian lọc
+     * - `interval`: mức gộp chu kỳ ('day'/'week'/'month')
+     * - `warehouseId` (tuỳ chọn): nếu chỉ muốn xem cho một kho
+     * Trả về:
+     * - Mảng các mục { period: 'YYYY-MM-DD'|'YYYY-WW'|'YYYY-MM', total_quantity: number }
+     *   - `period`: tên chu kỳ (dùng để vẽ trục thời gian)
+     *   - `total_quantity`: tổng lượng trong chu kỳ đó
+     */
     const { metric, from, to, interval = 'day', warehouseId } = params;
 
-    // match điều kiện transaction_type theo metric (in/out)
-    const match: any = {};
-    if (metric === 'in') match.transaction_type = 'Receipt';
-    else match.transaction_type = { $in: ['Usage', 'Disposal'] };
+    // 1) Fetch transactions matching metric + date range (unpaginated with large limit)
+    const txFilters: any = {};
+    if (metric === 'in') txFilters.transaction_type = 'Receipt';
+    else txFilters.transaction_type = undefined; // we'll filter out 'in'/'out' by transaction_type below
+    if (from) txFilters.from = new Date(from);
+    if (to) txFilters.to = new Date(to);
 
-    // range ngày
-    if (from || to) match.transaction_date = {};
-    if (from) match.transaction_date.$gte = new Date(from);
-    if (to) match.transaction_date.$lte = new Date(to);
+    const txRes = await this.txRepo.findAll(txFilters);
+    let txs: InventoryTransaction[] = (txRes.items ||
+      []) as InventoryTransaction[];
 
-    // Chuẩn bị pipeline: bắt đầu bằng match transaction
-    const pipeline: any[] = [{ $match: match }];
-
-    // Nếu cần filter theo kho thì lookup inventory_lots để biết warehouse_id của lot
-    if (warehouseId) {
-      pipeline.push({
-        $lookup: {
-          from: 'inventory_lots',
-          localField: 'lot_id',
-          foreignField: 'lot_id',
-          as: 'lot',
-        },
-      });
-      pipeline.push({ $unwind: '$lot' });
-      pipeline.push({ $match: { 'lot.warehouse_id': warehouseId } });
+    // If metric === 'out', keep Usage and Disposal
+    if (metric === 'out') {
+      txs = txs.filter((t) =>
+        ['Usage', 'Disposal'].includes(t.transaction_type),
+      );
+    } else {
+      txs = txs.filter((t) => t.transaction_type === 'Receipt');
     }
 
-    // Chọn format cho grouping theo interval (day/week/month)
-    const dateFormat =
-      interval === 'month'
-        ? '%Y-%m'
-        : interval === 'week'
-          ? '%Y-%V'
-          : '%Y-%m-%d';
+    // If warehouseId filter is requested, load lots for txs and filter
+    if (warehouseId) {
+      const lotIds = Array.from(
+        new Set(
+          txs
+            .map((t) => t.lot_id)
+            .filter((id): id is string => typeof id === 'string'),
+        ),
+      ) as string[];
+      const lots = await this.lotRepo.findByLotIds(lotIds);
+      const lotWarehouse = new Map(
+        lots.map((l: any) => [l.lot_id, l.warehouse_id]),
+      );
+      txs = txs.filter((t) => {
+        const lid = t.lot_id;
+        if (!lid) return false;
+        return lotWarehouse.get(lid) === warehouseId;
+      });
+    }
 
-    // Group theo chu kỳ thời gian và tính tổng quantity
-    // Giải thích các phần chính:
-    // - `$dateToString`: format ngày thành chu kỳ (ví dụ '2026-04-20' cho day, '2026-16' cho week, '2026-04' cho month)
-    // - `_id` của group dùng giá trị chu kỳ (period) để dễ chuyển thành time-series trên client
-    // - `$sum: '$quantity'` cộng dồn `quantity` của các transaction trong cùng period
-    // - `$sort: { _id: 1 }` sắp xếp kết quả theo thời gian tăng dần
-    pipeline.push({
-      $group: {
-        _id: {
-          // $dateToString chuyển `transaction_date` sang chuỗi theo định dạng `dateFormat`
-          $dateToString: { format: dateFormat, date: '$transaction_date' },
-        },
-        // Tổng lượng trong mỗi period
-        total_quantity: { $sum: '$quantity' },
-      },
-    });
-    // Sắp xếp theo period để client có thể hiển thị chuỗi thời gian đúng thứ tự
-    pipeline.push({ $sort: { _id: 1 } });
+    // Helper: compute period key from Date
+    const toPeriod = (d: Date) => {
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      if (interval === 'month') return `${y}-${m}`;
+      if (interval === 'week') {
+        // ISO week number approximation
+        const tmp = new Date(
+          Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+        );
+        const dayNum = tmp.getUTCDay() || 7;
+        tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil(
+          ((tmp.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+        );
+        return `${tmp.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`;
+      }
+      return `${y}-${m}-${day}`;
+    };
 
-    // Chạy aggregation qua repository (không truy cập model trực tiếp)
-    const rows = await this.txRepo.aggregate(pipeline);
+    // Group in JS
+    const agg = new Map<string, number>();
+    for (const t of txs) {
+      const pd = toPeriod(new Date(t.transaction_date));
+      agg.set(pd, (agg.get(pd) || 0) + (t.quantity || 0));
+    }
 
-    // Chuyển kết quả để phù hợp với client API: [{ period, total_quantity }]
-    return rows.map((r: any) => ({
-      period: r._id,
-      total_quantity: r.total_quantity,
-    }));
+    const rows = Array.from(agg.entries())
+      .map(([period, total_quantity]) => ({ period, total_quantity }))
+      .sort((a, b) => (a.period < b.period ? -1 : 1));
+
+    return rows;
   }
 
   // drilldown: paginated transactions or slips
@@ -300,69 +276,80 @@ export class DashboardService {
     materialId?: string;
     from?: string;
     to?: string;
+    warehouseId?: string;
   }) {
-    // Pagination defaults
+    /**
+     * Mục đích:
+     * - Trả về danh sách chi tiết (drilldown) các giao dịch/lô theo điều kiện, hỗ trợ phân trang.
+     * Dành cho ai:
+     * - Nhân viên kiểm kho hoặc người phân tích muốn xem chi tiết từng giao dịch (gồm mã lô, số lượng, ngày).
+     * Tham số:
+     * - `materialId`: (tuỳ chọn) lọc theo mã vật liệu
+     * - `warehouseId`: (tuỳ chọn) lọc theo kho
+     * - `from` / `to`: phạm vi ngày
+     * - `page` / `limit`: phân trang
+     * Trả về:
+     * - `items`: mảng giao dịch hiện tại (mỗi item chứa `transaction_id`, `lot_id`, `quantity`, `transaction_date`, ...)
+     * - `total`: tổng số kết quả phù hợp (dùng để hiển thị số trang)
+     * - `page`, `limit`: echo các tham số phân trang
+     */
+    // Simple implementation: fetch transactions in date range (large limit),
+    // optionally filter by materialId / warehouseId in memory, then paginate.
     const page = params.page && params.page > 0 ? params.page : 1;
     const limit = params.limit && params.limit > 0 ? params.limit : 20;
-    const skip = (page - 1) * limit;
 
-    // Filter theo ngày nếu có
-    const match: any = {};
-    if (params.from || params.to) match.transaction_date = {};
-    if (params.from) match.transaction_date.$gte = new Date(params.from);
-    if (params.to) match.transaction_date.$lte = new Date(params.to);
+    // Fetch transactions matching date range and metric roughly
+    const txFilters: any = {};
+    if (params.from) txFilters.from = new Date(params.from);
+    if (params.to) txFilters.to = new Date(params.to);
+    // We'll filter metric specifics after fetching
+    const txRes = await this.txRepo.findAll(txFilters);
+    let items: InventoryTransaction[] = (txRes.items ||
+      []) as InventoryTransaction[];
 
-    // Pipeline xây dựng cho truy vấn drilldown
-    const pipeline: any[] = [];
-    if (params.materialId) {
-      // Nếu lọc theo `materialId`:
-      // - `$lookup` join sang `inventory_lots` dựa trên `lot_id` (localField/foreignField)
-      // - `$unwind` tách mảng `lot_docs` để có access trực tiếp tới `lot_docs.material_id`
-      // - `$match` lọc các transaction mà lot liên quan có `material_id` tương ứng
-      pipeline.push({
-        $lookup: {
-          from: 'inventory_lots',
-          localField: 'lot_id',
-          foreignField: 'lot_id',
-          as: 'lot_docs',
-        },
+    // Apply metric filter
+    if (params.metric === 'in')
+      items = items.filter((t) => t.transaction_type === 'Receipt');
+    else if (params.metric === 'out')
+      items = items.filter((t) =>
+        ['Usage', 'Disposal'].includes(t.transaction_type),
+      );
+
+    // If materialId or warehouseId provided, filter by resolving lot info
+    if (params.materialId || params.warehouseId) {
+      const lotIds = Array.from(
+        new Set(
+          items
+            .map((t) => t.lot_id)
+            .filter((id): id is string => typeof id === 'string'),
+        ),
+      ) as string[];
+      const lots = await this.lotRepo.findByLotIds(lotIds);
+      const lotMap = new Map(lots.map((l: any) => [l.lot_id, l]));
+
+      items = items.filter((t) => {
+        const lid = t.lot_id;
+        if (!lid) return false;
+        const lot = lotMap.get(lid);
+        if (!lot) return false;
+        if (params.materialId && lot.material_id !== params.materialId)
+          return false;
+        if (params.warehouseId && lot.warehouse_id !== params.warehouseId)
+          return false;
+        return true;
       });
-      // Sau lookup, `lot_docs` là mảng; unwind để mỗi document chứa 1 lot_doc
-      pipeline.push({ $unwind: '$lot_docs' });
-      // Lọc transaction sao cho `lot_docs.material_id` khớp với params.materialId
-      pipeline.push({ $match: { 'lot_docs.material_id': params.materialId } });
     }
 
-    // Nếu truyền metric (in/out) thì lọc transaction_type tương ứng giống `getTrends`
-    if (params.metric) {
-      if (params.metric === 'in') match.transaction_type = 'Receipt';
-      else match.transaction_type = { $in: ['Usage', 'Disposal'] };
-    }
+    // Sort by transaction_date desc, paginate in memory
+    items.sort(
+      (a, b) =>
+        new Date(b.transaction_date).getTime() -
+        new Date(a.transaction_date).getTime(),
+    );
+    const total = items.length;
+    const start = (page - 1) * limit;
+    const pageItems = items.slice(start, start + limit);
 
-    // Nếu có điều kiện match do from/to/metric thì thêm vào đầu pipeline
-    if (Object.keys(match).length) pipeline.unshift({ $match: match });
-
-    // Gắn thêm sort/skip/limit cho pagination
-    // Giải thích:
-    // - `$sort`: sắp xếp transaction theo `transaction_date` giảm dần (mới nhất trước)
-    // - `$skip`: bỏ qua (page-1)*limit documents để thực hiện pagination
-    // - `$limit`: lấy đúng `limit` documents cho 1 trang
-    const agg = pipeline.concat([
-      { $sort: { transaction_date: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-    ]);
-
-    // Chạy đồng thời: items page hiện tại và tổng số item (count)
-    // Chạy đồng thời:
-    // - `items`: trang hiện tại với sort/skip/limit áp dụng
-    // - `totalObj`: tổng số item khớp filter (dùng `$count` để biết tổng để client render pagination)
-    const [items, totalObj] = await Promise.all([
-      this.txRepo.aggregate(agg),
-      this.txRepo.aggregate(pipeline.concat([{ $count: 'total' }])),
-    ]);
-
-    const total = totalObj[0]?.total ?? 0; // tổng count trả về
-    return { items, total, page, limit };
+    return { items: pageItems, total, page, limit };
   }
 }

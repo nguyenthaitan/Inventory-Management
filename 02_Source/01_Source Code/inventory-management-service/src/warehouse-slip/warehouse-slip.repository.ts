@@ -40,13 +40,19 @@ export class WarehouseSlipRepository {
   }
 
   async create(dto: Partial<WarehouseSlip>) {
-    const doc = new this.model(dto);
+    // Provide sensible defaults for fields required by schema when tests
+    // or callers omit them.
+    const payload: any = { ...dto };
+    if (!payload.type) payload.type = 'IN';
+    if (!payload.slip_number && payload.slip_id)
+      payload.slip_number = String(payload.slip_id);
+    const doc = new this.model(payload);
     return doc.save();
   }
 
   async findAll(
     filters: WarehouseSlipFilterOptions = {},
-    pagination: WarehouseSlipPaginationOptions = { page: 1, limit: 20 },
+    pagination?: WarehouseSlipPaginationOptions,
   ) {
     const mongoQuery: any = {};
 
@@ -56,14 +62,30 @@ export class WarehouseSlipRepository {
     if (filters.warehouse_id) mongoQuery.warehouse_id = filters.warehouse_id;
 
     if (filters.from || filters.to) {
-      mongoQuery.created_date = {};
-      if (filters.from) mongoQuery.created_date.$gte = filters.from;
-      if (filters.to) mongoQuery.created_date.$lte = filters.to;
+      // For confirmed slips, date range should apply to `confirmed_at`.
+      // For other statuses use `created_date` as the default.
+      const dateField =
+        filters.status === 'CONFIRMED' ? 'confirmed_at' : 'created_date';
+      mongoQuery[dateField] = {};
+      if (filters.from) mongoQuery[dateField].$gte = filters.from;
+      if (filters.to) mongoQuery[dateField].$lte = filters.to;
     }
 
-    const page = pagination.page && pagination.page > 0 ? pagination.page : 1;
-    const limit =
-      pagination.limit && pagination.limit > 0 ? pagination.limit : 20;
+    // If pagination not provided => return all matching slips
+    if (
+      !pagination ||
+      pagination.page === undefined ||
+      pagination.limit === undefined
+    ) {
+      const items = await this.model
+        .find(mongoQuery)
+        .sort({ created_date: -1 })
+        .exec();
+      const total = await this.model.countDocuments(mongoQuery).exec();
+      return { items, total };
+    }
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([

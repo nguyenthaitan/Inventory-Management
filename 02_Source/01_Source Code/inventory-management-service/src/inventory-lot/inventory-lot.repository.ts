@@ -30,9 +30,17 @@ export class InventoryLotRepository {
   }
 
   async findAll(
-    page: number = 1,
-    limit: number = 10,
+    page?: number,
+    limit?: number,
   ): Promise<{ data: InventoryLotDocument[]; total: number }> {
+    // If page/limit not provided => return all documents
+    if (page === undefined || limit === undefined) {
+      const data = await this.inventoryLotModel
+        .find()
+        .sort({ created_date: -1 })
+        .exec();
+      return { data, total: data.length };
+    }
     const skip = (page - 1) * limit;
     const data = await this.inventoryLotModel
       .find()
@@ -50,9 +58,16 @@ export class InventoryLotRepository {
 
   async findByMaterialId(
     material_id: string,
-    page: number = 1,
-    limit: number = 10,
+    page?: number,
+    limit?: number,
   ): Promise<{ data: InventoryLotDocument[]; total: number }> {
+    if (page === undefined || limit === undefined) {
+      const data = await this.inventoryLotModel
+        .find({ material_id })
+        .sort({ created_date: -1 })
+        .exec();
+      return { data, total: data.length };
+    }
     const skip = (page - 1) * limit;
     const data = await this.inventoryLotModel
       .find({ material_id })
@@ -68,9 +83,16 @@ export class InventoryLotRepository {
 
   async findByStatus(
     status: string,
-    page: number = 1,
-    limit: number = 10,
+    page?: number,
+    limit?: number,
   ): Promise<{ data: InventoryLotDocument[]; total: number }> {
+    if (page === undefined || limit === undefined) {
+      const data = await this.inventoryLotModel
+        .find({ status })
+        .sort({ created_date: -1 })
+        .exec();
+      return { data, total: data.length };
+    }
     const skip = (page - 1) * limit;
     const data = await this.inventoryLotModel
       .find({ status })
@@ -86,9 +108,16 @@ export class InventoryLotRepository {
 
   async findBySampleStatus(
     is_sample: boolean,
-    page: number = 1,
-    limit: number = 10,
+    page?: number,
+    limit?: number,
   ): Promise<{ data: InventoryLotDocument[]; total: number }> {
+    if (page === undefined || limit === undefined) {
+      const data = await this.inventoryLotModel
+        .find({ is_sample })
+        .sort({ created_date: -1 })
+        .exec();
+      return { data, total: data.length };
+    }
     const skip = (page - 1) * limit;
     const data = await this.inventoryLotModel
       .find({ is_sample })
@@ -113,11 +142,25 @@ export class InventoryLotRepository {
 
   async search(
     query: string,
-    page: number = 1,
-    limit: number = 10,
+    page?: number,
+    limit?: number,
   ): Promise<{ data: InventoryLotDocument[]; total: number }> {
-    const skip = (page - 1) * limit;
     const regex = new RegExp(query, 'i');
+    if (page === undefined || limit === undefined) {
+      const data = await this.inventoryLotModel
+        .find({
+          $or: [
+            { manufacturer_name: regex },
+            { manufacturer_lot: regex },
+            { supplier_name: regex },
+            { lot_id: regex },
+          ],
+        })
+        .sort({ created_date: -1 })
+        .exec();
+      return { data, total: data.length };
+    }
+    const skip = (page - 1) * limit;
     const data = await this.inventoryLotModel
       .find({
         $or: [
@@ -150,10 +193,9 @@ export class InventoryLotRepository {
       is_sample?: boolean;
       manufacturer_name?: string;
     },
-    page: number = 1,
-    limit: number = 10,
+    page?: number,
+    limit?: number,
   ): Promise<{ data: InventoryLotDocument[]; total: number }> {
-    const skip = (page - 1) * limit;
     const query: any = {};
 
     if (filter.material_id) query.material_id = filter.material_id;
@@ -162,6 +204,15 @@ export class InventoryLotRepository {
     if (filter.manufacturer_name)
       query.manufacturer_name = new RegExp(filter.manufacturer_name, 'i');
 
+    if (page === undefined || limit === undefined) {
+      const data = await this.inventoryLotModel
+        .find(query)
+        .sort({ created_date: -1 })
+        .exec();
+      return { data, total: data.length };
+    }
+
+    const skip = (page - 1) * limit;
     const data = await this.inventoryLotModel
       .find(query)
       .skip(skip)
@@ -179,11 +230,12 @@ export class InventoryLotRepository {
       status?: string;
       exclude_statuses?: string[];
       warehouse_id?: string;
+      // allow camelCase variant for callers that pass `warehouseId`
+      warehouseId?: string;
     },
-    page: number = 1,
-    limit: number = 20,
+    page?: number,
+    limit?: number,
   ): Promise<{ data: InventoryLotDocument[]; total: number }> {
-    const skip = (page - 1) * limit;
     const query: any = {};
 
     if (options.material_id) {
@@ -200,8 +252,9 @@ export class InventoryLotRepository {
       };
     }
 
-    if (options.warehouse_id) {
-      query.warehouse_id = options.warehouse_id;
+    const warehouseVal = options.warehouse_id ?? options.warehouseId;
+    if (warehouseVal) {
+      query.warehouse_id = warehouseVal;
     }
 
     if (options.q?.trim()) {
@@ -213,6 +266,16 @@ export class InventoryLotRepository {
       ];
     }
 
+    // If pagination not provided => return all matching documents
+    if (page === undefined || limit === undefined) {
+      const data = await this.inventoryLotModel
+        .find(query)
+        .sort({ lot_id: 1 })
+        .exec();
+      return { data, total: data.length };
+    }
+
+    const skip = (page - 1) * limit;
     const data = await this.inventoryLotModel
       .find(query)
       .skip(skip)

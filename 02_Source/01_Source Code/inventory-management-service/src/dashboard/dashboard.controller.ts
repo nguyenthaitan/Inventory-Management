@@ -1,8 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Logger } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')
 export class DashboardController {
+  private readonly logger = new Logger(DashboardController.name);
   constructor(private readonly svc: DashboardService) {}
 
   @Get('summary')
@@ -11,6 +12,9 @@ export class DashboardController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
+    this.logger.debug(
+      `summary called warehouseId=${warehouseId} from=${from} to=${to}`,
+    );
     return this.svc.getSummary({ warehouseId, from, to });
   }
 
