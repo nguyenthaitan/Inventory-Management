@@ -60,7 +60,7 @@ export class ReportsRepository {
       size: 0,
       aggs: {
         by_status: {
-          terms: { field: 'status.keyword', size: 50 },
+          terms: { field: 'status', size: 50 },
           aggs: {
             total_quantity: { sum: { field: 'quantity' } },
             sample_lots: {
@@ -99,34 +99,34 @@ export class ReportsRepository {
    * Query inventory_transactions_* — filter by date range, aggregate by material_id.
    */
   async getMaterialUsage(from?: Date, to?: Date): Promise<MaterialUsageItemDto[]> {
-    const mustClauses: any[] = [];
-
-    if (from || to) {
-      mustClauses.push({
-        range: {
-          transaction_date: {
-            ...(from ? { gte: from.toISOString() } : {}),
-            ...(to ? { lte: to.toISOString() } : {}),
-          },
-        },
-      });
-    }
+    const query =
+      from || to
+        ? {
+            bool: {
+              must: [
+                {
+                  range: {
+                    transaction_date: {
+                      ...(from ? { gte: from.toISOString() } : {}),
+                      ...(to ? { lte: to.toISOString() } : {}),
+                    },
+                  },
+                },
+              ],
+            },
+          }
+        : { match_all: {} };
 
     const result = await this.es.search({
       index: 'inventory_transactions_*',
       size: 0,
-      query: mustClauses.length > 0 ? { bool: { must: mustClauses } } : { match_all: {} },
+      query,
       aggs: {
         by_material: {
-          terms: { field: 'material_id.keyword', size: 500 },
+          terms: { field: 'material_id', size: 500 },
           aggs: {
             total_quantity: {
-              sum: {
-                script: {
-                  source: "doc['quantity'].size() > 0 ? Double.parseDouble(doc['quantity'].value) : 0",
-                  lang: 'painless',
-                },
-              },
+              sum: { field: 'quantity' },
             },
           },
         },
@@ -154,10 +154,10 @@ export class ReportsRepository {
       size: 0,
       aggs: {
         by_supplier: {
-          terms: { field: 'supplier_name.keyword', size: 500 },
+          terms: { field: 'supplier_name', size: 500 },
           aggs: {
             by_result: {
-              terms: { field: 'result_status.keyword', size: 10 },
+              terms: { field: 'result_status', size: 10 },
             },
           },
         },
@@ -291,18 +291,12 @@ export class ReportsRepository {
           aggs: {
             by_material: {
               terms: {
-                field: 'material_id.keyword',
+                field: 'material_id',
                 size: Math.max(1, limit),
               },
               aggs: {
                 total_quantity: {
-                  sum: {
-                    script: {
-                      source:
-                        "doc['quantity'].size() > 0 ? Double.parseDouble(doc['quantity'].value.toString()) : 0",
-                      lang: 'painless',
-                    },
-                  },
+                  sum: { field: 'quantity' },
                 },
               },
             },
@@ -363,35 +357,35 @@ export class ReportsRepository {
           aggs: {
             pass_count: {
               filter: {
-                term: { 'result_status.keyword': 'Pass' },
+                term: { 'result_status': 'Pass' },
               },
             },
             fail_count: {
               filter: {
-                term: { 'result_status.keyword': 'Fail' },
+                term: { 'result_status': 'Fail' },
               },
             },
             pending_count: {
               filter: {
-                term: { 'result_status.keyword': 'Pending' },
+                term: { 'result_status': 'Pending' },
               },
             },
           },
         },
         by_supplier: {
           terms: {
-            field: 'supplier_name.keyword',
+            field: 'supplier_name',
             size: Math.max(1, limit),
           },
           aggs: {
             pass_count: {
               filter: {
-                term: { 'result_status.keyword': 'Pass' },
+                term: { 'result_status': 'Pass' },
               },
             },
             fail_count: {
               filter: {
-                term: { 'result_status.keyword': 'Fail' },
+                term: { 'result_status': 'Fail' },
               },
             },
           },
@@ -458,7 +452,7 @@ export class ReportsRepository {
           aggs: {
             unique_users: {
               cardinality: {
-                field: 'performed_by.keyword',
+                field: 'performed_by',
               },
             },
           },

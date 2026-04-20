@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client } from '@elastic/elasticsearch';
+import { Model } from 'mongoose';
 import { RedisWatermarkService } from '../redis/redis-watermark.service';
 import { BaseCollectionSync, SyncResult } from './collections/base-collection-sync';
 import { InventoryLotsSync } from './collections/inventory-lots.sync';
@@ -10,8 +11,21 @@ import { QCTestsSync } from './collections/qc-tests.sync';
 import { MaterialsSync } from './collections/materials.sync';
 import { AuditLogsSync } from './collections/audit-logs.sync';
 import { ImportExportOrdersSync } from './collections/import-export-orders.sync';
+import { MarkdownKnowledgeSync } from './collections/markdown-knowledge.sync';
 import { ELASTICSEARCH_CLIENT } from '../elasticsearch/elasticsearch.constants';
 import { IndexTemplateService } from '../elasticsearch/index-template.service';
+
+interface CollectionSyncer {
+  collectionName: string;
+  sync(
+    from: Date | null,
+    to: Date,
+    batchSize: number,
+    options?: { dryRun?: boolean },
+  ): Promise<SyncResult>;
+  model?: Model<any>;
+  dateField?: string;
+}
 
 export interface RunFullSyncOptions {
   collections?: string[];
@@ -50,10 +64,10 @@ export interface RunFullSyncSummary {
 }
 
 @Injectable()
-export class SyncService {
+export class SyncService implements OnModuleInit {
   private readonly logger = new Logger(SyncService.name);
   private readonly batchSize: number;
-  private readonly syncers: BaseCollectionSync[];
+  private readonly syncers: CollectionSyncer[];
 
   constructor(
     private readonly watermark: RedisWatermarkService,
@@ -66,6 +80,7 @@ export class SyncService {
     private readonly materialsSync: MaterialsSync,
     private readonly auditLogsSync: AuditLogsSync,
     private readonly importExportOrdersSync: ImportExportOrdersSync,
+    private readonly markdownKnowledgeSync?: MarkdownKnowledgeSync,
   ) {
     this.batchSize = this.config.get<number>('sync.batchSize') ?? 500;
     this.syncers = [
@@ -75,7 +90,15 @@ export class SyncService {
       materialsSync,
       auditLogsSync,
       importExportOrdersSync,
+      ...(this.markdownKnowledgeSync ? [this.markdownKnowledgeSync] : []),
     ];
+  }
+
+  async onModuleInit(): Promise<void> {
+    this.logger.log('onModuleInit: applying ES templates and purging stale indices...');
+    await this.indexTemplateService.applyTemplates();
+    await this.indexTemplateService.purgeStaleIndices();
+    this.logger.log('onModuleInit: ES templates and stale index cleanup complete.');
   }
 
   getAvailableCollections(): string[] {
@@ -136,6 +159,7 @@ export class SyncService {
 
     if (options.ensureTemplates === true) {
       await this.indexTemplateService.applyTemplates(selectedCollections);
+      await this.indexTemplateService.purgeStaleIndices(selectedCollections);
     }
 
     const results: RunCollectionResult[] = [];
@@ -198,7 +222,7 @@ export class SyncService {
     return summary;
   }
 
-  private selectSyncers(collections?: string[]): BaseCollectionSync[] {
+  private selectSyncers(collections?: string[]): CollectionSyncer[] {
     if (!collections || collections.length === 0) {
       return this.syncers;
     }
@@ -218,22 +242,26 @@ export class SyncService {
   }
 
   private async verifyCounts(
-    syncer: BaseCollectionSync,
+    syncer: CollectionSyncer,
     from: Date | null,
     to: Date,
   ): Promise<CountCheckResult> {
+    const dateField = syncer.dateField ?? 'modified_date';
     const modifiedRange: Record<string, unknown> = { $lte: to };
     if (from) {
       modifiedRange.$gt = from;
     }
 
-    const mongoQuery = {
-      modified_date: modifiedRange,
+    const mongoQuery: Record<string, unknown> = {
+      [dateField]: modifiedRange,
       deleted: { $ne: true },
       is_active: { $ne: false },
     };
 
-    const mongoCount = await syncer.model.countDocuments(mongoQuery);
+    const hasMongoModel = Boolean(syncer.model);
+    const mongoCount = hasMongoModel
+      ? await syncer.model.countDocuments(mongoQuery)
+      : 0;
 
     let esCount = 0;
     try {
@@ -244,7 +272,7 @@ export class SyncService {
             filter: [
               {
                 range: {
-                  modified_date: {
+                  [dateField]: {
                     ...(from ? { gt: from.toISOString() } : {}),
                     lte: to.toISOString(),
                   },
@@ -263,9 +291,9 @@ export class SyncService {
 
     return {
       collection: syncer.collectionName,
-      mongoCount,
+      mongoCount: hasMongoModel ? mongoCount : esCount,
       esCount,
-      gap: mongoCount - esCount,
+      gap: hasMongoModel ? mongoCount - esCount : 0,
       from: from ? from.toISOString() : null,
       to: to.toISOString(),
     };

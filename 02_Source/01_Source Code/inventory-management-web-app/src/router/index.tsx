@@ -34,6 +34,7 @@ import StockOutOperator from "../pages/operator/StockOut";
 import InventoryTransactionListOperator from "../pages/operator/InventoryTransactionListOperator";
 import TransactionHistoryOperator from "../pages/operator/TransactionHistory";
 import LabelPrintOperator from "../pages/operator/LabelPrint";
+import BarcodeManager from "../pages/operator/BarcodeManager";
 import WarehouseSlipList from "../pages/operator/WarehouseSlipList";
 import WarehouseSlipCreate from "../pages/operator/WarehouseSlipCreate";
 import WarehouseSlipDetailPage from "../pages/operator/WarehouseSlipDetailPage";
@@ -209,7 +210,7 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       // IT ADMIN - Chỉ allow role 'it_admin'
-      // { path: "/admin/dashboard", element: requireAdminAuth(<DashboardIT />) },
+      { path: "/admin/dashboard", element: requireAdminAuth(<DashboardIT />) },
       {
         path: "/admin/monitoring",
         element: requireAdminAuth(<SystemMonitoring />),
@@ -221,7 +222,7 @@ export const router = createBrowserRouter([
       { path: "/admin/audit", element: requireAdminAuth(<AuditLog />) },
 
       // QC - Chỉ allow role 'quality-control'
-      // { path: "/qc/dashboard", element: requireQCAuth(<DashboardQC />) },
+      { path: "/qc/dashboard", element: requireQCAuth(<DashboardQC />) },
       { path: "/qc/inbound", element: requireQCAuth(<InboundControl />) },
       { path: "/qc/inventory", element: requireQCAuth(<InventoryQC />) },
       { path: "/qc/inspection", element: requireQCAuth(<ProductInspection />) },
@@ -324,17 +325,17 @@ export const router = createBrowserRouter([
         element: requireManagerAuth(<InventoryTransactionListManager />),
       },
       // Operator - Chỉ allow role 'operator'
-      // {
-      //   path: "/operator/dashboard",
-      //   element: requireOperatorAuth(<DashboardOperator />),
-      // },
+      {
+        path: "/operator/dashboard",
+        element: requireOperatorAuth(<DashboardOperator />),
+      },
       {
         path: "/operator/audit",
         element: requireOperatorAuth(<InventoryAuditOperator />),
       },
       {
-        path: "/operator/material",
-        element: requireOperatorAuth(<MaterialManagementOperator />),
+        path: "/operator/inventory",
+        element: requireOperatorAuth(<InventoryLot />),
       },
       {
         path: "/operator/product",
@@ -379,6 +380,10 @@ export const router = createBrowserRouter([
       {
         path: "operator/labels",
         element: requireOperatorAuth(<LabelPrintOperator />),
+      },
+      {
+        path: "operator/barcodes",
+        element: requireOperatorAuth(<BarcodeManager />),
       },
       {
         path: "operator/production-batches",
