@@ -78,13 +78,7 @@ const ACTION_LABELS: Record<string, string> = {
 function normalizeReport<T extends object>(raw: T | null): T | null {
   if (!raw) return null;
   // Handle backend wrapping { data: { ... } }
-  if (
-    "data" in (raw as any) &&
-    !(raw as any).generated_at &&
-    !(raw as any).items &&
-    !(raw as any).entries &&
-    !(raw as any).points
-  ) {
+  if ("data" in (raw as any) && !(raw as any).generated_at && !(raw as any).items && !(raw as any).entries && !(raw as any).points) {
     return (raw as any).data as T;
   }
   return raw;
@@ -173,11 +167,12 @@ function downloadCsv(
 }
 
 export default function DashboardManager() {
-  // Don't apply any default date range. Keep inputs empty until user selects range.
   const now = new Date();
+  const defaultFrom = new Date(now);
+  defaultFrom.setUTCDate(defaultFrom.getUTCDate() - 30);
 
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
+  const [fromDate, setFromDate] = useState<string>(toDateInput(defaultFrom));
+  const [toDate, setToDate] = useState<string>(toDateInput(now));
   const [interval, setInterval] = useState<TrendInterval>("day");
   const [refreshToken, setRefreshToken] = useState(0);
 
@@ -227,18 +222,7 @@ export default function DashboardManager() {
       setError(null);
 
       try {
-        // Prefer `dateRange` (RangePicker) as authoritative source for from/to
-        // to avoid stale or misformatted string inputs in `fromDate`/`toDate`.
-        let rangeFrom: string | undefined = undefined;
-        let rangeTo: string | undefined = undefined;
-        if (dateRange && dateRange[0] && dateRange[1]) {
-          rangeFrom = dateRange[0].toISOString();
-          rangeTo = dateRange[1].toISOString();
-        } else if (fromDate && toDate) {
-          const r = toRangeIso(fromDate, toDate);
-          rangeFrom = r.from;
-          rangeTo = r.to;
-        }
+        const range = toRangeIso(fromDate, toDate);
         const [
           inventory,
           usage,
@@ -249,25 +233,20 @@ export default function DashboardManager() {
           qcTrendData,
           auditTrendData,
         ] = await Promise.all([
-          getInventoryStatusReport(rangeFrom, rangeTo, filterWarehouse),
-          getMaterialUsageReport(rangeFrom, rangeTo, filterWarehouse),
-          getQcPerformanceReport(rangeFrom, rangeTo, filterWarehouse),
-          getAuditReport(rangeFrom, rangeTo, filterWarehouse),
-          getInventoryTrendReport(
-            rangeFrom,
-            rangeTo,
-            interval,
-            filterWarehouse,
-          ),
+          getInventoryStatusReport(range.from, range.to, filterWarehouse),
+          getMaterialUsageReport(range.from, range.to, filterWarehouse),
+          getQcPerformanceReport(range.from, range.to, filterWarehouse),
+          getAuditReport(range.from, range.to, filterWarehouse),
+          getInventoryTrendReport(range.from, range.to, interval, filterWarehouse),
           getMaterialUsageTrendReport(
-            rangeFrom,
-            rangeTo,
+            range.from,
+            range.to,
             interval,
             8,
             filterWarehouse,
           ),
-          getQcTrendReport(rangeFrom, rangeTo, interval, 8, filterWarehouse),
-          getAuditTrendReport(rangeFrom, rangeTo, interval, filterWarehouse),
+          getQcTrendReport(range.from, range.to, interval, 8, filterWarehouse),
+          getAuditTrendReport(range.from, range.to, interval, filterWarehouse),
         ]);
 
         setInventoryStatus(normalizeReport(inventory));
@@ -282,18 +261,18 @@ export default function DashboardManager() {
         void (async () => {
           try {
             const [dashSum, inT, outT, whs] = await Promise.all([
-              getDashboardSummary(filterWarehouse, rangeFrom, rangeTo),
+              getDashboardSummary(filterWarehouse, range.from, range.to),
               getDashboardTrends(
                 "in",
-                rangeFrom,
-                rangeTo,
+                range.from,
+                range.to,
                 interval,
                 filterWarehouse,
               ),
               getDashboardTrends(
                 "out",
-                rangeFrom,
-                rangeTo,
+                range.from,
+                range.to,
                 interval,
                 filterWarehouse,
               ),
@@ -358,9 +337,14 @@ export default function DashboardManager() {
   }
 
   async function applyRangeAndWarehouse() {
-    // If the user cleared the range, don't apply defaults — call APIs without dates.
-    const from = dateRange?.[0] ? dateRange[0].toISOString() : undefined;
-    const to = dateRange?.[1] ? dateRange[1].toISOString() : undefined;
+    const now = new Date();
+    const defaultFrom = new Date(
+      now.getTime() - 7 * 24 * 3600 * 1000,
+    ).toISOString();
+    const defaultTo = now.toISOString();
+
+    const from = dateRange?.[0] ? dateRange[0].toISOString() : defaultFrom;
+    const to = dateRange?.[1] ? dateRange[1].toISOString() : defaultTo;
     const intervalCalc = computeInterval(from, to);
     setInterval(intervalCalc);
 
@@ -385,10 +369,8 @@ export default function DashboardManager() {
       if (inResp.data) setTrendsIn(inResp.data);
       if (outResp.data) setTrendsOut(outResp.data);
       // Trigger broader dashboard refresh (inventory/material/qc/audit) as well
-      if (from) setFromDate(toDateInput(new Date(from)));
-      else setFromDate("");
-      if (to) setToDate(toDateInput(new Date(to)));
-      else setToDate("");
+      setFromDate(toDateInput(new Date(from)));
+      setToDate(toDateInput(new Date(to)));
       setRefreshToken((v) => v + 1);
     } catch (err) {
       setError(
@@ -498,7 +480,9 @@ export default function DashboardManager() {
     <PageWrapper>
       <div className="p-6 space-y-6">
         <div className="animate-fadeInUp">
-          <h1 className="text-2xl font-bold text-gray-900">Bảng Điều Khiển</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Bảng Điều Khiển
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
             Phân tích xu hướng, KPI báo cáo và tín hiệu vận hành.
           </p>
@@ -526,9 +510,7 @@ export default function DashboardManager() {
               Chu kỳ
               <select
                 value={interval}
-                onChange={(event) =>
-                  setInterval(event.target.value as TrendInterval)
-                }
+                onChange={(event) => setInterval(event.target.value as TrendInterval)}
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               >
                 <option value="day">Ngày</option>
@@ -774,60 +756,6 @@ export default function DashboardManager() {
           />
         </Card>
 
-        <Card
-          title="Sự kiện kiểm toán gần đây"
-          className="hover:shadow-md transition-shadow duration-200"
-        >
-          <Table
-            rowKey={(record: any, index?: number) =>
-              record && (record.entity || record.performed_at || record.action)
-                ? `${record.entity || "x"}-${record.performed_at || record.timestamp || (index ?? 0)}-${record.action || "x"}`
-                : String(index ?? 0)
-            }
-            pagination={{ pageSize: 8 }}
-            dataSource={(auditReport?.entries || []).slice(0, 40)}
-            columns={[
-              {
-                title: "Hành động",
-                render: (_: any, record: any) =>
-                  record.action ||
-                  record.verb ||
-                  record.event ||
-                  (record.details && (record.details.action as string)) ||
-                  "-",
-              },
-              {
-                title: "Đối tượng",
-                render: (_: any, record: any) =>
-                  record.entity ||
-                  record.entity_name ||
-                  record.target ||
-                  (record.details && (record.details.entity as string)) ||
-                  "-",
-              },
-              {
-                title: "Người",
-                render: (_: any, record: any) =>
-                  record.performed_by ||
-                  record.user ||
-                  record.actor ||
-                  (record.details && (record.details.user as string)) ||
-                  "-",
-              },
-              {
-                title: "Thời gian",
-                render: (_: any, record: any) =>
-                  formatDateShort(
-                    record.performed_at ||
-                      record.performedAt ||
-                      record.timestamp,
-                  ),
-              },
-            ]}
-            size="middle"
-          />
-        </Card>
-
         <Modal
           title="Chi Tiết Giao Dịch"
           open={drilldownVisible}
@@ -857,8 +785,7 @@ export default function DashboardManager() {
         <Divider />
 
         <p className="text-xs text-gray-400 m-0">
-          Cập nhật lúc: {new Date().toLocaleString("vi-VN")} | Chu kỳ:{" "}
-          {interval === "day" ? "Ngày" : interval === "week" ? "Tuần" : "Tháng"}
+          Cập nhật lúc: {new Date().toLocaleString("vi-VN")} | Chu kỳ: {interval === "day" ? "Ngày" : interval === "week" ? "Tuần" : "Tháng"}
         </p>
       </div>
     </PageWrapper>

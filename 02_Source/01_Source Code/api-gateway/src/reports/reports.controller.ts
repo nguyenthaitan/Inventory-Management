@@ -14,11 +14,7 @@ import { UserRole } from "../schemas/user.schema";
 import { METRICS_SERVICE_TOKEN } from "../grpc/grpc.module";
 
 interface MetricsReportsGrpcService {
-  GetInventoryStatus(data: {
-    from?: string;
-    to?: string;
-    warehouse_id?: string;
-  }): Observable<any>;
+  GetInventoryStatus(data: Record<string, never>): Observable<any>;
   GetMaterialUsage(data: { from?: string; to?: string }): Observable<any>;
   GetQcPerformance(data: Record<string, never>): Observable<any>;
   GetAuditReport(data: { page?: number; size?: number }): Observable<any>;
@@ -64,17 +60,9 @@ export class ReportsController implements OnModuleInit {
 
   @Roles(UserRole.MANAGER, UserRole.IT_ADMINISTRATOR, UserRole.OPERATOR)
   @Get("inventory-status")
-  async getInventoryStatus(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("warehouse_id") warehouse_id?: string,
-    @Query("warehouseId") warehouseId?: string,
-  ) {
+  async getInventoryStatus() {
     try {
-      const wid = warehouse_id ?? warehouseId;
-      return await firstValueFrom(
-        this.metricsService.GetInventoryStatus({ from, to, warehouse_id: wid }),
-      );
+      return await firstValueFrom(this.metricsService.GetInventoryStatus({}));
     } catch (err) {
       const e: any = err;
       const msg = e?.message ?? String(err);
