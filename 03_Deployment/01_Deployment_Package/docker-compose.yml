@@ -24,6 +24,8 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       JWKS_URI: http://inventory_keycloak:8080/realms/inventory/protocol/openid-connect/certs
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASS: ${MAIL_PASS:-}
     ports:
       - '3200:3200'
       - '50051:50051'
